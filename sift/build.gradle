@@ -1,0 +1,45 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion '24.0.0 rc2'
+
+    defaultConfig {
+        minSdkVersion 16  // Jelly Bean 4.1.x (basically Java 6)
+        targetSdkVersion 23
+        versionCode 1
+        versionName '0.0.1'
+    }
+
+    // This makes it slightly nicer to code (like diamond operator) but
+    // keep in mind that we are still writing for Java 6 (so no try-with
+    // resources).
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+    }
+
+    lintOptions {
+        abortOnError true
+        warningsAsErrors true
+        quiet true
+        textReport true
+        textOutput 'stdout'
+        disable 'InvalidPackage'  // See https://github.com/square/okio/issues/58
+    }
+}
+
+dependencies {
+    compile 'com.google.android.gms:play-services-location:8.4.0'
+    compile 'com.google.code.gson:gson:2.6.2'
+    compile 'com.google.guava:guava:19.0'
+    compile 'com.squareup.okhttp3:okhttp:3.2.0'
+
+    testCompile 'junit:junit:4.12'
+    testCompile "org.mockito:mockito-core:1.10.19"
+    androidTestCompile 'com.android.support:support-annotations:23.3.0'
+    androidTestCompile 'com.android.support.test:runner:0.4.1'
+    androidTestCompile 'com.android.support.test:rules:0.4.1'
+    androidTestCompile 'com.google.dexmaker:dexmaker:1.2'
+    androidTestCompile 'com.google.dexmaker:dexmaker-mockito:1.2'
+    androidTestCompile 'org.mockito:mockito-core:1.10.19'
+}
