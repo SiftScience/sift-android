@@ -70,7 +70,7 @@ public class Queue {
             if (!(other instanceof Config)) {
                 return false;
             }
-            Config that = (Config)other;
+            Config that = (Config) other;
             return acceptSameEventAfter == that.acceptSameEventAfter &&
                     uploadWhenMoreThan == that.uploadWhenMoreThan &&
                     uploadWhenOlderThan == that.uploadWhenOlderThan;

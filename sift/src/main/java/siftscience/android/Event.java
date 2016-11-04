@@ -60,7 +60,7 @@ public class Event {
     public boolean equals(Object object) {
         if (!(object instanceof Event))
             return false;
-        Event other = (Event)object;
+        Event other = (Event) object;
         return Objects.equal(time, other.time) && basicallyEquals(other);
     }
 
@@ -68,7 +68,7 @@ public class Event {
     public boolean basicallyEquals(Object object) {
         if (!(object instanceof Event))
             return false;
-        return basicallyEquals((Event)object);
+        return basicallyEquals((Event) object);
     }
 
     private boolean basicallyEquals(Event other) {
