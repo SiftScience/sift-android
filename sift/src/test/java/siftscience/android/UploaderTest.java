@@ -20,6 +20,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -171,6 +172,7 @@ public class UploaderTest {
                 .request(new Request.Builder().url("http://siftscience.com/").build())
                 .protocol(Protocol.HTTP_1_0)
                 .code(code)
+                .body(ResponseBody.create(null, ""))
                 .build();
     }
 }

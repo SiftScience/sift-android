@@ -34,7 +34,7 @@ class Uploader {
     }
 
     @VisibleForTesting static final int REJECTION_LIMIT = 3;
-    private static final long INITIAL_BACKOFF = TimeUnit.SECONDS.toMillis(3);
+    private static final long INITIAL_BACKOFF = TimeUnit.SECONDS.toMillis(1);
 
     /**
      * The state of uploader.
@@ -177,8 +177,13 @@ class Uploader {
 
                 try {
                     Log.d(TAG, "Send HTTP request");
+                    // try-with needs API level 19+ :(
                     Response response = client.newCall(state.request).execute();
-                    if (response.code() == 200) {
+                    int code = response.code();
+                    String body = response.body() == null ? null : response.body().string();
+                    response.close();
+
+                    if (code == 200) {
                         // Success!  Reset the state and move on to the next batch.
                         state.reset();
                         batches.pop();
@@ -193,10 +198,8 @@ class Uploader {
                     }
 
                     Log.e(TAG, String.format(
-                            "HTTP error when upload batch: status=%d response=%s",
-                            response.code(),
-                            response.body() == null ? "<null>" : response.body().string()));
-                    if (response.code() == 400) {
+                            "HTTP error when upload batch: status=%d response=%s", code, body));
+                    if (code == 400) {
                         state.numRejects++;
                     }
                 } catch (IOException e) {
