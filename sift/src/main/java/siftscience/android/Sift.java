@@ -112,7 +112,7 @@ public class Sift {
             if (!(other instanceof Config)) {
                 return false;
             }
-            Config that  = (Config)other;
+            Config that  = (Config) other;
             return Objects.equal(accountId, that.accountId) &&
                     Objects.equal(beaconKey, that.beaconKey) &&
                     Objects.equal(serverUrlFormat, that.serverUrlFormat);
@@ -252,14 +252,13 @@ public class Sift {
             String identifier = ArchiveKey.getQueueIdentifier(entry.getKey());
             if (identifier != null) {
                 Log.i(TAG, String.format("Load queue \"%s\"", identifier));
-                archive = (String)entry.getValue();
+                archive = (String) entry.getValue();
                 Queue queue = new Queue(archive, executor, userIdProvider, uploadRequester);
                 queues.put(identifier, queue);
             }
         }
 
-        // Call instance methods after construction completed.
-
+        // Construction is completed; now you may call instance methods.
         // Create the default queue if there isn't one.
         if (!queues.containsKey(DEFAULT_QUEUE_IDENTIFIER)) {
             createQueue(DEFAULT_QUEUE_IDENTIFIER, DEFAULT_QUEUE_CONFIG);
