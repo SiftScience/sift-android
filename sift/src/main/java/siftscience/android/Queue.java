@@ -5,9 +5,12 @@ package siftscience.android;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListeningScheduledExecutorService;
+import com.sift.api.representations.MobileEventJson;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -128,8 +131,8 @@ public class Queue {
     private static class State {
 
         Config config;
-        List<Event> queue;
-        Event lastEvent;
+        List<MobileEventJson> queue;
+        MobileEventJson lastEvent;
         long lastEventTimestamp;
 
         State() {
@@ -149,15 +152,15 @@ public class Queue {
     Queue(String archive,
           ListeningScheduledExecutorService executor,
           UserIdProvider userIdProvider,
-          UploadRequester uploadRequester) {
-        state = archive == null ? new State() : Sift.GSON.fromJson(archive, State.class);
+          UploadRequester uploadRequester) throws IOException {
+        state = archive == null ? new State() : Sift.JSON.readValue(archive, State.class);
         this.executor = executor;
         this.userIdProvider = userIdProvider;
         this.uploadRequester = uploadRequester;
     }
 
-    synchronized String archive() {
-        return Sift.GSON.toJson(state);
+    synchronized String archive() throws JsonProcessingException {
+        return Sift.JSON.writeValueAsString(state);
     }
 
     /** Return the queue configuration. */
@@ -175,22 +178,25 @@ public class Queue {
      *
      * The event could be ignored if `acceptSameEventAfter` is set.
      */
-    public synchronized void append(@NonNull Event event) {
+    public synchronized void append(@NonNull MobileEventJson event) {
         long now = Time.now();
 
         if (event.userId == null) {
-            event.userId = userIdProvider.getUserId();
+            event = MobileEventJson.newBuilder(event)
+                    .withUserId(userIdProvider.getUserId())
+                    .build();
         }
 
         if (state.config.acceptSameEventAfter > 0 &&
                 now < state.lastEventTimestamp + state.config.acceptSameEventAfter &&
                 state.lastEvent != null &&
-                state.lastEvent.basicallyEquals(event)) {
-            Log.d(TAG, String.format("Drop the same event of type \"%s\"", event.type));
+                state.lastEvent.equals(event)) {
+            Log.d(TAG, String.format("Drop the same event of type \"%s\"",
+                    event.mobileEventType));
             return;  // Drop the same event.
         }
 
-        Log.i(TAG, String.format("Append event of type \"%s\"", event.type));
+        Log.i(TAG, String.format("Append event of type \"%s\"", event.mobileEventType));
         state.queue.add(event);
         state.lastEvent = event;
         state.lastEventTimestamp = now;
@@ -222,8 +228,8 @@ public class Queue {
     }
 
     /** Transfer the ownership of the events. */
-    synchronized List<Event> transfer() {
-        List<Event> events = state.queue;
+    synchronized List<MobileEventJson> transfer() {
+        List<MobileEventJson> events = state.queue;
         state.queue = Lists.newLinkedList();
         return events;
     }

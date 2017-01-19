@@ -1,0 +1,18 @@
+---
+title: iOS Device Location
+type: object
+javaType: com.sift.api.representations.IosDeviceLocationJson
+properties:
+  time: {type: integer, required: false}
+
+  latitude: {type: number, required: false}
+  longitude: {type: number, required: false}
+  altitude: {type: number, required: false}
+  horizontal_accuracy: {type: number, required: false}
+  vertical_accuracy: {type: number, required: false}
+
+  floor: {type: integer, required: false}
+  speed: {type: number, required: false}
+  course: {type: number, required: false}
+
+additionalProperties: false

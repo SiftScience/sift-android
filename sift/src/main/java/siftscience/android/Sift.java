@@ -9,20 +9,22 @@ import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.google.gson.FieldNamingPolicy;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
+import com.sift.api.representations.MobileEventJson;
 
 /** The main class of the Sift client library. */
 public class Sift {
@@ -37,7 +39,11 @@ public class Sift {
      */
     public static synchronized void open(@NonNull Context context) {
         if (instance == null) {
-            instance = new Sift(context);
+            try {
+                instance = new Sift(context);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         openCount++;
     }
@@ -158,9 +164,7 @@ public class Sift {
      * The Gson object shared within this package, which is configured
      * to generate JSON messages complied with our API doc.
      */
-    static final Gson GSON = new GsonBuilder()
-            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-            .create();
+    static final ObjectMapper JSON = new ObjectMapper();
 
     // The default queue.
     private static final String DEFAULT_QUEUE_IDENTIFIER = "siftscience.android.default";
@@ -225,13 +229,13 @@ public class Sift {
         }
     };
 
-    private Sift(Context context) {
+    private Sift(Context context) throws IOException {
         this(context, MoreExecutors.listeningDecorator(
                 Executors.newSingleThreadScheduledExecutor()));
     }
 
     @VisibleForTesting
-    Sift(Context context, ListeningScheduledExecutorService executor) {
+    Sift(Context context, ListeningScheduledExecutorService executor) throws IOException {
         archives = context.getSharedPreferences(ARCHIVE_NAME, Context.MODE_PRIVATE);
         this.executor = executor;
 
@@ -240,8 +244,8 @@ public class Sift {
         String archive;
 
         archive = archives.getString(ArchiveKey.CONFIG.key, null);
-        config = archive == null ? new Config() : GSON.fromJson(archive, Config.class);
 
+        config = archive == null ? new Config() : JSON.readValue(archive, Config.class);
         userId = archives.getString(ArchiveKey.USER_ID.key, null);
 
         archive = archives.getString(ArchiveKey.UPLOADER.key, null);
@@ -286,15 +290,19 @@ public class Sift {
         Log.i(TAG, "Save Sift object states");
         SharedPreferences.Editor editor = archives.edit();
         editor.clear();
-        editor.putString(ArchiveKey.CONFIG.key, GSON.toJson(config));
-        editor.putString(ArchiveKey.USER_ID.key, userId);
-        editor.putString(ArchiveKey.UPLOADER.key, uploader.archive());
-        for (Map.Entry<String, Queue> entry : queues.entrySet()) {
-            String identifier = ArchiveKey.getKeyForQueueIdentifier(entry.getKey());
-            Log.i(TAG, String.format("Save queue \"%s\"", identifier));
-            editor.putString(identifier, entry.getValue().archive());
+        try {
+            editor.putString(ArchiveKey.CONFIG.key, JSON.writeValueAsString(config));
+            editor.putString(ArchiveKey.USER_ID.key, userId);
+            editor.putString(ArchiveKey.UPLOADER.key, uploader.archive());
+            for (Map.Entry<String, Queue> entry : queues.entrySet()) {
+                String identifier = ArchiveKey.getKeyForQueueIdentifier(entry.getKey());
+                Log.i(TAG, String.format("Save queue \"%s\"", identifier));
+                editor.putString(identifier, entry.getValue().archive());
+            }
+            editor.apply();
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
         }
-        editor.apply();
     }
 
     /** Return the configurations of this Sift object. */
@@ -324,7 +332,8 @@ public class Sift {
     }
 
     /** Create an event queue. */
-    public synchronized Queue createQueue(@NonNull String identifier, Queue.Config config) {
+    public synchronized Queue createQueue(@NonNull String identifier, Queue.Config config)
+            throws IOException {
         Preconditions.checkState(getQueue(identifier) == null, "queue exists: " + identifier);
         Log.i(TAG, String.format("Create queue \"%s\"", identifier));
         Queue queue = new Queue(null, executor, userIdProvider, uploadRequester);
@@ -353,7 +362,7 @@ public class Sift {
      * queue's batching policy.
      */
     public synchronized void upload(boolean force) {
-        List<Event> events = Lists.newLinkedList();
+        List<MobileEventJson> events = Lists.newLinkedList();
         for (Queue queue : queues.values()) {
             if (force || queue.isEventsReadyForUpload(Time.now())) {
                 events.addAll(queue.transfer());

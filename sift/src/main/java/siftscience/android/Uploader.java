@@ -6,9 +6,11 @@ import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Lists;
 import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.ListeningScheduledExecutorService;
+import com.sift.api.representations.MobileEventJson;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -76,23 +78,23 @@ class Uploader {
      * batch) to provide atomic operations.
      */
     private static class Batches {
-        private final List<List<Event>> batches;
+        private final List<List<MobileEventJson>> batches;
 
         Batches() {
             batches = Lists.newLinkedList();
         }
 
-        synchronized String archive() {
-            return Sift.GSON.toJson(this);
+        synchronized String archive() throws JsonProcessingException {
+            return Sift.JSON.writeValueAsString(this);
         }
 
         /** Append a batch to the end of FIFO. */
-        synchronized void append(List<Event> batch) {
+        synchronized void append(List<MobileEventJson> batch) {
             batches.add(batch);
         }
 
         /** Peek the first batch. */
-        synchronized List<Event> peek() {
+        synchronized List<MobileEventJson> peek() {
             return batches.isEmpty() ? null : batches.get(0);
         }
 
@@ -119,7 +121,7 @@ class Uploader {
 
     Uploader(String archive,
              ListeningScheduledExecutorService executor,
-             ConfigProvider configProvider) {
+             ConfigProvider configProvider) throws IOException {
         this(archive, INITIAL_BACKOFF, executor, configProvider, new OkHttpClient());
     }
 
@@ -128,8 +130,9 @@ class Uploader {
              long initialBackoff,
              ListeningScheduledExecutorService executor,
              ConfigProvider configProvider,
-             OkHttpClient client) {
-        batches = archive == null ? new Batches() : Sift.GSON.fromJson(archive, Batches.class);
+             OkHttpClient client) throws IOException {
+        batches = archive == null ? new Batches() : Sift.JSON.readValue(archive, Batches.class);
+
         state = new State(initialBackoff);
         this.executor = executor;
         this.configProvider = configProvider;
@@ -139,11 +142,11 @@ class Uploader {
         executor.submit(checkState);
     }
 
-    String archive() {
+    String archive() throws JsonProcessingException {
         return batches.archive();
     }
 
-    void upload(List<Event> events) {
+    void upload(List<MobileEventJson> events) {
         Log.d(TAG, String.format("Append batch: size=%d", events.size()));
         if (!events.isEmpty()) {
             batches.append(events);
@@ -159,7 +162,11 @@ class Uploader {
         public void run() {
             synchronized (state) {
                 if (state.request == null) {
-                    state.request = makeRequest();
+                    try {
+                        state.request = makeRequest();
+                    } catch (JsonProcessingException e) {
+                        e.printStackTrace();
+                    }
                 }
                 if (state.request == null) {
                     // Nothing to upload at the moment; check again a minute later.
@@ -232,8 +239,8 @@ class Uploader {
 
     /** The list request class as defined in Sift API doc. */
     private static class ListRequest {
-        final List<Event> data;
-        ListRequest(List<Event> data) {
+        final List<MobileEventJson> data;
+        ListRequest(List<MobileEventJson> data) {
             this.data = data;
         }
     }
@@ -246,8 +253,8 @@ class Uploader {
 
     /** Make an HTTP request object from the first batch of events. */
     @Nullable
-    private Request makeRequest() {
-        List<Event> events = batches.peek();
+    private Request makeRequest() throws JsonProcessingException {
+        List<MobileEventJson> events = batches.peek();
         if (events == null) {
             return null;  // Nothing to upload.
         }
@@ -272,7 +279,7 @@ class Uploader {
         return new Request.Builder()
                 .url(String.format(config.serverUrlFormat, config.accountId))
                 .header("Authorization", "Basic " + encodedBeaconKey)
-                .put(RequestBody.create(JSON, Sift.GSON.toJson(request)))
+                .put(RequestBody.create(JSON, Sift.JSON.writeValueAsBytes(request)))
                 .build();
     }
 }
