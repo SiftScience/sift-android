@@ -26,6 +26,16 @@ public class HelloSift extends AppCompatActivity {
 
         Sift.open(this);
 
+        // TODO(gary): Remove testing code eventually
+        Sift.get().setUserId("janice");
+        Sift.get().setConfig(new Sift.Config.Builder()
+                .withAccountId("4e1a50e172beb95cf1e4ae54")
+                .withBeaconKey("f92ed5bf7b")
+                .build()
+        );
+
+        Sift.collect(this);
+
         // Configure Sift object.  If you have multiple activities, you
         // probably should only do this in the "main" activity (the
         // activity that starts first).

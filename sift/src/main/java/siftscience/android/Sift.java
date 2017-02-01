@@ -48,6 +48,10 @@ public class Sift {
         openCount++;
     }
 
+    public static synchronized void collect(@NonNull Context context) {
+        DevicePropertiesCollector.collect(instance, context);
+    }
+
     /** Return the shared Sift object. */
     public static synchronized Sift get() {
         return Preconditions.checkNotNull(instance);
@@ -320,7 +324,7 @@ public class Sift {
      * set one in the Event object.
      */
     public synchronized String getUserId() {
-        return userId;
+        return this.userId;
     }
 
     /**
