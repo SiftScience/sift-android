@@ -34,12 +34,12 @@ public class HelloSift extends AppCompatActivity {
                 .build()
         );
 
-        Sift.collect(this);
+        Sift.collect();
 
-        // Configure Sift object.  If you have multiple activities, you
-        // probably should only do this in the "main" activity (the
-        // activity that starts first).
-        Sift.Config.Builder builder = new Sift.Config.Builder(Sift.get().getConfig());
+//        // Configure Sift object.  If you have multiple activities, you
+//        // probably should only do this in the "main" activity (the
+//        // activity that starts first).
+//        Sift.Config.Builder builder = new Sift.Config.Builder(Sift.get().getConfig());
 
         Button buttonUpload = (Button) findViewById(R.id.buttonUpload);
         buttonUpload.setOnClickListener(new Button.OnClickListener() {
@@ -50,57 +50,62 @@ public class HelloSift extends AppCompatActivity {
             }
         });
 
-        EditText editTextAccountId = (EditText) findViewById(R.id.editTextAccountId);
-        // Configure Sift object with UI component's default text (same
-        // below).
-        builder.withAccountId(editTextAccountId.getText().toString());
-        editTextAccountId.addTextChangedListener(new AfterTextChanged() {
-            @Override
-            public void afterTextChanged(Editable editable) {
-                Log.d(TAG, String.format("Account ID: \"%s\"", editable.toString()));
-                Sift sift = Sift.get();
-                sift.setConfig(new Sift.Config.Builder(sift.getConfig())
-                        .withAccountId(editable.toString())
-                        .build());
-            }
-        });
+//        EditText editTextAccountId = (EditText) findViewById(R.id.editTextAccountId);
+//        // Configure Sift object with UI component's default text (same
+//        // below).
+//        builder.withAccountId(editTextAccountId.getText().toString());
+//        editTextAccountId.addTextChangedListener(new AfterTextChanged() {
+//            @Override
+//            public void afterTextChanged(Editable editable) {
+//                Log.d(TAG, String.format("Account ID: \"%s\"", editable.toString()));
+//                Sift sift = Sift.get();
+//                sift.setConfig(new Sift.Config.Builder(sift.getConfig())
+//                        .withAccountId(editable.toString())
+//                        .build());
+//            }
+//        });
+//
+//        EditText editTextBeaconKey = (EditText) findViewById(R.id.editTextBeaconKey);
+//        builder.withBeaconKey(editTextBeaconKey.getText().toString());
+//        editTextBeaconKey.addTextChangedListener(new AfterTextChanged() {
+//            @Override
+//            public void afterTextChanged(Editable editable) {
+//                Log.d(TAG, String.format("Beacon key: \"%s\"", editable.toString()));
+//                Sift sift = Sift.get();
+//                sift.setConfig(new Sift.Config.Builder(sift.getConfig())
+//                        .withBeaconKey(editable.toString())
+//                        .build());
+//            }
+//        });
+//
+//        EditText editTextServerUrl = (EditText) findViewById(R.id.editTextServerUrl);
+//        builder.withServerUrlFormat(editTextServerUrl.getText().toString());
+//        editTextServerUrl.addTextChangedListener(new AfterTextChanged() {
+//            @Override
+//            public void afterTextChanged(Editable editable) {
+//                Log.d(TAG, String.format("Server URL: \"%s\"", editable.toString()));
+//                Sift sift = Sift.get();
+//                sift.setConfig(new Sift.Config.Builder(sift.getConfig())
+//                        .withServerUrlFormat(editable.toString())
+//                        .build());
+//            }
+//        });
+//
+//        Sift.get().setConfig(builder.build());
+//
+//        EditText editTextUserId = (EditText) findViewById(R.id.editTextUserId);
+//        editTextUserId.addTextChangedListener(new AfterTextChanged() {
+//            @Override
+//            public void afterTextChanged(Editable editable) {
+//                Log.d(TAG, String.format("User ID: \"%s\"", editable.toString()));
+//                Sift.get().setUserId(editable.toString());
+//            }
+//        });
+    }
 
-        EditText editTextBeaconKey = (EditText) findViewById(R.id.editTextBeaconKey);
-        builder.withBeaconKey(editTextBeaconKey.getText().toString());
-        editTextBeaconKey.addTextChangedListener(new AfterTextChanged() {
-            @Override
-            public void afterTextChanged(Editable editable) {
-                Log.d(TAG, String.format("Beacon key: \"%s\"", editable.toString()));
-                Sift sift = Sift.get();
-                sift.setConfig(new Sift.Config.Builder(sift.getConfig())
-                        .withBeaconKey(editable.toString())
-                        .build());
-            }
-        });
-
-        EditText editTextServerUrl = (EditText) findViewById(R.id.editTextServerUrl);
-        builder.withServerUrlFormat(editTextServerUrl.getText().toString());
-        editTextServerUrl.addTextChangedListener(new AfterTextChanged() {
-            @Override
-            public void afterTextChanged(Editable editable) {
-                Log.d(TAG, String.format("Server URL: \"%s\"", editable.toString()));
-                Sift sift = Sift.get();
-                sift.setConfig(new Sift.Config.Builder(sift.getConfig())
-                        .withServerUrlFormat(editable.toString())
-                        .build());
-            }
-        });
-
-        Sift.get().setConfig(builder.build());
-
-        EditText editTextUserId = (EditText) findViewById(R.id.editTextUserId);
-        editTextUserId.addTextChangedListener(new AfterTextChanged() {
-            @Override
-            public void afterTextChanged(Editable editable) {
-                Log.d(TAG, String.format("User ID: \"%s\"", editable.toString()));
-                Sift.get().setUserId(editable.toString());
-            }
-        });
+    @Override
+    protected void onStart() {
+        super.onStart();
     }
 
     @Override
@@ -108,6 +113,11 @@ public class HelloSift extends AppCompatActivity {
         super.onPause();
         Log.d(TAG, "onPause");
         Sift.get().save();
+    }
+
+    protected void onResume() {
+        super.onResume();
+        Sift.get().resume();
     }
 
     @Override

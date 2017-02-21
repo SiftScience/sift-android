@@ -9,6 +9,8 @@ import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Objects;
@@ -33,6 +35,9 @@ public class Sift {
     private static Sift instance;
     private static int openCount;
 
+    private static DevicePropertiesCollector devicePropertiesCollector;
+    private static AppStateCollector appStateCollector;
+
     /**
      * Call this method in every Activity instance's `onCreate()`
      * method.
@@ -41,6 +46,8 @@ public class Sift {
         if (instance == null) {
             try {
                 instance = new Sift(context);
+                devicePropertiesCollector = new DevicePropertiesCollector(instance, context);
+                appStateCollector = new AppStateCollector(instance, context);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -48,8 +55,10 @@ public class Sift {
         openCount++;
     }
 
-    public static synchronized void collect(@NonNull Context context) {
-        DevicePropertiesCollector.collect(instance, context);
+    public static synchronized void collect() {
+        // Invoke a collection for DevicePropertiesCollector only.
+        // AppStateCollector will wait for location callback.
+        devicePropertiesCollector.collect();
     }
 
     /** Return the shared Sift object. */
@@ -104,7 +113,7 @@ public class Sift {
          */
         public final String serverUrlFormat;
 
-        // The default no-args constructor for Gson.
+        // The default no-args constructor for JSON.
         Config() {
             this(null, null, DEFAULT_SERVER_URL_FORMAT);
         }
@@ -165,15 +174,22 @@ public class Sift {
     }
 
     /**
-     * The Gson object shared within this package, which is configured
+     * The JSON object shared within this package, which is configured
      * to generate JSON messages complied with our API doc.
      */
     static final ObjectMapper JSON = new ObjectMapper();
 
     // The default queue.
-    private static final String DEFAULT_QUEUE_IDENTIFIER = "siftscience.android.default";
-    private static final Queue.Config DEFAULT_QUEUE_CONFIG = new Queue.Config.Builder()
-            .withUploadWhenMoreThan(32)  // Unit: events.
+    public static final String DEVICE_PROPERTIES_QUEUE_IDENTIFIER = "siftscience.android.device";
+    private static final Queue.Config DEVICE_PROPERTIES_QUEUE_CONFIG = new Queue.Config.Builder()
+            .withAcceptSameEventAfter(TimeUnit.HOURS.toMillis(1))
+            .withUploadWhenMoreThan(8)
+            .withUploadWhenOlderThan(TimeUnit.MINUTES.toMillis(1))
+            .build();
+
+    public static final String APP_STATE_QUEUE_IDENTIFIER = "siftscience.android.app";
+    private static final Queue.Config APP_STATE_QUEUE_CONFIG = new Queue.Config.Builder()
+            .withUploadWhenMoreThan(32)
             .withUploadWhenOlderThan(TimeUnit.MINUTES.toMillis(1))
             .build();
 
@@ -240,6 +256,8 @@ public class Sift {
 
     @VisibleForTesting
     Sift(Context context, ListeningScheduledExecutorService executor) throws IOException {
+        JSON.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+
         archives = context.getSharedPreferences(ARCHIVE_NAME, Context.MODE_PRIVATE);
         this.executor = executor;
 
@@ -267,9 +285,13 @@ public class Sift {
         }
 
         // Construction is completed; now you may call instance methods.
-        // Create the default queue if there isn't one.
-        if (!queues.containsKey(DEFAULT_QUEUE_IDENTIFIER)) {
-            createQueue(DEFAULT_QUEUE_IDENTIFIER, DEFAULT_QUEUE_CONFIG);
+        // Create the queues if they don't exist.
+        if (!queues.containsKey(DEVICE_PROPERTIES_QUEUE_IDENTIFIER)) {
+            createQueue(DEVICE_PROPERTIES_QUEUE_IDENTIFIER, DEVICE_PROPERTIES_QUEUE_CONFIG);
+        }
+
+        if (!queues.containsKey(APP_STATE_QUEUE_IDENTIFIER)) {
+            createQueue(APP_STATE_QUEUE_IDENTIFIER, APP_STATE_QUEUE_CONFIG);
         }
     }
 
@@ -307,6 +329,12 @@ public class Sift {
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
+        this.appStateCollector.disconnectLocationServices();
+    }
+
+    public synchronized void resume() {
+        Log.i(TAG, "Save Sift object states");
+        this.appStateCollector.reconnectLocationServices();
     }
 
     /** Return the configurations of this Sift object. */
@@ -344,12 +372,6 @@ public class Sift {
         queue.setConfig(config);
         queues.put(identifier, queue);
         return queue;
-    }
-
-    /** Return the default event queue. */
-    @NonNull
-    public synchronized Queue getQueue() {
-        return Preconditions.checkNotNull(getQueue(DEFAULT_QUEUE_IDENTIFIER));
     }
 
     /**

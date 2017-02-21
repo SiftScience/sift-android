@@ -190,13 +190,12 @@ public class Queue {
         if (state.config.acceptSameEventAfter > 0 &&
                 now < state.lastEventTimestamp + state.config.acceptSameEventAfter &&
                 state.lastEvent != null &&
-                state.lastEvent.equals(event)) {
-            Log.d(TAG, String.format("Drop the same event of type \"%s\"",
-                    event.mobileEventType));
-            return;  // Drop the same event.
+                Utils.eventsAreBasicallyEqual(state.lastEvent, event)) {
+            Log.d(TAG, String.format("Drop duplicate event \"%s\"", event.toString()));
+            return;
         }
 
-        Log.i(TAG, String.format("Append event of type \"%s\"", event.mobileEventType));
+        Log.i(TAG, String.format("Append event \"%s\"", event.toString()));
         state.queue.add(event);
         state.lastEvent = event;
         state.lastEventTimestamp = now;

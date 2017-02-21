@@ -41,11 +41,27 @@ properties:
     required: false
     additionalProperties: false
     properties:
-      app_name:          {type: string, required: false}
-      app_version:       {type: string, required: false}
-      sdk_version:       {type: string, required: false}
+      app_name: {type: string, required: false}
+      app_version: {type: string, required: false}
+      sdk_version: {type: string, required: false}
+
+      mobile_carrier_name:     {type: string, required: false}
+      mobile_iso_country_code: {type: string, required: false}
+
+      device_manufacturer: {type: string, required: false}
+      device_model: {type: string, required: false}
 
       android_id: {type: string, required: false}
+
+  android_app_state:
+    scope: public
+    type: object
+    javaType: com.sift.api.representations.AndroidAppStateJson
+    required: false
+    additionalProperties: false
+    properties:
+      activity_class_name: {type: string, required: false}
+      location: {$ref: android_device_location.yaml, required: false}
 
   ios_app_state:
     scope: public

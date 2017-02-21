@@ -205,20 +205,28 @@ class Uploader {
                     }
 
                     Log.e(TAG, String.format(
-                            "HTTP error when upload batch: status=%d response=%s", code, body));
+                            "HTTP error when uploading batch: status=%d response=%s", code, body));
+
                     if (code == 400) {
-                        state.numRejects++;
+                        Log.e(TAG, "Drop batch due to 400");
+                        state.reset();
+                        batches.pop();
+                        executor.submit(checkState);
                     }
+
+                    state.numRejects++;
+
                 } catch (IOException e) {
-                    Log.e(TAG, "Network error when upload batch", e);
+                    Log.e(TAG, "Network error when uploading batch", e);
                 }
 
                 if (state.numRejects >= REJECTION_LIMIT) {
                     // This request has been rejected repeatedly; reset
                     // the state and move on to the next batch.
-                    Log.e(TAG, "Drop this batch due to repeated rejection");
+                    Log.e(TAG, "Drop batch due to repeated rejection");
                     state.reset();
                     batches.pop();
+
                     executor.submit(checkState);
 
                     // This is for testing.
@@ -261,14 +269,14 @@ class Uploader {
 
         Sift.Config config = configProvider.getConfig();
         if (config == null) {
-            Log.d(TAG, "Lack Sift.Config object");
+            Log.d(TAG, "Missing Sift.Config object");
             return null;
         }
 
         if (config.accountId == null ||
                 config.beaconKey == null ||
                 config.serverUrlFormat == null) {
-            Log.w(TAG, "Lack account ID, beacon key, and/or server URL format");
+            Log.w(TAG, "Missing account ID, beacon key, and/or server URL format");
             return null;
         }
 
