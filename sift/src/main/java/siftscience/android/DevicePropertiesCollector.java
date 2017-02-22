@@ -28,9 +28,11 @@ public class DevicePropertiesCollector {
     }
 
     public void collect() {
+        AndroidDevicePropertiesJson deviceProperties = this.get();
         this.sift.getQueue(Sift.DEVICE_PROPERTIES_QUEUE_IDENTIFIER).append(
                 MobileEventJson.newBuilder()
-                        .withAndroidDeviceProperties(this.get())
+                        .withAndroidDeviceProperties(deviceProperties)
+                        .withInstallationId(deviceProperties.androidId)
                         .withTime(Time.now())
                         .build());
     }

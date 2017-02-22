@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -54,9 +55,12 @@ public class AppStateCollector implements LocationListener,
     }
 
     public void collect() {
+        String installationId = Settings.Secure.getString(this.context.getContentResolver(),
+                Settings.Secure.ANDROID_ID);
         this.sift.getQueue(Sift.APP_STATE_QUEUE_IDENTIFIER).append(
                 MobileEventJson.newBuilder()
                         .withAndroidAppState(this.get())
+                        .withInstallationId(installationId)
                         .withTime(Time.now())
                         .build());
     }
