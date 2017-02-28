@@ -2,9 +2,12 @@ package siftscience.android;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.BatteryManager;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -22,10 +25,16 @@ import com.sift.api.representations.AndroidDeviceLocationJson;
 import com.sift.api.representations.MobileEventJson;
 
 import java.math.BigDecimal;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by gary on 1/30/17.
+ * Collectors for AndroidAppState
  */
 public class AppStateCollector implements LocationListener,
         GoogleApiClient.ConnectionCallbacks,
@@ -80,16 +89,62 @@ public class AppStateCollector implements LocationListener,
     }
 
     private AndroidAppStateJson get() {
-        if (this.lastLocation != null) {
-            return AndroidAppStateJson.newBuilder()
-                    .withActivityClassName(this.context.getClass().getSimpleName())
-                    .withLocation(this.getLocation())
-                    .build();
+        Intent batteryStatus = context.registerReceiver(null,
+                new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+
+        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        double batteryLevel = -1;
+        if (level != -1 && scale != -1) {
+            batteryLevel = (double) level / scale;
         }
 
-        return AndroidAppStateJson.newBuilder()
+        // unknown=1, charging=2, discharging=3, not charging=4, full=5
+        int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+        // ac=1, usb=2, wireless=4
+        int plugState = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+        // unknown=1, good=2, overheat=3, dead=4, over voltage=5, unspecified failure=6, cold=7
+        int health = batteryStatus.getIntExtra(BatteryManager.EXTRA_HEALTH, -1);
+
+        List<String> ipAddresses = getIpAddresses();
+
+        AndroidAppStateJson.Builder builder = AndroidAppStateJson.newBuilder()
                 .withActivityClassName(this.context.getClass().getSimpleName())
-                .build();
+                .withBatteryLevel(batteryLevel)
+                .withBatteryState((long) status)
+                .withBatteryHealth((long) health)
+                .withPlugState((long) plugState)
+                .withNetworkAddresses(ipAddresses);
+
+        if (this.lastLocation != null) {
+            return builder.withLocation(this.getLocation()).build();
+        }
+
+        return builder.build();
+    }
+
+    private List<String> getIpAddresses() {
+        List<String> addresses = new ArrayList<>();
+        try {
+            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces();
+                    en.hasMoreElements();) {
+                NetworkInterface intf = en.nextElement();
+                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses();
+                     enumIpAddr.hasMoreElements();) {
+                    InetAddress inetAddress = enumIpAddr.nextElement();
+                    if (!inetAddress.isLoopbackAddress()) {
+                        String address = inetAddress.getHostAddress().toLowerCase();
+                        if (address.indexOf('%') > -1) { // Truncate zone in IPv6 if present
+                            address = address.substring(0, address.indexOf('%'));
+                        }
+                        addresses.add(address);
+                    }
+                }
+            }
+        } catch (SocketException e) {
+            Log.e(TAG, e.toString());
+        }
+        return addresses;
     }
 
     private AndroidDeviceLocationJson getLocation() {

@@ -18,6 +18,11 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+
+        // TODO: currently used for testing on device. may need to remove before release
+        debug {
+            debuggable true
+        }
     }
 
     packagingOptions {

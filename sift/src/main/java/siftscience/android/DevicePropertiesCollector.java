@@ -1,12 +1,10 @@
 package siftscience.android;
 
-import android.Manifest;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.provider.Settings;
-import android.support.v4.content.ContextCompat;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
@@ -61,6 +59,7 @@ public class DevicePropertiesCollector {
         String deviceModel;
         String mobileCarrierName;
         String mobileCarrierIsoCountryCode;
+        String systemVersion;
 
         mobileCarrierName = telephonyManager.getNetworkOperatorName();
         mobileCarrierIsoCountryCode = telephonyManager.getNetworkCountryIso();
@@ -68,6 +67,7 @@ public class DevicePropertiesCollector {
         deviceModel = Build.MODEL;
         androidId = Settings.Secure.getString(this.context.getContentResolver(),
                 Settings.Secure.ANDROID_ID);
+        systemVersion = Build.VERSION.RELEASE;
 
         return AndroidDevicePropertiesJson.newBuilder()
                 .withAppName(appName)
@@ -78,6 +78,7 @@ public class DevicePropertiesCollector {
                 .withDeviceModel(deviceModel)
                 .withMobileCarrierName(mobileCarrierName)
                 .withMobileIsoCountryCode(mobileCarrierIsoCountryCode)
+                .withSystemVersion(systemVersion)
                 .build();
     }
 }
