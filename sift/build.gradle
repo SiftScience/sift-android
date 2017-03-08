@@ -1,5 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'jsonschema2pojo'
+apply from: 'maven-push.gradle'
 
 buildscript {
     repositories {
@@ -77,7 +78,7 @@ jsonSchema2Pojo {
     source = files('src/main/json')
 }
 
-task compile(dependsOn: 'generateJsonSchema2PojoForRelease') << {
+task compileAndroid(dependsOn: 'generateJsonSchema2PojoForRelease') << {
     if (project.hasProperty('diff')) {
         def JAVA_DIR = '../code/java/sift-json/src/main/json/'
         def androidDir = new File('sift/src/main/json')
@@ -95,4 +96,25 @@ task compile(dependsOn: 'generateJsonSchema2PojoForRelease') << {
             throw new GradleException("The following files are not in sync:\n${diffFiles.join('\n')}")
         }
     }
+}
+
+task copyJsonClasses(type: Copy) {
+    from('./build/generated/source/js2p/release/com/sift/api/representations') {
+        include '**/*.java'
+    }
+
+    into 'src/main/java/com/sift/api/representations'
+
+    outputs.upToDateWhen { false }
+}
+
+task cleanJsonBuild(type: Delete, dependsOn: 'copyJsonClasses') {
+    delete './build/generated/source/js2p/debug/com/sift/api/representations'
+    delete './build/generated/source/js2p/release/com/sift/api/representations'
+
+    outputs.upToDateWhen { false }
+}
+
+afterEvaluate {
+    generateJsonSchema2PojoForRelease.finalizedBy cleanJsonBuild
 }

@@ -6,7 +6,6 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 
 import com.sift.api.representations.AndroidDevicePropertiesJson;
 import com.sift.api.representations.MobileEventJson;
