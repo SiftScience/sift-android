@@ -12,11 +12,14 @@ import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.sift.api.representations.MobileEventJson;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.GZIPOutputStream;
 
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -164,7 +167,7 @@ class Uploader {
                 if (state.request == null) {
                     try {
                         state.request = makeRequest();
-                    } catch (JsonProcessingException e) {
+                    } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
@@ -261,7 +264,7 @@ class Uploader {
 
     /** Make an HTTP request object from the first batch of events. */
     @Nullable
-    private Request makeRequest() throws JsonProcessingException {
+    private Request makeRequest() throws IOException {
         List<MobileEventJson> events = batches.peek();
         if (events == null) {
             return null;  // Nothing to upload.
@@ -284,10 +287,18 @@ class Uploader {
         String encodedBeaconKey = BaseEncoding.base64().encode(
                 config.beaconKey.getBytes(US_ASCII));
         ListRequest request = new ListRequest(events);
+
+        byte[] data = Sift.JSON.writeValueAsBytes(request);
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        OutputStream gzip = new GZIPOutputStream(os);
+        gzip.write(data);
+        gzip.close();
+
         return new Request.Builder()
                 .url(String.format(config.serverUrlFormat, config.accountId))
                 .header("Authorization", "Basic " + encodedBeaconKey)
-                .put(RequestBody.create(JSON, Sift.JSON.writeValueAsBytes(request)))
+                .header("Content-Encoding", "gzip")
+                .put(RequestBody.create(JSON, os.toByteArray()))
                 .build();
     }
 }
