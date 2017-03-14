@@ -19,6 +19,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.common.collect.Lists;
 import com.sift.api.representations.AndroidAppStateJson;
 import com.sift.api.representations.AndroidDeviceLocationJson;
 import com.sift.api.representations.MobileEventJson;
@@ -134,7 +135,7 @@ public class AppStateCollector implements LocationListener,
     }
 
     private List<String> getIpAddresses() {
-        List<String> addresses = new ArrayList<>();
+        List<String> addresses = Lists.newArrayList();
         try {
             for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces();
                     en.hasMoreElements();) {

@@ -55,6 +55,12 @@ properties:
 
       android_id: {type: string, required: false}
 
+      build_tags: {type: string, required: false}
+      evidence_files_present: {type: array, items: {type: string}, required: false}
+      evidence_packages_present: {type: array, items: {type: string}, required: false}
+      evidence_properties: {type: array, items: {type: string}, required: false}
+      evidence_directories_writable: {type: array, items: {type: string}, required: false}
+
   android_app_state:
     scope: public
     type: object
