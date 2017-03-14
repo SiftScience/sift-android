@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.location.LocationManager;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -46,7 +45,6 @@ public class AppStateCollector implements LocationListener,
 
     private GoogleApiClient googleApiClient;
     private LocationRequest locationRequest;
-    private LocationManager locationManager;
 
     private Location lastLocation;
 
@@ -54,13 +52,17 @@ public class AppStateCollector implements LocationListener,
         this.sift = sift;
         this.context = context;
 
-        this.googleApiClient = new GoogleApiClient.Builder(this.context)
-                .addApi(LocationServices.API)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
-
-        this.googleApiClient.connect();
+        Log.d(TAG, "Connect location services");
+        try {
+            this.googleApiClient = new GoogleApiClient.Builder(this.context)
+                    .addApi(LocationServices.API)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .build();
+            this.googleApiClient.connect();
+        } catch(Exception e) {
+            Log.e(TAG, e.toString());
+        }
     }
 
     public void collect() {
@@ -77,15 +79,23 @@ public class AppStateCollector implements LocationListener,
     public void disconnectLocationServices() {
         Log.d(TAG, "Disconnect location services");
 
-        if (this.googleApiClient.isConnected()) {
-            this.googleApiClient.disconnect();
+        try {
+            if (this.googleApiClient.isConnected()) {
+                this.googleApiClient.disconnect();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, e.toString());
         }
     }
 
     public void reconnectLocationServices() {
         Log.d(TAG, "Reconnect location services");
 
-        this.googleApiClient.connect();
+        try {
+            this.googleApiClient.connect();
+        } catch (Exception e) {
+            Log.e(TAG, e.toString());
+        }
     }
 
     private AndroidAppStateJson get() {

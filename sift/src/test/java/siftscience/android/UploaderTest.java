@@ -5,6 +5,8 @@ package siftscience.android;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.sift.api.representations.AndroidDevicePropertiesJson;
+import com.sift.api.representations.MobileEventJson;
 
 import org.junit.After;
 import org.junit.Before;
@@ -62,7 +64,7 @@ public class UploaderTest {
     public void testUploadNothing() throws Exception {
         OkHttpClient client = mock(OkHttpClient.class);
         Uploader uploader = new Uploader(null, 0L, executor, CONFIG_PROVIDER, client);
-        uploader.upload(ImmutableList.<Event>of());
+        uploader.upload(ImmutableList.<MobileEventJson>of());
         verifyZeroInteractions(client);
     }
 
@@ -70,7 +72,7 @@ public class UploaderTest {
     public void testUpload() throws Exception {
         assertTrue(Uploader.REJECTION_LIMIT > 2);
         // Don't nest mocking calls; mockito can't handle that.
-        Call[] calls = new Call[] {makeCall(400), makeCall(400), makeCall(200)};
+        Call[] calls = new Call[] {makeCall(429), makeCall(429), makeCall(200)};
 
         OkHttpClient client = mock(OkHttpClient.class);
         when(client.newCall(any(Request.class)))
@@ -82,7 +84,18 @@ public class UploaderTest {
         uploader.onRequestCompletion = new Semaphore(0);
         uploader.onRequestRejection = new Semaphore(0);
 
-        uploader.upload(ImmutableList.of(new Event("type", "path-1", null)));
+
+        MobileEventJson event = MobileEventJson.newBuilder()
+                .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
+                        .withAndroidId("foo")
+                        .withDeviceManufacturer("bar")
+                        .withDeviceModel("baz")
+                        .build()
+                )
+                .withTime(System.currentTimeMillis())
+                .build();
+
+        uploader.upload(ImmutableList.of(event));
 
         assertTrue(uploader.onRequestCompletion.tryAcquire(1, TimeUnit.SECONDS));
         assertTrue(uploader.onRequestCompletion.availablePermits() == 0);
@@ -97,14 +110,12 @@ public class UploaderTest {
         assertTrue(Uploader.REJECTION_LIMIT == 3);
         // Don't nest mocking calls; mockito can't handle that.
         Call[] calls = new Call[] {
-                makeCall(400),
-                makeCall(404),  // 404s are not counted for rejections.
-                makeCall(400),
-                makeCall(404),
-                makeCall(400),  // The third rejection.
-                makeCall(404),
-                makeCall(400),
-                makeCall(404),
+                makeCall(429),
+                makeCall(429),
+                makeCall(429),
+                makeCall(429),
+                makeCall(429),
+
         };
 
         OkHttpClient client = mock(OkHttpClient.class);
@@ -117,14 +128,24 @@ public class UploaderTest {
         uploader.onRequestCompletion = new Semaphore(0);
         uploader.onRequestRejection = new Semaphore(0);
 
-        uploader.upload(ImmutableList.of(new Event("type", "path-1", null)));
+        MobileEventJson event = MobileEventJson.newBuilder()
+                .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
+                        .withAndroidId("foo")
+                        .withDeviceManufacturer("bar")
+                        .withDeviceModel("baz")
+                        .build()
+                )
+                .withTime(System.currentTimeMillis())
+                .build();
+
+        uploader.upload(ImmutableList.of(event));
 
         assertTrue(uploader.onRequestCompletion.availablePermits() == 0);
-
         assertTrue(uploader.onRequestRejection.tryAcquire(1, TimeUnit.SECONDS));
         assertTrue(uploader.onRequestRejection.availablePermits() == 0);
 
-        verify(client, times(5)).newCall(any(Request.class));
+        // The last two calls are in excess of the rejection limit
+        verify(client, times(Uploader.REJECTION_LIMIT)).newCall(any(Request.class));
     }
 
     @Test
@@ -146,10 +167,40 @@ public class UploaderTest {
         uploader.onRequestCompletion = new Semaphore(0);
         uploader.onRequestRejection = new Semaphore(0);
 
+        MobileEventJson event0 = MobileEventJson.newBuilder()
+                .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
+                        .withAndroidId("foo0")
+                        .withDeviceManufacturer("bar0")
+                        .withDeviceModel("baz0")
+                        .build()
+                )
+                .withTime(System.currentTimeMillis())
+                .build();
+
+        MobileEventJson event1 = MobileEventJson.newBuilder()
+                .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
+                        .withAndroidId("foo1")
+                        .withDeviceManufacturer("bar1")
+                        .withDeviceModel("baz1")
+                        .build()
+                )
+                .withTime(System.currentTimeMillis())
+                .build();
+
+        MobileEventJson event2 = MobileEventJson.newBuilder()
+                .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
+                        .withAndroidId("foo2")
+                        .withDeviceManufacturer("bar2")
+                        .withDeviceModel("baz2")
+                        .build()
+                )
+                .withTime(System.currentTimeMillis())
+                .build();
+
         // Upload 3 batches.
-        uploader.upload(ImmutableList.of(new Event("type", "path-1", null)));
-        uploader.upload(ImmutableList.of(new Event("type", "path-2", null)));
-        uploader.upload(ImmutableList.of(new Event("type", "path-3", null)));
+        uploader.upload(ImmutableList.of(event0));
+        uploader.upload(ImmutableList.of(event1));
+        uploader.upload(ImmutableList.of(event2));
 
         assertTrue(uploader.onRequestCompletion.tryAcquire(1, TimeUnit.SECONDS));
         assertTrue(uploader.onRequestCompletion.tryAcquire(1, TimeUnit.SECONDS));

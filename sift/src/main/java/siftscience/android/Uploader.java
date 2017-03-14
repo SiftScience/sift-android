@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Lists;
 import com.google.common.io.BaseEncoding;
@@ -249,6 +250,7 @@ class Uploader {
     };
 
     /** The list request class as defined in Sift API doc. */
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
     private static class ListRequest {
         final List<MobileEventJson> data;
         ListRequest(List<MobileEventJson> data) {

@@ -40,6 +40,10 @@ android {
         textOutput 'stdout'
         disable 'InvalidPackage'  // See https://github.com/square/okio/issues/58
     }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
 }
 
 dependencies {
@@ -116,5 +120,6 @@ task cleanJsonBuild(type: Delete, dependsOn: 'copyJsonClasses') {
 }
 
 afterEvaluate {
+    generateJsonSchema2PojoForDebug.finalizedBy cleanJsonBuild
     generateJsonSchema2PojoForRelease.finalizedBy cleanJsonBuild
 }

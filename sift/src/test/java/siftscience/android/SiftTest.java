@@ -6,10 +6,10 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.annotation.Nullable;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ListeningScheduledExecutorService;
+import com.sift.api.representations.MobileEventJson;
 
 import org.junit.Test;
 
@@ -170,7 +170,7 @@ public class SiftTest {
         assertNull(sift.getUserId());
 
         // There is always a default queue.
-        assertNotNull(sift.getQueue());
+        assertNotNull(sift.getQueue(Sift.DEVICE_PROPERTIES_QUEUE_IDENTIFIER));
 
         assertNull(sift.getQueue("some-queue"));
         assertNotNull(sift.createQueue("some-queue", new Queue.Config.Builder().build()));
@@ -188,16 +188,20 @@ public class SiftTest {
     public void testSave() throws Exception {
         MemorySharedPreferences preferences = new MemorySharedPreferences();
 
+        Sift.open(mockContext(preferences));
+
         Sift sift1 =
                 new Sift(mockContext(preferences), mock(ListeningScheduledExecutorService.class));
         assertTrue(preferences.fields.isEmpty());
 
-        sift1.getQueue().append(new Event("type", "path", ImmutableMap.of("key", "value")));
+        sift1.getQueue(Sift.DEVICE_PROPERTIES_QUEUE_IDENTIFIER)
+                .append(MobileEventJson.newBuilder().build());
         sift1.save();
         assertEquals(
                 ImmutableSet.of(
                         "config",
-                        "queue/siftscience.android.default",
+                        "queue/siftscience.android.app",
+                        "queue/siftscience.android.device",
                         "uploader",
                         "user_id"
                 ),
@@ -227,7 +231,8 @@ public class SiftTest {
         assertEquals(
                 ImmutableSet.of(
                         "config",
-                        "queue/siftscience.android.default",
+                        "queue/siftscience.android.app",
+                        "queue/siftscience.android.device",
                         "queue/some-queue",
                         "uploader",
                         "user_id"

@@ -5,6 +5,7 @@ package siftscience.android;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListeningScheduledExecutorService;
@@ -128,6 +129,7 @@ public class Queue {
     }
 
     // States that are archived.
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
     private static class State {
 
         Config config;

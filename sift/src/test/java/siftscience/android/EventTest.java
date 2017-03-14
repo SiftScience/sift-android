@@ -2,9 +2,12 @@
 
 package siftscience.android;
 
-import com.google.common.collect.ImmutableMap;
+import com.sift.api.representations.AndroidDevicePropertiesJson;
+import com.sift.api.representations.MobileEventJson;
 
 import org.junit.Test;
+
+import java.io.IOException;
 
 import static org.junit.Assert.*;
 
@@ -12,27 +15,47 @@ public class EventTest {
 
     @Test
     public void testEventEssentiallyEquals() {
-        Event event0 = new Event("type-0", "path-0", ImmutableMap.of(
-                "key-1", "value-1",
-                "key-2", "value-2"));
-        Event event1 = new Event("type-0", "path-0", ImmutableMap.of(
-                "key-1", "value-1",
-                "key-2", "value-2"));
-        event1.time = event0.time + 1;  // Make sure their `time` differ.
+        long now = System.currentTimeMillis();
 
-        assertTrue(event0.basicallyEquals(event1));
+        MobileEventJson event0 = MobileEventJson.newBuilder()
+                .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
+                        .withAndroidId("foo")
+                        .withDeviceManufacturer("bar")
+                        .withDeviceModel("baz")
+                        .build()
+                )
+                .withTime(now)
+                .build();
+
+        MobileEventJson event1 = MobileEventJson.newBuilder()
+                .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
+                        .withAndroidId("foo")
+                        .withDeviceManufacturer("bar")
+                        .withDeviceModel("baz")
+                        .build()
+                )
+                .withTime(now)
+                .build();
+
+        assertTrue(Utils.eventsAreBasicallyEqual(event0, event1));
     }
 
     @Test
-    public void testEventToJson() {
-        Event event = new Event("type-0", "path-0", ImmutableMap.of(
-                "key-1", "value-1",
-                "key-2", "value-2"));
-        event.installationId = "some-id";
-        event.deviceProperties = ImmutableMap.of("prop", "value");
+    public void testEventToJson() throws IOException {
+        MobileEventJson event = MobileEventJson.newBuilder()
+                .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
+                        .withAndroidId("foo")
+                        .withDeviceManufacturer("bar")
+                        .withDeviceModel("baz")
+                        .build()
+                )
+                .withTime(System.currentTimeMillis())
+                .build();
 
-        Event actual = Sift.GSON.fromJson(Sift.GSON.toJson(event), Event.class);
-        assertTrue(event.basicallyEquals(actual));
+        MobileEventJson actual = Sift.JSON.readValue(Sift.JSON.writeValueAsBytes(event),
+                MobileEventJson.class);
+
+        assertTrue(Utils.eventsAreBasicallyEqual(event, actual));
         assertEquals(event.time, actual.time);
     }
 }
