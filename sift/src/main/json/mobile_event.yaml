@@ -50,8 +50,7 @@ properties:
 
       device_manufacturer: {type: string, required: false}
       device_model: {type: string, required: false}
-
-      system_version: {type: string, required: false}
+      device_system_version: {type: string, required: false}
 
       android_id: {type: string, required: false}
 
