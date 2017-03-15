@@ -144,7 +144,7 @@ public class DevicePropertiesCollector {
                 .withDeviceModel(deviceModel)
                 .withMobileCarrierName(mobileCarrierName)
                 .withMobileIsoCountryCode(mobileCarrierIsoCountryCode)
-                .withSystemVersion(systemVersion)
+                .withDeviceSystemVersion(systemVersion)
                 .withBuildTags(buildTags)
                 .withEvidenceFilesPresent(evidenceFiles)
                 .withEvidencePackagesPresent(evidencePackages)
