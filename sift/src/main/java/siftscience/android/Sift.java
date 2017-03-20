@@ -183,8 +183,6 @@ public class Sift {
     public static final String DEVICE_PROPERTIES_QUEUE_IDENTIFIER = "siftscience.android.device";
     private static final Queue.Config DEVICE_PROPERTIES_QUEUE_CONFIG = new Queue.Config.Builder()
             .withAcceptSameEventAfter(TimeUnit.HOURS.toMillis(1))
-            .withUploadWhenMoreThan(8)
-            .withUploadWhenOlderThan(TimeUnit.MINUTES.toMillis(1))
             .build();
 
     public static final String APP_STATE_QUEUE_IDENTIFIER = "siftscience.android.app";

@@ -37,4 +37,23 @@ android {
 dependencies {
     compile 'com.android.support:appcompat-v7:25.0.0'
     compile project(':sift')
+
+    androidTestCompile 'com.android.support:support-annotations:25.0.0'
+    androidTestCompile 'com.android.support.test:runner:0.5'
+    androidTestCompile 'com.android.support.test:rules:0.5'
+    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.2'
+}
+
+if (project.file('../keys.gradle').exists()) {
+    apply plugin: 'devicefarm'
+    apply from: '../keys.gradle'
+
+    devicefarm {
+        projectName 'sift-android-private'
+        devicePool 'mini pool'
+        authentication {
+            accessKey a
+            secretKey s
+        }
+    }
 }

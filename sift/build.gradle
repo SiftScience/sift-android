@@ -5,7 +5,7 @@ apply from: 'maven-push.gradle'
 buildscript {
     repositories {
         flatDir {
-          dirs '../lib/jsonschema2pojo/lib'
+            dirs '../lib/jsonschema2pojo/lib'
         }
     }
     dependencies {
@@ -44,6 +44,14 @@ android {
     testOptions {
         unitTests.returnDefaultValues = true
     }
+
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+    }
 }
 
 dependencies {
@@ -51,7 +59,7 @@ dependencies {
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version:'2.3.3'
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version:'2.3.3'
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version:'2.3.3'
-    
+
     compile 'javax.validation:validation-api:1.1.0.Final'
     compile 'javax.annotation:javax.annotation-api:1.2'
     compile 'com.google.guava:guava:19.0'
@@ -100,26 +108,4 @@ task compileAndroid(dependsOn: 'generateJsonSchema2PojoForRelease') << {
             throw new GradleException("The following files are not in sync:\n${diffFiles.join('\n')}")
         }
     }
-}
-
-task copyJsonClasses(type: Copy) {
-    from('./build/generated/source/js2p/release/com/sift/api/representations') {
-        include '**/*.java'
-    }
-
-    into 'src/main/java/com/sift/api/representations'
-
-    outputs.upToDateWhen { false }
-}
-
-task cleanJsonBuild(type: Delete, dependsOn: 'copyJsonClasses') {
-    delete './build/generated/source/js2p/debug/com/sift/api/representations'
-    delete './build/generated/source/js2p/release/com/sift/api/representations'
-
-    outputs.upToDateWhen { false }
-}
-
-afterEvaluate {
-    generateJsonSchema2PojoForDebug.finalizedBy cleanJsonBuild
-    generateJsonSchema2PojoForRelease.finalizedBy cleanJsonBuild
 }
