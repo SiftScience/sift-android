@@ -22,7 +22,7 @@ android {
         minSdkVersion 16  // Jelly Bean 4.1.x (basically Java 6)
         targetSdkVersion 25
         versionCode 1
-        versionName '0.0.1'
+        versionName '0.0.2'
     }
 
     // This makes it slightly nicer to code (like diamond operator) but
