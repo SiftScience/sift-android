@@ -53,16 +53,19 @@ public class AppStateCollector implements LocationListener,
         this.sift = sift;
         this.context = context;
 
-        Log.d(TAG, "Connect location services");
-        try {
-            this.googleApiClient = new GoogleApiClient.Builder(this.context)
-                    .addApi(LocationServices.API)
-                    .addConnectionCallbacks(this)
-                    .addOnConnectionFailedListener(this)
-                    .build();
-            this.googleApiClient.connect();
-        } catch(Exception e) {
-            Log.e(TAG, e.toString());
+        if (!sift.getConfig().disallowLocationCollection) {
+            try {
+                this.googleApiClient = new GoogleApiClient.Builder(this.context)
+                        .addApi(LocationServices.API)
+                        .addConnectionCallbacks(this)
+                        .addOnConnectionFailedListener(this)
+                        .build();
+                this.googleApiClient.connect();
+            } catch(Exception e) {
+                Log.e(TAG, e.toString());
+            }
+        } else {
+            this.collect();
         }
     }
 
@@ -81,7 +84,8 @@ public class AppStateCollector implements LocationListener,
         Log.d(TAG, "Disconnect location services");
 
         try {
-            if (this.googleApiClient.isConnected()) {
+            if (!this.sift.getConfig().disallowLocationCollection &&
+                    this.googleApiClient.isConnected()) {
                 this.googleApiClient.disconnect();
             }
         } catch (Exception e) {
@@ -93,7 +97,9 @@ public class AppStateCollector implements LocationListener,
         Log.d(TAG, "Reconnect location services");
 
         try {
-            this.googleApiClient.connect();
+            if (!this.sift.getConfig().disallowLocationCollection) {
+                this.googleApiClient.connect();
+            }
         } catch (Exception e) {
             Log.e(TAG, e.toString());
         }

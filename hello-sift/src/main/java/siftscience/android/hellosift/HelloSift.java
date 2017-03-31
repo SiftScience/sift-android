@@ -29,14 +29,12 @@ public class HelloSift extends AppCompatActivity {
         editor.clear();
         editor.commit();
 
-        Sift.open(this);
-
-        Sift.get().setUserId("nick");
-        Sift.get().setConfig(new Sift.Config.Builder()
+        Sift.open(this, new Sift.Config.Builder()
                 .withAccountId("4e1a50e172beb95cf1e4ae54")
                 .withBeaconKey("f92ed5bf7b")
-                .build()
-        );
+                .build());
+
+        Sift.get().setUserId("gary");
 
         Sift.collect();
 

@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -159,13 +160,14 @@ public class SiftTest {
         MemorySharedPreferences preferences = new MemorySharedPreferences();
 
         Sift sift = new Sift(
-                mockContext(preferences), mock(ListeningScheduledExecutorService.class));
+                mockContext(preferences), null, mock(ListeningScheduledExecutorService.class));
 
         assertNotNull(sift.getConfig());
         // Verify default values.
         assertNull(sift.getConfig().accountId);
         assertNull(sift.getConfig().beaconKey);
         assertNotNull(sift.getConfig().serverUrlFormat);
+        assertFalse(sift.getConfig().disallowLocationCollection);
 
         assertNull(sift.getUserId());
 
@@ -191,7 +193,7 @@ public class SiftTest {
         Sift.open(mockContext(preferences));
 
         Sift sift1 =
-                new Sift(mockContext(preferences), mock(ListeningScheduledExecutorService.class));
+                new Sift(mockContext(preferences), null, mock(ListeningScheduledExecutorService.class));
         assertTrue(preferences.fields.isEmpty());
 
         sift1.getQueue(Sift.DEVICE_PROPERTIES_QUEUE_IDENTIFIER)
@@ -210,7 +212,7 @@ public class SiftTest {
 
         // Load saved Sift instance state.
         Sift sift2 =
-                new Sift(mockContext(preferences), mock(ListeningScheduledExecutorService.class));
+                new Sift(mockContext(preferences), null, mock(ListeningScheduledExecutorService.class));
         assertEquals(sift1.getConfig(), sift2.getConfig());
         assertNull(sift2.getUserId());
 
@@ -239,10 +241,10 @@ public class SiftTest {
                 ),
                 preferences.fields.keySet()
         );
-
+        
         // Load saved Sift instance state again.
         Sift sift3 =
-                new Sift(mockContext(preferences), mock(ListeningScheduledExecutorService.class));
+                new Sift(mockContext(preferences), null, mock(ListeningScheduledExecutorService.class));
         assertNotEquals(sift1.getConfig(), sift3.getConfig());
         assertEquals(sift2.getConfig(), sift3.getConfig());
         assertEquals("user-id", sift3.getUserId());

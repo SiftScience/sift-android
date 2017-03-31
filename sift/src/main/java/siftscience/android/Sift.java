@@ -43,9 +43,16 @@ public class Sift {
      * method.
      */
     public static synchronized void open(@NonNull Context context) {
+        open(context, null);
+    }
+
+    /**
+     * Call this method in your application's main Activity.
+     */
+    public static synchronized void open(@NonNull Context context, Config config) {
         if (instance == null) {
             try {
-                instance = new Sift(context);
+                instance = new Sift(context, config);
                 devicePropertiesCollector = new DevicePropertiesCollector(instance, context);
                 appStateCollector = new AppStateCollector(instance, context);
             } catch (IOException e) {
@@ -101,29 +108,31 @@ public class Sift {
         private static final String DEFAULT_SERVER_URL_FORMAT =
                 "https://api3.siftscience.com/v3/accounts/%s/mobile_events";
 
-        /** Your account ID; default to null. */
+        /** Your account ID; defaults to null. */
         public final String accountId;
 
-        /** Your beacon key; default to null. */
+        /** Your beacon key; defaults to null. */
         public final String beaconKey;
 
-        /**
-         * The location of the API endpoint.  You may overwrite this
-         * for testing.
-         */
+        /** The location of the API endpoint. May be overwritten for testing. */
         public final String serverUrlFormat;
+
+        /** Whether to allow location collection; defaults to false. */
+        public final boolean disallowLocationCollection;
 
         // The default no-args constructor for JSON.
         Config() {
-            this(null, null, DEFAULT_SERVER_URL_FORMAT);
+            this(null, null, DEFAULT_SERVER_URL_FORMAT, false);
         }
 
         private Config(String accountId,
                        String beaconKey,
-                       String serverUrlFormat) {
+                       String serverUrlFormat,
+                       boolean disallowLocationCollection) {
             this.accountId = accountId;
             this.beaconKey = beaconKey;
             this.serverUrlFormat = serverUrlFormat;
+            this.disallowLocationCollection = disallowLocationCollection;
         }
 
         @Override
@@ -134,7 +143,8 @@ public class Sift {
             Config that  = (Config) other;
             return Objects.equal(accountId, that.accountId) &&
                     Objects.equal(beaconKey, that.beaconKey) &&
-                    Objects.equal(serverUrlFormat, that.serverUrlFormat);
+                    Objects.equal(serverUrlFormat, that.serverUrlFormat) &&
+                    Objects.equal(disallowLocationCollection, that.disallowLocationCollection);
         }
 
         public static class Builder {
@@ -147,6 +157,7 @@ public class Sift {
                 accountId = config.accountId;
                 beaconKey = config.beaconKey;
                 serverUrlFormat = config.serverUrlFormat;
+                disallowLocationCollection = config.disallowLocationCollection;
             }
 
             private String accountId;
@@ -167,8 +178,14 @@ public class Sift {
                 return this;
             }
 
+            private boolean disallowLocationCollection;
+            public Builder withDisallowLocationCollection(boolean disallowLocationCollection) {
+                this.disallowLocationCollection = disallowLocationCollection;
+                return this;
+            }
+
             public Config build() {
-                return new Config(accountId, beaconKey, serverUrlFormat);
+                return new Config(accountId, beaconKey, serverUrlFormat, disallowLocationCollection);
             }
         }
     }
@@ -247,25 +264,29 @@ public class Sift {
         }
     };
 
-    private Sift(Context context) throws IOException {
-        this(context, MoreExecutors.listeningDecorator(
+    private Sift(Context context, Config config) throws IOException {
+        this(context, config, MoreExecutors.listeningDecorator(
                 Executors.newSingleThreadScheduledExecutor()));
     }
 
     @VisibleForTesting
-    Sift(Context context, ListeningScheduledExecutorService executor) throws IOException {
+    Sift(Context context, Config conf, ListeningScheduledExecutorService executor) throws IOException {
         JSON.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
 
         archives = context.getSharedPreferences(ARCHIVE_NAME, Context.MODE_PRIVATE);
         this.executor = executor;
 
         // Load archived data.
-
         String archive;
 
         archive = archives.getString(ArchiveKey.CONFIG.key, null);
 
-        config = archive == null ? new Config() : JSON.readValue(archive, Config.class);
+        if (archive == null) {
+            config = conf == null ? new Config() : conf;
+        } else {
+            config = JSON.readValue(archive, Config.class);
+        }
+
         userId = archives.getString(ArchiveKey.USER_ID.key, null);
 
         archive = archives.getString(ArchiveKey.UPLOADER.key, null);

@@ -31,14 +31,12 @@ public class HelloSiftTest extends AppCompatActivity {
         editor.clear();
         editor.commit();
 
-        Sift.open(this);
-
-        Sift.get().setUserId("foo");
-        Sift.get().setConfig(new Sift.Config.Builder()
+        Sift.open(this, new Sift.Config.Builder()
                 .withAccountId("bar")
                 .withBeaconKey("baz")
-                .build()
-        );
+                .build());
+
+        Sift.get().setUserId("foo");
 
         Sift.collect();
 
