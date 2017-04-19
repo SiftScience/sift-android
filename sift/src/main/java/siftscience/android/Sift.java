@@ -382,6 +382,8 @@ public class Sift {
         this.userId = userId;
     }
 
+    public synchronized void unsetUserId() { this.userId = null; }
+
     /** Create an event queue. */
     public synchronized Queue createQueue(@NonNull String identifier, Queue.Config config)
             throws IOException {

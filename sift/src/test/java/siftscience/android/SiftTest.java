@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyInt;
@@ -251,6 +252,26 @@ public class SiftTest {
         Queue q3 = sift3.getQueue("some-queue");
         assertNotNull(q3);
         assertEquals(q2.getConfig(), q3.getConfig());
+    }
+
+    @Test
+    public void testUnsetUserId() throws Exception {
+        MemorySharedPreferences preferences = new MemorySharedPreferences();
+
+        Sift sift =
+                new Sift(mockContext(preferences), mock(ListeningScheduledExecutorService.class));
+
+        sift.setUserId("gary");
+
+        sift.getQueue(Sift.APP_STATE_QUEUE_IDENTIFIER).append(MobileEventJson.newBuilder().build());
+        MobileEventJson event = sift.getQueue(Sift.APP_STATE_QUEUE_IDENTIFIER).transfer().get(0);
+        assertEquals(event.userId, "gary");
+
+        sift.unsetUserId();
+
+        sift.getQueue(Sift.APP_STATE_QUEUE_IDENTIFIER).append(MobileEventJson.newBuilder().build());
+        event = sift.getQueue(Sift.APP_STATE_QUEUE_IDENTIFIER).transfer().get(0);
+        assertNull(event.userId);
     }
 
     private Context mockContext(SharedPreferences preferences) {
