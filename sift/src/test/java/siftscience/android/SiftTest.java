@@ -258,8 +258,8 @@ public class SiftTest {
     public void testUnsetUserId() throws Exception {
         MemorySharedPreferences preferences = new MemorySharedPreferences();
 
-        Sift sift =
-                new Sift(mockContext(preferences), mock(ListeningScheduledExecutorService.class));
+        Sift sift = new Sift(mockContext(preferences), null,
+                mock(ListeningScheduledExecutorService.class));
 
         sift.setUserId("gary");
 
