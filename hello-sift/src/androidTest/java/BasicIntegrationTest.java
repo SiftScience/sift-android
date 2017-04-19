@@ -20,13 +20,20 @@ import static android.support.test.espresso.matcher.ViewMatchers.withText;
  */
 
 @RunWith(AndroidJUnit4.class)
-public class IntegrationTest {
+public class BasicIntegrationTest {
     @Rule
     public ActivityTestRule<HelloSiftTest> helloSiftActivityTestRule =
             new ActivityTestRule(HelloSiftTest.class);
 
     @Test
-    public void smokeTest() {
-        onView(withId(R.id.textView)).perform(click()).check(matches(withText("1 HelloSift foo bar baz https://api3.siftscience.com/v3/accounts/%s/mobile_events")));
+    public void basicDeviceTest() {
+        onView(withId(R.id.deviceDebug)).perform(click());
+        onView(withId(R.id.deviceDebug)).check(matches(withText("empty")));
+    }
+
+    @Test
+    public void basicAppTest() {
+        onView(withId(R.id.appDebug)).perform(click());
+        onView(withId(R.id.appDebug)).check(matches(withText("1 HelloSiftTest foo bar baz https://api3.siftscience.com/v3/accounts/%s/mobile_events")));
     }
 }

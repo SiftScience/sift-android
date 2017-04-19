@@ -56,9 +56,9 @@ public class Queue {
          */
         public final long uploadWhenOlderThan;
 
-        // The default no-args constructor for Gson.
+        // The default no-args constructor.
         Config() {
-            this(0, 0, 0);
+            this(0, -1, 0);
         }
 
         private Config(long acceptSameEventAfter,
@@ -87,7 +87,7 @@ public class Queue {
                 return this;
             }
 
-            private int uploadWhenMoreThan = 0;
+            private int uploadWhenMoreThan = -1;
             public Builder withUploadWhenMoreThan(int uploadWhenMoreThan) {
                 this.uploadWhenMoreThan = uploadWhenMoreThan;
                 return this;
@@ -221,7 +221,7 @@ public class Queue {
      * by the queue config.
      */
     synchronized boolean isEventsReadyForUpload(long now) {
-        return (state.config.uploadWhenMoreThan > 0 &&
+        return (state.config.uploadWhenMoreThan >= 0 &&
                 state.queue.size() > state.config.uploadWhenMoreThan) ||
                (state.config.uploadWhenOlderThan > 0 &&
                 !state.queue.isEmpty() &&

@@ -73,6 +73,7 @@ public class QueueTest {
         List<MobileEventJson> expect = ImmutableList.of(event0, event1, event2);
 
         Queue queue = new Queue(null, executor, USER_ID_PROVIDER, uploadRequester);
+        queue.setConfig(new Queue.Config.Builder().withUploadWhenMoreThan(10).build());
 
         for (MobileEventJson event : expect) {
             queue.append(event);
