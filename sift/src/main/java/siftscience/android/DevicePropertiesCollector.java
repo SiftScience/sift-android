@@ -119,7 +119,7 @@ public class DevicePropertiesCollector {
         String systemVersion;
 
         mobileCarrierName = telephonyManager.getNetworkOperatorName();
-        mobileCarrierIsoCountryCode = telephonyManager.getNetworkCountryIso();
+        mobileCarrierIsoCountryCode = telephonyManager.getSimCountryIso();
         deviceManufacturer = Build.MANUFACTURER;
         deviceModel = Build.MODEL;
         androidId = Settings.Secure.getString(this.context.getContentResolver(),
