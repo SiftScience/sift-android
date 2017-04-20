@@ -39,7 +39,6 @@ public class AppStateCollector implements LocationListener,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
     private static final String TAG = AppStateCollector.class.getSimpleName();
-    private static final String SDK_VERSION = "0.0";
     private final Sift sift;
     private final Context context;
 
