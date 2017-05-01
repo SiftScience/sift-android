@@ -92,7 +92,7 @@ jsonSchema2Pojo {
 }
 
 task compileAndroid(dependsOn: 'generateJsonSchema2PojoForRelease') << {
-    if (project.hasProperty('diff')) {
+    if (System.getenv("CI") == null) {
         def JAVA_DIR = '../code/java/sift-json/src/main/json/'
         def androidDir = new File('sift/src/main/json')
         def diffFiles = []
@@ -110,3 +110,18 @@ task compileAndroid(dependsOn: 'generateJsonSchema2PojoForRelease') << {
         }
     }
 }
+
+tasks.preBuild.dependsOn(compileAndroid);
+
+task deleteJar(type: Delete) {
+    delete 'libs/logmanagementlib.jar'
+}
+
+task createJar(type: Copy) {
+    from('build/intermediates/bundles/release/')
+    into('libs/jars/')
+    include('classes.jar')
+    rename('classes.jar', 'logmanagementlib.jar')
+}
+
+createJar.dependsOn(deleteJar, build)
