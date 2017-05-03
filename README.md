@@ -46,7 +46,7 @@ android {
 ```
 
 <a name="integration"></a>
-## Add Sift to your application
+## Integrating Sift
 
 There are two different integration paths to take for incorporating Sift into your application.
 The first one will be detailed below in the [Application Integration](#application) section.
