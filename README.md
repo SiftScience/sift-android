@@ -3,11 +3,13 @@
 - [Introduction](#introduction)
 - [Installation](#installation)
 - [Integration](#integration)
+  - [Application Integration](#application)
+  - [Custom Integration](#custom)
 
 <a name="introduction"></a>
 ## Introduction
 
-How to integrate with Sift Android SDK into your Android application.
+The Sift Android SDK collects and sends device information and application interaction events to Sift Science.
 
 <a name="installation"></a>
 ## Installing Sift
@@ -52,4 +54,8 @@ Follow these instructions if your application flow is primarily based on
 Activities. If your application flow is based on a combination of Activities
 and Fragments, please refer to the the **Custom Integration** section.
 
+<a name="application"></a>
 ### Application Integration
+
+<a name="custom"></a>
+### Custom Integration
