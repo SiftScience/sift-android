@@ -13,8 +13,6 @@ import com.sift.api.representations.MobileEventJson;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.TimeUnit;
 
 /**
  * The main class for batching events before sending them to the Sift
