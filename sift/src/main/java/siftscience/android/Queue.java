@@ -13,6 +13,7 @@ import com.sift.api.representations.MobileEventJson;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -204,15 +205,6 @@ public class Queue {
 
         if (isEventsReadyForUpload(now)) {
             uploadRequester.requestUpload();
-        } else if (state.config.uploadWhenOlderThan > 0) {
-            executor.schedule(new Runnable() {
-                @Override
-                public void run() {
-                    if (isEventsReadyForUpload(Time.now())) {
-                        uploadRequester.requestUpload();
-                    }
-                }
-            }, state.config.uploadWhenOlderThan, TimeUnit.MILLISECONDS);
         }
     }
 
