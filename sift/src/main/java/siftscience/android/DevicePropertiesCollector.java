@@ -1,3 +1,5 @@
+// Copyright (c) 2017 Sift Science. All rights reserved.
+
 package siftscience.android;
 
 import android.content.Context;
@@ -26,7 +28,7 @@ import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 /**
- * Created by gary on 1/18/17.
+ * Collects AndroidDeviceProperties
  */
 public class DevicePropertiesCollector {
     private static final String TAG = DevicePropertiesCollector.class.getName();
@@ -34,6 +36,7 @@ public class DevicePropertiesCollector {
     private final Sift sift;
     private final Context context;
 
+    // Constants used to determine whether a device is rooted
     private static final String[] SU_PATHS = {
             "/system/app/Superuser.apk",
             "/sbin/su",
@@ -243,7 +246,10 @@ public class DevicePropertiesCollector {
         return pathsFound;
     }
 
-    // Used for existingDangerousProperties()
+    /**
+     * Used for existingDangerousProperties()
+     * @return - list of system properties
+     */
     private String[] propertiesReader() {
         InputStream inputstream = null;
         try {
@@ -264,7 +270,10 @@ public class DevicePropertiesCollector {
         return allProperties.split("\n");
     }
 
-    // Used for existingRWPaths()
+    /**
+     * Used for existingRWPaths()
+     * @return - list of directories and their properties
+     */
     private String[] mountReader() {
         InputStream inputstream = null;
         try {

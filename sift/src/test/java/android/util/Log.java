@@ -1,4 +1,4 @@
-// Copyright (c) 2016 Sift Science. All rights reserved.
+// Copyright (c) 2017 Sift Science. All rights reserved.
 
 package android.util;
 

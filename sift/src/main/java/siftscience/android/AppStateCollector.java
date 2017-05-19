@@ -1,3 +1,5 @@
+// Copyright (c) 2017 Sift Science. All rights reserved.
+
 package siftscience.android;
 
 import android.Manifest;
@@ -33,7 +35,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Collectors for AndroidAppState
+ * Collects AndroidAppState
  */
 public class AppStateCollector implements LocationListener,
         GoogleApiClient.ConnectionCallbacks,

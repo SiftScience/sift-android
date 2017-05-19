@@ -1,9 +1,11 @@
+// Copyright (c) 2017 Sift Science. All rights reserved.
+
 package siftscience.android;
 
 import com.sift.api.representations.MobileEventJson;
 
 /**
- * Created by gary on 2/1/17.
+ * Util methods
  */
 
 public class Utils {
