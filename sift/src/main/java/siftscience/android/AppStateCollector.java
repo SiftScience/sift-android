@@ -47,7 +47,7 @@ public class AppStateCollector implements LocationListener,
     private GoogleApiClient googleApiClient;
     private LocationRequest locationRequest;
 
-    private Location lastLocation;
+    private Location location;
 
     public AppStateCollector(Sift sift, Context context) {
         this.sift = sift;
@@ -133,7 +133,7 @@ public class AppStateCollector implements LocationListener,
                 .withPlugState((long) plugState)
                 .withNetworkAddresses(ipAddresses);
 
-        if (this.lastLocation != null) {
+        if (this.location != null) {
             return builder.withLocation(this.getLocation()).build();
         }
 
@@ -166,10 +166,10 @@ public class AppStateCollector implements LocationListener,
 
     private AndroidDeviceLocationJson getLocation() {
         return AndroidDeviceLocationJson.newBuilder()
-                .withTime(this.lastLocation.getTime())
-                .withLatitude(this.lastLocation.getLatitude())
-                .withLongitude(this.lastLocation.getLongitude())
-                .withAccuracy(new BigDecimal(this.lastLocation.getAccuracy()).doubleValue())
+                .withTime(this.location.getTime())
+                .withLatitude(this.location.getLatitude())
+                .withLongitude(this.location.getLongitude())
+                .withAccuracy(new BigDecimal(this.location.getAccuracy()).doubleValue())
                 .build();
     }
 
@@ -177,7 +177,7 @@ public class AppStateCollector implements LocationListener,
         Log.d(TAG, "Requested location");
 
         this.locationRequest = LocationRequest.create()
-                .setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY)
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .setInterval(TimeUnit.MINUTES.toMillis(1))
                 .setFastestInterval(TimeUnit.SECONDS.toMillis(10));
 
@@ -194,7 +194,7 @@ public class AppStateCollector implements LocationListener,
     public void onLocationChanged(Location location) {
         Log.d(TAG, "Location changed");
 
-        this.lastLocation = location;
+        this.location = location;
         LocationServices.FusedLocationApi.removeLocationUpdates(this.googleApiClient, this);
 
         this.collect();
@@ -208,13 +208,11 @@ public class AppStateCollector implements LocationListener,
                 == PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this.context, Manifest.permission.ACCESS_COARSE_LOCATION)
                         == PackageManager.PERMISSION_GRANTED) {
-            Location location = LocationServices.FusedLocationApi.getLastLocation(this.googleApiClient);
-            if (location != null) {
-                Log.d(TAG, "Acquired last location");
-                this.lastLocation = location;
-            } else {
-                this.requestLocation();
+            Location lastLocation = LocationServices.FusedLocationApi.getLastLocation(this.googleApiClient);
+            if (lastLocation != null) {
+                this.location = lastLocation;
             }
+            this.requestLocation();
         }
 
         this.collect();
