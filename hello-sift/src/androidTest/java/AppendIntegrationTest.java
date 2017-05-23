@@ -1,8 +1,6 @@
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import com.sift.api.representations.MobileEventJson;
 
 import org.junit.Rule;
@@ -69,15 +67,17 @@ public class AppendIntegrationTest {
             m.setAccessible(true);
             List<MobileEventJson> backingQueue = (List<MobileEventJson>) m.invoke(queue);
 
-            if (backingQueue.size() != 2) {
+            if (backingQueue.size() != 1) {
                 onView(withId(R.id.collect))
-                        .check(matches(withText("app state queue should contain 2 items but has size " +
+                        .check(matches(withText("on second append (no wait), app state queue " +
+                                "should contain 1 item but has size " +
                                 backingQueue.size())));
             }
 
             if (!backingQueue.get(0).androidAppState.activityClassName.equals("HelloSiftTest")) {
                 onView(withId(R.id.collect))
-                        .check(matches(withText("activityClassName should be \"HelloSiftTest\" but was " +
+                        .check(matches(withText("activityClassName should be \"HelloSiftTest\" " +
+                                "but was " +
                                 backingQueue.get(0).androidAppState.activityClassName)));
             }
         } catch (NoSuchMethodException e) {

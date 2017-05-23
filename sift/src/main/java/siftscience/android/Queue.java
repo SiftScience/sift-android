@@ -134,13 +134,13 @@ public class Queue {
         Config config;
         List<MobileEventJson> queue;
         MobileEventJson lastEvent;
-        long lastEventTimestamp;
+        long lastUploadTimestamp;
 
         State() {
             config = new Config();
             queue = Lists.newLinkedList();
             lastEvent = null;
-            lastEventTimestamp = 0;
+            lastUploadTimestamp = 0;
         }
     }
 
@@ -189,8 +189,8 @@ public class Queue {
         }
 
         if (state.config.acceptSameEventAfter > 0 &&
-                now < state.lastEventTimestamp + state.config.acceptSameEventAfter &&
                 state.lastEvent != null &&
+                now < state.lastEvent.time + state.config.acceptSameEventAfter &&
                 Utils.eventsAreBasicallyEqual(state.lastEvent, event)) {
             Log.d(TAG, String.format("Drop duplicate event \"%s\"", event.toString()));
             return;
@@ -199,10 +199,10 @@ public class Queue {
         Log.i(TAG, String.format("Append event \"%s\"", event.toString()));
         state.queue.add(event);
         state.lastEvent = event;
-        state.lastEventTimestamp = now;
 
         if (isEventsReadyForUpload(now)) {
             uploadRequester.requestUpload();
+            state.lastUploadTimestamp = now;
         }
     }
 
@@ -215,7 +215,7 @@ public class Queue {
                 state.queue.size() > state.config.uploadWhenMoreThan) ||
                (state.config.uploadWhenOlderThan > 0 &&
                 !state.queue.isEmpty() &&
-                now > state.lastEventTimestamp + state.config.uploadWhenOlderThan);
+                now > state.lastUploadTimestamp + state.config.uploadWhenOlderThan);
     }
 
     /** Transfer the ownership of the events. */

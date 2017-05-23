@@ -225,4 +225,92 @@ public class QueueTest {
         Time.currentTime += 2;
         assertTrue(queue.isEventsReadyForUpload(Time.currentTime));
     }
+
+    // Ensures that the first event appended will get uploaded
+    @Test
+    public void testUploadFirstEvent() throws IOException {
+        ListeningScheduledExecutorService executor = mock(ListeningScheduledExecutorService.class);
+        Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
+
+        Queue queue = new Queue(null, executor, USER_ID_PROVIDER, uploadRequester);
+        queue.setConfig(new Queue.Config.Builder().withUploadWhenMoreThan(5)
+                .withUploadWhenOlderThan(10000).build());
+
+        MobileEventJson event = MobileEventJson.newBuilder()
+                .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
+                        .withAndroidId("foo0")
+                        .withDeviceManufacturer("bar0")
+                        .withDeviceModel("baz0")
+                        .build()
+                )
+                .withTime(System.currentTimeMillis())
+                .build();
+
+        queue.append(event); // should have uploaded
+        verify(uploadRequester).requestUpload();
+    }
+
+    // Checks that appending after waiting will request an upload
+    @Test
+    public void testUploadEventAfterWait() throws IOException, InterruptedException {
+        ListeningScheduledExecutorService executor = mock(ListeningScheduledExecutorService.class);
+        Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
+
+        Queue queue = new Queue(null, executor, USER_ID_PROVIDER, uploadRequester);
+        // note that this TTL is 1 second
+        queue.setConfig(new Queue.Config.Builder().withUploadWhenMoreThan(5)
+                .withUploadWhenOlderThan(1000).build());
+
+        MobileEventJson event = MobileEventJson.newBuilder()
+                .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
+                        .withAndroidId("foo0")
+                        .withDeviceManufacturer("bar0")
+                        .withDeviceModel("baz0")
+                        .build()
+                )
+                .withTime(System.currentTimeMillis())
+                .build();
+
+        // should have uploaded the first event
+        queue.append(event);
+        verify(uploadRequester).requestUpload();
+        reset(uploadRequester);
+
+        // sleep for 2 seconds (in excess of TTL)
+        Thread.sleep(2000);
+
+        // should have uploaded the second event (sufficiently stale)
+        queue.append(event);
+        verify(uploadRequester).requestUpload();
+    }
+
+    // Checks that appending without waiting will not request an upload
+    @Test
+    public void testUploadEventWithoutWait() throws IOException {
+        ListeningScheduledExecutorService executor = mock(ListeningScheduledExecutorService.class);
+        Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
+
+        Queue queue = new Queue(null, executor, USER_ID_PROVIDER, uploadRequester);
+        queue.setConfig(new Queue.Config.Builder().withUploadWhenMoreThan(5)
+                .withUploadWhenOlderThan(10000).build());
+
+        MobileEventJson event = MobileEventJson.newBuilder()
+                .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
+                        .withAndroidId("foo0")
+                        .withDeviceManufacturer("bar0")
+                        .withDeviceModel("baz0")
+                        .build()
+                )
+                .withTime(System.currentTimeMillis())
+                .build();
+
+        // should have uploaded the first event
+        queue.append(event);
+        verify(uploadRequester).requestUpload();
+        reset(uploadRequester);
+
+        // should not have uploaded the second event (not stale enough)
+        queue.append(event);
+        verify(uploadRequester, never()).requestUpload();
+    }
 }

@@ -34,7 +34,7 @@ public class BasicIntegrationTest {
             new ActivityTestRule(HelloSiftTest.class);
 
     @Test
-    public void basicDeviceTest() {
+    public void basicTest() {
         onView(withId(R.id.deviceDebug)).perform(click());
         Queue queue = Sift.get().getQueue(Sift.DEVICE_PROPERTIES_QUEUE_IDENTIFIER);
 
@@ -47,36 +47,6 @@ public class BasicIntegrationTest {
                 onView(withId(R.id.collect))
                         .check(matches(withText("device properties queue should be flushed but has size " +
                             backingQueue.size())));
-            }
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Test
-    public void basicAppTest() {
-        onView(withId(R.id.appDebug)).perform(click());
-        Queue queue = Sift.get().getQueue(Sift.APP_STATE_QUEUE_IDENTIFIER);
-
-        try {
-            Method m = queue.getClass().getDeclaredMethod("transfer");
-            m.setAccessible(true);
-            List<MobileEventJson> backingQueue = (List<MobileEventJson>) m.invoke(queue);
-
-            if (backingQueue.size() != 1) {
-                onView(withId(R.id.collect))
-                        .check(matches(withText("app state queue should contain 1 item but has size " +
-                            backingQueue.size())));
-            }
-
-            if (!backingQueue.get(0).androidAppState.activityClassName.equals("HelloSiftTest")) {
-                onView(withId(R.id.collect))
-                        .check(matches(withText("activityClassName should be \"HelloSiftTest\" but was " +
-                                backingQueue.get(0).androidAppState.activityClassName)));
             }
         } catch (NoSuchMethodException e) {
             e.printStackTrace();

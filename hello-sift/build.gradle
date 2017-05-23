@@ -50,7 +50,7 @@ if (project.file('../keys.gradle').exists()) {
 
     devicefarm {
         projectName 'sift-android-private'
-        devicePool 'mini pool'
+        devicePool 'big pool'
         authentication {
             accessKey a
             secretKey s

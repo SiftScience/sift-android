@@ -264,6 +264,8 @@ public class SiftTest {
         sift.setUserId("gary");
 
         sift.getQueue(Sift.APP_STATE_QUEUE_IDENTIFIER).append(MobileEventJson.newBuilder().build());
+        // append twice because the first one gets uploaded and flushed
+        sift.getQueue(Sift.APP_STATE_QUEUE_IDENTIFIER).append(MobileEventJson.newBuilder().build());
         MobileEventJson event = sift.getQueue(Sift.APP_STATE_QUEUE_IDENTIFIER).transfer().get(0);
         assertEquals(event.userId, "gary");
 
