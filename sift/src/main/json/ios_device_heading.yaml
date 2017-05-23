@@ -1,0 +1,16 @@
+---
+title: iOS Device Heading
+type: object
+javaType: com.sift.api.representations.IosDeviceHeadingJson
+properties:
+  time: {type: integer, required: false}
+
+  magnetic_heading: {type: number, required: false}
+  true_heading: {type: number, required: false}
+  accuracy: {type: number, required: false}
+
+  raw_magnetic_field_x: {type: number, required: false}
+  raw_magnetic_field_y: {type: number, required: false}
+  raw_magnetic_field_z: {type: number, required: false}
+
+additionalProperties: false

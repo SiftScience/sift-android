@@ -1,0 +1,4 @@
+include ':sift'
+
+// Testing app.
+include ':hello-sift'
