@@ -30,11 +30,11 @@ public class HelloSift extends AppCompatActivity {
         editor.commit();
 
         Sift.open(this, new Sift.Config.Builder()
-                .withAccountId("4e1a50e172beb95cf1e4ae54")
-                .withBeaconKey("f92ed5bf7b")
+                .withAccountId("YOUR_ACCOUNT_ID")
+                .withBeaconKey("YOUR_BEACON_KEY")
                 .build());
 
-        Sift.get().setUserId("gary");
+        Sift.get().setUserId("USER_ID");
 
         Sift.collect();
 
