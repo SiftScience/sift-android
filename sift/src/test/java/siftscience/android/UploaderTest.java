@@ -7,6 +7,7 @@ import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.sift.api.representations.AndroidDevicePropertiesJson;
 import com.sift.api.representations.MobileEventJson;
+// Copyright (c) 2017 Sift Science. All rights reserved.
 
 import org.junit.After;
 import org.junit.Before;
@@ -71,7 +72,7 @@ public class UploaderTest {
     @Test
     public void testUpload() throws Exception {
         assertTrue(Uploader.REJECTION_LIMIT > 2);
-        // Don't nest mocking calls; mockito can't handle that.
+        // Don't nest mocking calls; mockito can't handle that
         Call[] calls = new Call[] {makeCall(429), makeCall(429), makeCall(200)};
 
         OkHttpClient client = mock(OkHttpClient.class);
@@ -108,7 +109,7 @@ public class UploaderTest {
     @Test
     public void testUploadTooManyRejections() throws Exception {
         assertTrue(Uploader.REJECTION_LIMIT == 3);
-        // Don't nest mocking calls; mockito can't handle that.
+        // Don't nest mocking calls; mockito can't handle that
         Call[] calls = new Call[] {
                 makeCall(429),
                 makeCall(429),
@@ -150,8 +151,8 @@ public class UploaderTest {
 
     @Test
     public void testUploadManyBatches() throws Exception {
-        // Create mocks for 3 batches.
-        // Don't nest mocking calls; mockito can't handle that.
+        // Create mocks for 3 batches
+        // Don't nest mocking calls; mockito can't handle that
         Call[] calls = new Call[] {
                 makeCall(200),
                 makeCall(200),
@@ -197,7 +198,7 @@ public class UploaderTest {
                 .withTime(System.currentTimeMillis())
                 .build();
 
-        // Upload 3 batches.
+        // Upload 3 batches
         uploader.upload(ImmutableList.of(event0));
         uploader.upload(ImmutableList.of(event1));
         uploader.upload(ImmutableList.of(event2));

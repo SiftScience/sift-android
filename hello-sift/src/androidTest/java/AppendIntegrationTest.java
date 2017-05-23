@@ -1,3 +1,5 @@
+// Copyright (c) 2017 Sift Science. All rights reserved.
+
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 
@@ -24,7 +26,7 @@ import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 
 /**
- * Test for the MainActivity screen
+ * Test append behavior.
  */
 
 @RunWith(AndroidJUnit4.class)
@@ -45,8 +47,8 @@ public class AppendIntegrationTest {
 
             if (backingQueue.size() != 0) {
                 onView(withId(R.id.collect))
-                        .check(matches(withText("device properties queue should be flushed but has size " +
-                                backingQueue.size())));
+                        .check(matches(withText("device properties queue should be flushed " +
+                                "but has size " + backingQueue.size())));
             }
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
@@ -70,8 +72,7 @@ public class AppendIntegrationTest {
             if (backingQueue.size() != 1) {
                 onView(withId(R.id.collect))
                         .check(matches(withText("on second append (no wait), app state queue " +
-                                "should contain 1 item but has size " +
-                                backingQueue.size())));
+                                "should contain 1 item but has size " + backingQueue.size())));
             }
 
             if (!backingQueue.get(0).androidAppState.activityClassName.equals("HelloSiftTest")) {

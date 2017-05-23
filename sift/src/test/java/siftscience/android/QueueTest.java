@@ -86,7 +86,7 @@ public class QueueTest {
 
         assertEquals(expect, queue.transfer());
 
-        // Test un-archived events.
+        // Test un-archived events
         Queue another = new Queue(archive, executor, USER_ID_PROVIDER, uploadRequester);
         assertEquals(expect, another.transfer());
     }
@@ -246,7 +246,8 @@ public class QueueTest {
                 .withTime(System.currentTimeMillis())
                 .build();
 
-        queue.append(event); // should have uploaded
+        // Should have uploaded
+        queue.append(event);
         verify(uploadRequester).requestUpload();
     }
 
@@ -271,15 +272,15 @@ public class QueueTest {
                 .withTime(System.currentTimeMillis())
                 .build();
 
-        // should have uploaded the first event
+        // Should have uploaded the first event
         queue.append(event);
         verify(uploadRequester).requestUpload();
         reset(uploadRequester);
 
-        // sleep for 2 seconds (in excess of TTL)
+        // Sleep for 2 seconds (in excess of TTL)
         Thread.sleep(2000);
 
-        // should have uploaded the second event (sufficiently stale)
+        // Should have uploaded the second event (sufficiently stale)
         queue.append(event);
         verify(uploadRequester).requestUpload();
     }
@@ -304,12 +305,12 @@ public class QueueTest {
                 .withTime(System.currentTimeMillis())
                 .build();
 
-        // should have uploaded the first event
+        // Should have uploaded the first event
         queue.append(event);
         verify(uploadRequester).requestUpload();
         reset(uploadRequester);
 
-        // should not have uploaded the second event (not stale enough)
+        // Should not have uploaded the second event (not stale enough)
         queue.append(event);
         verify(uploadRequester, never()).requestUpload();
     }

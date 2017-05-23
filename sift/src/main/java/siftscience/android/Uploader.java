@@ -117,7 +117,7 @@ class Uploader {
     private final ConfigProvider configProvider;
     private final OkHttpClient client;
 
-    // These two semaphores are used as counters in unit tests.
+    // These two semaphores are used as counters in unit tests
     @VisibleForTesting
     Semaphore onRequestCompletion;
     @VisibleForTesting
@@ -142,7 +142,7 @@ class Uploader {
         this.configProvider = configProvider;
         this.client = client;
 
-        // Check if we have unfinished batches.
+        // Check if we have unfinished batches
         executor.submit(checkState);
     }
 
@@ -158,9 +158,10 @@ class Uploader {
         executor.submit(checkState);
     }
 
-    // This is the core of the uploader finite state machine that
-    // checks the state, performs related actions, and advances the
-    // state.
+    /**
+     * This is the core of the uploader finite state machine that checks the state,
+     * performs related actions, and advances the state.
+     */
     private final Runnable checkState = new Runnable() {
         @Override
         public void run() {
@@ -173,14 +174,14 @@ class Uploader {
                     }
                 }
                 if (state.request == null) {
-                    // Nothing to upload at the moment; check again a minute later.
+                    // Nothing to upload at the moment; check again a minute later
                     executor.schedule(checkState, 60, TimeUnit.SECONDS);
                     return;
                 }
 
                 long now = Time.now();
                 if (state.nextUploadTime > now) {
-                    // We've waken up too early; go back to sleep.
+                    // We've woken up too early; go back to sleep
                     long delay = state.nextUploadTime - now;
                     executor.schedule(checkState, delay, TimeUnit.MILLISECONDS);
                     return;
@@ -195,12 +196,12 @@ class Uploader {
                     response.close();
 
                     if (code == 200) {
-                        // Success!  Reset the state and move on to the next batch.
+                        // Success, reset the state and move on to the next batch
                         state.reset();
                         batches.pop();
                         executor.submit(checkState);
 
-                        // This is for testing.
+                        // This is for testing
                         if (onRequestCompletion != null) {
                             onRequestCompletion.release();
                         }
@@ -225,15 +226,15 @@ class Uploader {
                 }
 
                 if (state.numRejects >= REJECTION_LIMIT) {
-                    // This request has been rejected repeatedly; reset
-                    // the state and move on to the next batch.
+                    // This request has been rejected repeatedly;
+                    // reset the state and move on to the next batch
                     Log.e(TAG, "Drop batch due to repeated rejection");
                     state.reset();
                     batches.pop();
 
                     executor.submit(checkState);
 
-                    // This is for testing.
+                    // This is for testing
                     if (onRequestRejection != null) {
                         onRequestRejection.release();
                     }
@@ -241,7 +242,7 @@ class Uploader {
                     return;
                 }
 
-                // This request was rejected; retry this request later.
+                // This request was rejected; retry this request later
                 executor.schedule(checkState, state.backoff, TimeUnit.MILLISECONDS);
                 state.nextUploadTime = now + state.backoff;
                 state.backoff *= 2;  // Exponential backoff.
@@ -269,7 +270,7 @@ class Uploader {
     private Request makeRequest() throws IOException {
         List<MobileEventJson> events = batches.peek();
         if (events == null) {
-            return null;  // Nothing to upload.
+            return null;  // Nothing to upload
         }
 
         Sift.Config config = configProvider.getConfig();

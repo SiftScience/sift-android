@@ -1,3 +1,5 @@
+// Copyright (c) 2017 Sift Science. All rights reserved.
+
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 
@@ -24,7 +26,7 @@ import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 
 /**
- * Test for the MainActivity screen
+ * Test basic collection on Activity onCreate().
  */
 
 @RunWith(AndroidJUnit4.class)
@@ -45,8 +47,8 @@ public class BasicIntegrationTest {
 
             if (backingQueue.size() != 0) {
                 onView(withId(R.id.collect))
-                        .check(matches(withText("device properties queue should be flushed but has size " +
-                            backingQueue.size())));
+                        .check(matches(withText("device properties queue should be flushed " +
+                                "but has size " + backingQueue.size())));
             }
         } catch (NoSuchMethodException e) {
             e.printStackTrace();

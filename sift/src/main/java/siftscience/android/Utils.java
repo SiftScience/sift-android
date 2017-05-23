@@ -5,7 +5,7 @@ package siftscience.android;
 import com.sift.api.representations.MobileEventJson;
 
 /**
- * Util methods
+ * Util methods.
  */
 
 public class Utils {

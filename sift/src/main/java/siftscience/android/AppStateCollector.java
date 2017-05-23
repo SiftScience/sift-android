@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Collects AndroidAppState
+ * Collects AndroidAppState.
  */
 public class AppStateCollector implements LocationListener,
         GoogleApiClient.ConnectionCallbacks,
@@ -61,7 +61,7 @@ public class AppStateCollector implements LocationListener,
                         .addOnConnectionFailedListener(this)
                         .build();
                 this.googleApiClient.connect();
-            } catch(Exception e) {
+            } catch (Exception e) {
                 Log.e(TAG, e.toString());
             }
         } else {
@@ -181,10 +181,10 @@ public class AppStateCollector implements LocationListener,
                 .setInterval(TimeUnit.MINUTES.toMillis(1))
                 .setFastestInterval(TimeUnit.SECONDS.toMillis(10));
 
-        if (ActivityCompat.checkSelfPermission(this.context, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this.context, Manifest.permission.ACCESS_COARSE_LOCATION)
-                        == PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this.context,
+                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this.context, Manifest.permission
+                        .ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             LocationServices.FusedLocationApi.requestLocationUpdates(this.googleApiClient,
                     this.locationRequest, this);
         }
@@ -204,11 +204,12 @@ public class AppStateCollector implements LocationListener,
     public void onConnected(@Nullable Bundle bundle) {
         Log.d(TAG, "Connected to Google API Client");
 
-        if (ActivityCompat.checkSelfPermission(this.context, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this.context, Manifest.permission.ACCESS_COARSE_LOCATION)
-                        == PackageManager.PERMISSION_GRANTED) {
-            Location lastLocation = LocationServices.FusedLocationApi.getLastLocation(this.googleApiClient);
+        if (ActivityCompat.checkSelfPermission(this.context,
+                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this.context, Manifest.permission
+                        .ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            Location lastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                    this.googleApiClient);
             if (lastLocation != null) {
                 this.location = lastLocation;
             }

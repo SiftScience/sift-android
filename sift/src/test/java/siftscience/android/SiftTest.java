@@ -21,7 +21,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyInt;
@@ -37,7 +36,7 @@ public class SiftTest {
 
         private class Editor implements SharedPreferences.Editor {
 
-            // Make a copy of fields.
+            // Make a copy of fields
             private final Map<String, String> newFields = Maps.newHashMap(fields);
 
             @Override
@@ -110,27 +109,27 @@ public class SiftTest {
         @Nullable
         @Override
         public Set<String> getStringSet(String key, Set<String> defValues) {
-            throw new AssertionError();  // Not implemented.
+            throw new AssertionError();  // Not implemented
         }
 
         @Override
         public int getInt(String key, int defValue) {
-            throw new AssertionError();  // Not implemented.
+            throw new AssertionError();  // Not implemented
         }
 
         @Override
         public long getLong(String key, long defValue) {
-            throw new AssertionError();  // Not implemented.
+            throw new AssertionError();  // Not implemented
         }
 
         @Override
         public float getFloat(String key, float defValue) {
-            throw new AssertionError();  // Not implemented.
+            throw new AssertionError();  // Not implemented
         }
 
         @Override
         public boolean getBoolean(String key, boolean defValue) {
-            throw new AssertionError();  // Not implemented.
+            throw new AssertionError();  // Not implemented
         }
 
         @Override
@@ -146,13 +145,13 @@ public class SiftTest {
         @Override
         public void registerOnSharedPreferenceChangeListener(
                 OnSharedPreferenceChangeListener onSharedPreferenceChangeListener) {
-            throw new AssertionError();  // Not implemented.
+            throw new AssertionError();  // Not implemented
         }
 
         @Override
         public void unregisterOnSharedPreferenceChangeListener(
                 OnSharedPreferenceChangeListener onSharedPreferenceChangeListener) {
-            throw new AssertionError();  // Not implemented.
+            throw new AssertionError();  // Not implemented
         }
     }
 
@@ -164,7 +163,7 @@ public class SiftTest {
                 mockContext(preferences), null, mock(ListeningScheduledExecutorService.class));
 
         assertNotNull(sift.getConfig());
-        // Verify default values.
+        // Verify default values
         assertNull(sift.getConfig().accountId);
         assertNull(sift.getConfig().beaconKey);
         assertNotNull(sift.getConfig().serverUrlFormat);
@@ -172,7 +171,7 @@ public class SiftTest {
 
         assertNull(sift.getUserId());
 
-        // There is always a default queue.
+        // There is always a default queue
         assertNotNull(sift.getQueue(Sift.DEVICE_PROPERTIES_QUEUE_IDENTIFIER));
 
         assertNull(sift.getQueue("some-queue"));
@@ -194,7 +193,8 @@ public class SiftTest {
         Sift.open(mockContext(preferences));
 
         Sift sift1 =
-                new Sift(mockContext(preferences), null, mock(ListeningScheduledExecutorService.class));
+                new Sift(mockContext(preferences), null,
+                        mock(ListeningScheduledExecutorService.class));
         assertTrue(preferences.fields.isEmpty());
 
         sift1.getQueue(Sift.DEVICE_PROPERTIES_QUEUE_IDENTIFIER)
@@ -211,9 +211,10 @@ public class SiftTest {
                 preferences.fields.keySet()
         );
 
-        // Load saved Sift instance state.
+        // Load saved Sift instance state
         Sift sift2 =
-                new Sift(mockContext(preferences), null, mock(ListeningScheduledExecutorService.class));
+                new Sift(mockContext(preferences), null,
+                        mock(ListeningScheduledExecutorService.class));
         assertEquals(sift1.getConfig(), sift2.getConfig());
         assertNull(sift2.getUserId());
 
@@ -242,10 +243,11 @@ public class SiftTest {
                 ),
                 preferences.fields.keySet()
         );
-        
-        // Load saved Sift instance state again.
+
+        // Load saved Sift instance state again
         Sift sift3 =
-                new Sift(mockContext(preferences), null, mock(ListeningScheduledExecutorService.class));
+                new Sift(mockContext(preferences), null,
+                        mock(ListeningScheduledExecutorService.class));
         assertNotEquals(sift1.getConfig(), sift3.getConfig());
         assertEquals(sift2.getConfig(), sift3.getConfig());
         assertEquals("user-id", sift3.getUserId());
@@ -264,7 +266,7 @@ public class SiftTest {
         sift.setUserId("gary");
 
         sift.getQueue(Sift.APP_STATE_QUEUE_IDENTIFIER).append(MobileEventJson.newBuilder().build());
-        // append twice because the first one gets uploaded and flushed
+        // Append twice because the first one gets uploaded and flushed
         sift.getQueue(Sift.APP_STATE_QUEUE_IDENTIFIER).append(MobileEventJson.newBuilder().build());
         MobileEventJson event = sift.getQueue(Sift.APP_STATE_QUEUE_IDENTIFIER).transfer().get(0);
         assertEquals(event.userId, "gary");

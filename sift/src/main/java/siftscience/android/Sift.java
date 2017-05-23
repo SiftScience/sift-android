@@ -62,13 +62,17 @@ public class Sift {
         openCount++;
     }
 
+    /**
+     * Invoke a collection for DevicePropertiesCollector only.
+     * AppStateCollector will wait for location callback.
+     */
     public static synchronized void collect() {
-        // Invoke a collection for DevicePropertiesCollector only.
-        // AppStateCollector will wait for location callback.
         devicePropertiesCollector.collect();
     }
 
-    /** Return the shared Sift object. */
+    /**
+     * Return the shared Sift object.
+     */
     public static synchronized Sift get() {
         return Preconditions.checkNotNull(instance);
     }
@@ -185,7 +189,8 @@ public class Sift {
             }
 
             public Config build() {
-                return new Config(accountId, beaconKey, serverUrlFormat, disallowLocationCollection);
+                return new Config(accountId, beaconKey, serverUrlFormat,
+                        disallowLocationCollection);
             }
         }
     }
@@ -196,7 +201,7 @@ public class Sift {
      */
     static final ObjectMapper JSON = new ObjectMapper();
 
-    // The default queue.
+    // The default queue
     public static final String DEVICE_PROPERTIES_QUEUE_IDENTIFIER = "siftscience.android.device";
     private static final Queue.Config DEVICE_PROPERTIES_QUEUE_CONFIG = new Queue.Config.Builder()
             .withAcceptSameEventAfter(TimeUnit.HOURS.toMillis(1))
@@ -215,8 +220,8 @@ public class Sift {
     private enum ArchiveKey {
         CONFIG("config"),
         USER_ID("user_id"),
-        UPLOADER("uploader"),  // For the Uploader instance.
-        QUEUE("queue");  // For Queue instances.
+        UPLOADER("uploader"),  // For the Uploader instance
+        QUEUE("queue");  // For Queue instances
 
         public final String key;
 
@@ -271,13 +276,14 @@ public class Sift {
     }
 
     @VisibleForTesting
-    Sift(Context context, Config conf, ListeningScheduledExecutorService executor) throws IOException {
+    Sift(Context context, Config conf, ListeningScheduledExecutorService executor)
+            throws IOException {
         JSON.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
 
         archives = context.getSharedPreferences(ARCHIVE_NAME, Context.MODE_PRIVATE);
         this.executor = executor;
 
-        // Load archived data.
+        // Load archived data
         String archive;
 
         archive = archives.getString(ArchiveKey.CONFIG.key, null);
@@ -383,7 +389,9 @@ public class Sift {
         this.userId = userId;
     }
 
-    public synchronized void unsetUserId() { this.userId = null; }
+    public synchronized void unsetUserId() {
+        this.userId = null;
+    }
 
     /** Create an event queue. */
     public synchronized Queue createQueue(@NonNull String identifier, Queue.Config config)

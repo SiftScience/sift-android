@@ -28,7 +28,7 @@ import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 /**
- * Collects AndroidDeviceProperties
+ * Collects AndroidDeviceProperties.
  */
 public class DevicePropertiesCollector {
     private static final String TAG = DevicePropertiesCollector.class.getName();
@@ -105,7 +105,8 @@ public class DevicePropertiesCollector {
             ApplicationInfo applicationInfo =
                     packageManager.getApplicationInfo(this.context.getPackageName(), 0);
             appName = (String) packageManager.getApplicationLabel(applicationInfo);
-            appVersion = packageManager.getPackageInfo(this.context.getPackageName(), 0).versionName;
+            appVersion = packageManager.getPackageInfo(this.context.getPackageName(), 0)
+                    .versionName;
         } catch (final PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
@@ -157,7 +158,7 @@ public class DevicePropertiesCollector {
     }
 
     /**
-     * Checks for files that are known to indicate root
+     * Checks for files that are known to indicate root.
      * @return - list of such files found
      */
     private List<String> existingRootFiles() {
@@ -171,7 +172,7 @@ public class DevicePropertiesCollector {
     }
 
     /**
-     * Checks for packages that are known to indicate root
+     * Checks for packages that are known to indicate root.
      * @return - list of such packages found
      */
     private List<String> existingRootPackages() {
@@ -196,7 +197,7 @@ public class DevicePropertiesCollector {
     }
 
     /**
-     * Checks system properties for any dangerous properties that indicate root
+     * Checks system properties for any dangerous properties that indicate root.
      * @return - list of dangerous properties that indicate root
      */
     private List<String> existingDangerousProperties() {
@@ -231,7 +232,7 @@ public class DevicePropertiesCollector {
             String mountPoint = args[1];
             String mountOptions = args[3];
 
-            for(String pathToCheck : PATHS_THAT_SHOULD_NOT_BE_WRITABLE) {
+            for (String pathToCheck : PATHS_THAT_SHOULD_NOT_BE_WRITABLE) {
                 if (mountPoint.equalsIgnoreCase(pathToCheck)) {
                     // Split options out and compare against "rw" to avoid false positives
                     for (String option : mountOptions.split(",")){
@@ -247,7 +248,7 @@ public class DevicePropertiesCollector {
     }
 
     /**
-     * Used for existingDangerousProperties()
+     * Used for existingDangerousProperties().
      * @return - list of system properties
      */
     private String[] propertiesReader() {
@@ -271,7 +272,7 @@ public class DevicePropertiesCollector {
     }
 
     /**
-     * Used for existingRWPaths()
+     * Used for existingRWPaths().
      * @return - list of directories and their properties
      */
     private String[] mountReader() {
