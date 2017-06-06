@@ -15,3 +15,8 @@
 -dontnote com.google.android.gms.internal.*
 -dontnote com.google.common.**
 -dontnote okhttp3.internal.platform.*
+
+-keepclassmembers class * {
+     @com.fasterxml.jackson.annotation.JsonCreator *;
+     @com.fasterxml.jackson.annotation.JsonProperty *;
+}

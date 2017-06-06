@@ -13,6 +13,7 @@ import com.sift.api.representations.MobileEventJson;
 
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
@@ -184,6 +185,23 @@ public class SiftTest {
         }
 
         assertTrue(preferences.fields.isEmpty());
+    }
+
+    @Test
+    public void testUnmarshallUnknown() throws IOException {
+        MemorySharedPreferences preferences = new MemorySharedPreferences();
+
+        Sift sift = new Sift(
+                mockContext(preferences), null, mock(ListeningScheduledExecutorService.class));
+
+        String jsonAsString =
+                "{\"accountId\":\"foo\"," +
+                "\"beaconKey\":\"bar\"," +
+                "\"serverUrlFormat\":\"baz\"," +
+                "\"unknown\":\"property\"," +
+                "\"disallowLocationCollection\":true}";
+
+        sift.JSON.readValue(jsonAsString, Sift.Config.class);
     }
 
     @Test
