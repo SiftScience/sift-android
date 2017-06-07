@@ -32,7 +32,7 @@ import java.util.Scanner;
  */
 public class DevicePropertiesCollector {
     private static final String TAG = DevicePropertiesCollector.class.getName();
-    private static final String SDK_VERSION = "0.9.0";
+    private static final String SDK_VERSION = "0.9.1";
     private final Sift sift;
     private final Context context;
 
