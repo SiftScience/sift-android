@@ -12,6 +12,7 @@ import android.util.Log;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -279,6 +280,7 @@ public class Sift {
     Sift(Context context, Config conf, ListeningScheduledExecutorService executor)
             throws IOException {
         JSON.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+        JSON.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         archives = context.getSharedPreferences(ARCHIVE_NAME, Context.MODE_PRIVATE);
         this.executor = executor;
