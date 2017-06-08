@@ -108,7 +108,7 @@ public class DevicePropertiesCollector {
             appVersion = packageManager.getPackageInfo(this.context.getPackageName(), 0)
                     .versionName;
         } catch (final PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Encountered NameNotFoundException in get", e);
         }
 
         // Telephony properties

@@ -170,7 +170,7 @@ class Uploader {
                     try {
                         state.request = makeRequest();
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        Log.e(TAG, "Encountered IOException in makeRequest", e);
                     }
                 }
                 if (state.request == null) {

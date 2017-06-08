@@ -194,10 +194,17 @@ public class AppStateCollector implements LocationListener,
     public void onLocationChanged(Location location) {
         Log.d(TAG, "Location changed");
 
-        this.location = location;
-        LocationServices.FusedLocationApi.removeLocationUpdates(this.googleApiClient, this);
-
-        this.collect();
+        try {
+            if (!this.sift.getConfig().disallowLocationCollection &&
+                    this.googleApiClient.isConnected()) {
+                this.location = location;
+                LocationServices.FusedLocationApi
+                        .removeLocationUpdates(this.googleApiClient, this);
+                this.collect();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Encountered Exception in onLocationChanged", e);
+        }
     }
 
     @Override

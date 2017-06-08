@@ -57,7 +57,7 @@ public class Sift {
                 devicePropertiesCollector = new DevicePropertiesCollector(instance, context);
                 appStateCollector = new AppStateCollector(instance, context);
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.e(TAG, "Encountered IOException in open", e);
             }
         }
         openCount++;
@@ -355,7 +355,7 @@ public class Sift {
             }
             editor.apply();
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Encountered JsonProcessingException in save", e);
         }
         this.appStateCollector.disconnectLocationServices();
     }
