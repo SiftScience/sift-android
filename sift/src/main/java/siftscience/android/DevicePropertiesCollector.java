@@ -10,8 +10,6 @@ import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.sift.api.representations.AndroidDevicePropertiesJson;
 import com.sift.api.representations.MobileEventJson;
 
@@ -22,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -32,7 +31,6 @@ import java.util.Scanner;
  */
 public class DevicePropertiesCollector {
     private static final String TAG = DevicePropertiesCollector.class.getName();
-    private static final String SDK_VERSION = "0.9.2";
     private final Sift sift;
     private final Context context;
 
@@ -76,9 +74,11 @@ public class DevicePropertiesCollector {
             "/vendor/bin",
             "/sbin",
             "/etc"};
-    private static final Map<String, String> DANGEROUS_PROPERTIES = ImmutableMap.of(
-            "[ro.debuggable]", "[1]",
-            "[ro.secure]", "[0]");
+    private static final Map<String, String> DANGEROUS_PROPERTIES = new HashMap<String, String>(){{
+            put("[ro.debuggable]", "[1]");
+            put("[ro.secure]", "[0]");
+    }};
+
 
     public DevicePropertiesCollector(Sift sift, Context context) {
         this.sift = sift;
@@ -142,7 +142,7 @@ public class DevicePropertiesCollector {
         return AndroidDevicePropertiesJson.newBuilder()
                 .withAppName(appName)
                 .withAppVersion(appVersion)
-                .withSdkVersion(SDK_VERSION)
+                .withSdkVersion(Sift.SDK_VERSION)
                 .withAndroidId(androidId)
                 .withDeviceManufacturer(deviceManufacturer)
                 .withDeviceModel(deviceModel)
@@ -162,7 +162,7 @@ public class DevicePropertiesCollector {
      * @return - list of such files found
      */
     private List<String> existingRootFiles() {
-        List<String> filesFound = Lists.newArrayList();
+        List<String> filesFound = new ArrayList<>();
         for (String path : SU_PATHS) {
             if (new File(path).exists()) {
                 filesFound.add(path);
@@ -176,13 +176,13 @@ public class DevicePropertiesCollector {
      * @return - list of such packages found
      */
     private List<String> existingRootPackages() {
-        ArrayList<String> packages = Lists.newArrayList();
+        ArrayList<String> packages = new ArrayList<>();
         packages.addAll(Arrays.asList(KNOWN_ROOT_APPS_PACKAGES));
         packages.addAll(Arrays.asList(KNOWN_DANGEROUS_APPS_PACKAGES));
         packages.addAll(Arrays.asList(KNOWN_ROOT_CLOAKING_PACKAGES));
 
         PackageManager pm = context.getPackageManager();
-        List<String> packagesFound = Lists.newArrayList();
+        List<String> packagesFound = new ArrayList<>();
 
         for (String packageName : packages) {
             try {
@@ -202,7 +202,7 @@ public class DevicePropertiesCollector {
      */
     private List<String> existingDangerousProperties() {
         String[] lines = propertiesReader();
-        List<String> propertiesFound = Lists.newArrayList();
+        List<String> propertiesFound = new ArrayList<>();
         for (String line : lines) {
             for (String key : DANGEROUS_PROPERTIES.keySet()) {
                 if (line.contains(key) && line.contains(DANGEROUS_PROPERTIES.get(key))) {
@@ -220,7 +220,7 @@ public class DevicePropertiesCollector {
      */
     private List<String> existingRWPaths() {
         String[] lines = mountReader();
-        List<String> pathsFound = Lists.newArrayList();
+        List<String> pathsFound = new ArrayList<>();
         for (String line : lines) {
             // Split lines into parts
             String[] args = line.split(" ");

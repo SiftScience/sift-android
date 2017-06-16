@@ -2,8 +2,6 @@
 
 package siftscience.android;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.sift.api.representations.AndroidDevicePropertiesJson;
 import com.sift.api.representations.MobileEventJson;
 
@@ -11,7 +9,10 @@ import org.junit.After;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -34,7 +35,7 @@ public class QueueTest {
     public void testAppend() throws IOException {
         long now = 1001;
 
-        ListeningScheduledExecutorService executor = mock(ListeningScheduledExecutorService.class);
+        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
         MobileEventJson event0 = MobileEventJson.newBuilder()
@@ -70,7 +71,7 @@ public class QueueTest {
                 .withUserId("gary")
                 .build();
 
-        List<MobileEventJson> expect = ImmutableList.of(event0, event1, event2);
+        List<MobileEventJson> expect = new LinkedList<>(Arrays.asList(event0, event1, event2));
 
         Queue queue = new Queue(null, executor, USER_ID_PROVIDER, uploadRequester);
         queue.setConfig(new Queue.Config.Builder().withUploadWhenMoreThan(10).build());
@@ -93,7 +94,7 @@ public class QueueTest {
 
     @Test
     public void testAcceptSameEventAfter() throws IOException {
-        ListeningScheduledExecutorService executor = mock(ListeningScheduledExecutorService.class);
+        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
         Queue queue = new Queue(null, executor, USER_ID_PROVIDER, uploadRequester);
@@ -145,7 +146,7 @@ public class QueueTest {
         verifyZeroInteractions(executor);
         verifyZeroInteractions(uploadRequester);
 
-        assertEquals(ImmutableList.of(event0), queue.transfer());
+        assertEquals(new LinkedList<>(Arrays.asList(event0)), queue.transfer());
 
         Time.currentTime = 1000 + 60000;
         event1 = MobileEventJson.newBuilder()
@@ -163,14 +164,14 @@ public class QueueTest {
 
         verifyZeroInteractions(executor);
         verifyZeroInteractions(uploadRequester);
-        assertEquals(ImmutableList.of(event1), queue.transfer());
+        assertEquals(new LinkedList<>(Arrays.asList(event1)), queue.transfer());
     }
 
     @Test
     public void testUploadWhenMoreThan() throws IOException {
         long now = 1001;
 
-        ListeningScheduledExecutorService executor = mock(ListeningScheduledExecutorService.class);
+        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
         Queue queue = new Queue(null, executor, USER_ID_PROVIDER, uploadRequester);
@@ -202,7 +203,7 @@ public class QueueTest {
 
     @Test
     public void testUploadWhenOlderThan() throws IOException {
-        ListeningScheduledExecutorService executor = mock(ListeningScheduledExecutorService.class);
+        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
         Queue queue = new Queue(null, executor, USER_ID_PROVIDER, uploadRequester);
@@ -229,7 +230,7 @@ public class QueueTest {
     // Ensures that the first event appended will get uploaded
     @Test
     public void testUploadFirstEvent() throws IOException {
-        ListeningScheduledExecutorService executor = mock(ListeningScheduledExecutorService.class);
+        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
         Queue queue = new Queue(null, executor, USER_ID_PROVIDER, uploadRequester);
@@ -254,7 +255,7 @@ public class QueueTest {
     // Checks that appending after waiting will request an upload
     @Test
     public void testUploadEventAfterWait() throws IOException, InterruptedException {
-        ListeningScheduledExecutorService executor = mock(ListeningScheduledExecutorService.class);
+        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
         Queue queue = new Queue(null, executor, USER_ID_PROVIDER, uploadRequester);
@@ -288,7 +289,7 @@ public class QueueTest {
     // Checks that appending without waiting will not request an upload
     @Test
     public void testUploadEventWithoutWait() throws IOException {
-        ListeningScheduledExecutorService executor = mock(ListeningScheduledExecutorService.class);
+        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
         Queue queue = new Queue(null, executor, USER_ID_PROVIDER, uploadRequester);
