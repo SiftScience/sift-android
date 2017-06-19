@@ -14,23 +14,21 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.util.concurrent.ListeningScheduledExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import com.sift.api.representations.MobileEventJson;
 
 /** The main class of the Sift client library. */
 public class Sift {
+    public static final String SDK_VERSION = "0.9.3";
     private static final String TAG = Sift.class.getName();
 
     private static Sift instance;
@@ -75,7 +73,7 @@ public class Sift {
      * Return the shared Sift object.
      */
     public static synchronized Sift get() {
-        return Preconditions.checkNotNull(instance);
+        return instance;
     }
 
     /**
@@ -146,10 +144,10 @@ public class Sift {
                 return false;
             }
             Config that  = (Config) other;
-            return Objects.equal(accountId, that.accountId) &&
-                    Objects.equal(beaconKey, that.beaconKey) &&
-                    Objects.equal(serverUrlFormat, that.serverUrlFormat) &&
-                    Objects.equal(disallowLocationCollection, that.disallowLocationCollection);
+            return Utils.equals(accountId, that.accountId) &&
+                    Utils.equals(beaconKey, that.beaconKey) &&
+                    Utils.equals(serverUrlFormat, that.serverUrlFormat) &&
+                    Utils.equals(disallowLocationCollection, that.disallowLocationCollection);
         }
 
         public static class Builder {
@@ -167,19 +165,19 @@ public class Sift {
 
             private String accountId;
             public Builder withAccountId(String accountId) {
-                this.accountId = Preconditions.checkNotNull(accountId);
+                this.accountId = accountId;
                 return this;
             }
 
             private String beaconKey;
             public Builder withBeaconKey(String beaconKey) {
-                this.beaconKey = Preconditions.checkNotNull(beaconKey);
+                this.beaconKey = beaconKey;
                 return this;
             }
 
             private String serverUrlFormat;
             public Builder withServerUrlFormat(String serverUrlFormat) {
-                this.serverUrlFormat = Preconditions.checkNotNull(serverUrlFormat);
+                this.serverUrlFormat = serverUrlFormat;
                 return this;
             }
 
@@ -244,7 +242,7 @@ public class Sift {
     }
 
     private final SharedPreferences archives;
-    private final ListeningScheduledExecutorService executor;
+    private final ScheduledExecutorService executor;
     private Config config;
     private String userId;
     private final Uploader uploader;
@@ -272,12 +270,11 @@ public class Sift {
     };
 
     private Sift(Context context, Config config) throws IOException {
-        this(context, config, MoreExecutors.listeningDecorator(
-                Executors.newSingleThreadScheduledExecutor()));
+        this(context, config, Executors.newSingleThreadScheduledExecutor());
     }
 
     @VisibleForTesting
-    Sift(Context context, Config conf, ListeningScheduledExecutorService executor)
+    Sift(Context context, Config conf, ScheduledExecutorService executor)
             throws IOException {
         JSON.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
         JSON.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -301,7 +298,7 @@ public class Sift {
         archive = archives.getString(ArchiveKey.UPLOADER.key, null);
         uploader = new Uploader(archive, executor, configProvider);
 
-        queues = Maps.newHashMap();
+        queues = new HashMap<>();
         for (Map.Entry<String, ?> entry : archives.getAll().entrySet()) {
             String identifier = ArchiveKey.getQueueIdentifier(entry.getKey());
             if (identifier != null) {
@@ -398,7 +395,10 @@ public class Sift {
     /** Create an event queue. */
     public synchronized Queue createQueue(@NonNull String identifier, Queue.Config config)
             throws IOException {
-        Preconditions.checkState(getQueue(identifier) == null, "queue exists: " + identifier);
+        if (getQueue(identifier) != null) {
+            throw new IllegalStateException("queue exists: " + identifier);
+        }
+
         Log.i(TAG, String.format("Create queue \"%s\"", identifier));
         Queue queue = new Queue(null, executor, userIdProvider, uploadRequester);
         queue.setConfig(config);
@@ -420,7 +420,7 @@ public class Sift {
      * queue's batching policy.
      */
     public synchronized void upload(boolean force) {
-        List<MobileEventJson> events = Lists.newLinkedList();
+        List<MobileEventJson> events = new LinkedList<>();
         for (Queue queue : queues.values()) {
             if (force || queue.isEventsReadyForUpload(Time.now())) {
                 events.addAll(queue.transfer());

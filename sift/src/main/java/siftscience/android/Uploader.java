@@ -5,19 +5,19 @@ package siftscience.android;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.util.Log;
+import android.util.Base64;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.collect.Lists;
-import com.google.common.io.BaseEncoding;
-import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.sift.api.representations.MobileEventJson;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
@@ -85,7 +85,7 @@ class Uploader {
         private final List<List<MobileEventJson>> batches;
 
         Batches() {
-            batches = Lists.newLinkedList();
+            batches = new LinkedList<>();
         }
 
         synchronized String archive() throws JsonProcessingException {
@@ -110,7 +110,7 @@ class Uploader {
         }
     }
 
-    private final ListeningScheduledExecutorService executor;
+    private final ScheduledExecutorService executor;
     private final Batches batches;
     private final State state;
 
@@ -124,7 +124,7 @@ class Uploader {
     Semaphore onRequestRejection;
 
     Uploader(String archive,
-             ListeningScheduledExecutorService executor,
+             ScheduledExecutorService executor,
              ConfigProvider configProvider) throws IOException {
         this(archive, INITIAL_BACKOFF, executor, configProvider, new OkHttpClient());
     }
@@ -132,7 +132,7 @@ class Uploader {
     @VisibleForTesting
     Uploader(String archive,
              long initialBackoff,
-             ListeningScheduledExecutorService executor,
+             ScheduledExecutorService executor,
              ConfigProvider configProvider,
              OkHttpClient client) throws IOException {
         batches = archive == null ? new Batches() : Sift.JSON.readValue(archive, Batches.class);
@@ -287,8 +287,10 @@ class Uploader {
         }
 
         Log.i(TAG, String.format("Create HTTP request for batch: size=%d", events.size()));
-        String encodedBeaconKey = BaseEncoding.base64().encode(
-                config.beaconKey.getBytes(US_ASCII));
+
+        String encodedBeaconKey =  Base64.encodeToString(config.beaconKey.getBytes(US_ASCII),
+                Base64.NO_WRAP);
+
         ListRequest request = new ListRequest(events);
 
         byte[] data = Sift.JSON.writeValueAsBytes(request);

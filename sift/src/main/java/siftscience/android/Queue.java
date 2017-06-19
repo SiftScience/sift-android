@@ -7,12 +7,12 @@ import android.util.Log;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.sift.api.representations.MobileEventJson;
 
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * The main class for batching events before sending them to the Sift
@@ -138,20 +138,20 @@ public class Queue {
 
         State() {
             config = new Config();
-            queue = Lists.newLinkedList();
+            queue = new LinkedList<>();
             lastEvent = null;
             lastUploadTimestamp = 0;
         }
     }
 
     private final State state;
-    private final ListeningScheduledExecutorService executor;
+    private final ScheduledExecutorService executor;
 
     private final UserIdProvider userIdProvider;
     private final UploadRequester uploadRequester;
 
     Queue(String archive,
-          ListeningScheduledExecutorService executor,
+          ScheduledExecutorService executor,
           UserIdProvider userIdProvider,
           UploadRequester uploadRequester) throws IOException {
         state = archive == null ? new State() : Sift.JSON.readValue(archive, State.class);
@@ -221,7 +221,7 @@ public class Queue {
     /** Transfer the ownership of the events. */
     synchronized List<MobileEventJson> transfer() {
         List<MobileEventJson> events = state.queue;
-        state.queue = Lists.newLinkedList();
+        state.queue = new LinkedList<>();
         return events;
     }
 }

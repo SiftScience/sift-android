@@ -2,9 +2,6 @@
 
 package siftscience.android;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.ListeningScheduledExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.sift.api.representations.AndroidDevicePropertiesJson;
 import com.sift.api.representations.MobileEventJson;
 // Copyright (c) 2017 Sift Science. All rights reserved.
@@ -14,7 +11,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.stubbing.OngoingStubbing;
 
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -48,11 +48,11 @@ public class UploaderTest {
         }
     };
 
-    private ListeningScheduledExecutorService executor;
+    private ScheduledExecutorService executor;
 
     @Before
     public void setUp() {
-        executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadScheduledExecutor());
+        executor = Executors.newSingleThreadScheduledExecutor();
     }
 
     @After
@@ -65,7 +65,7 @@ public class UploaderTest {
     public void testUploadNothing() throws Exception {
         OkHttpClient client = mock(OkHttpClient.class);
         Uploader uploader = new Uploader(null, 0L, executor, CONFIG_PROVIDER, client);
-        uploader.upload(ImmutableList.<MobileEventJson>of());
+        uploader.upload(new LinkedList<MobileEventJson>());
         verifyZeroInteractions(client);
     }
 
@@ -96,7 +96,7 @@ public class UploaderTest {
                 .withTime(System.currentTimeMillis())
                 .build();
 
-        uploader.upload(ImmutableList.of(event));
+        uploader.upload(new LinkedList<>(Arrays.asList(event)));
 
         assertTrue(uploader.onRequestCompletion.tryAcquire(1, TimeUnit.SECONDS));
         assertTrue(uploader.onRequestCompletion.availablePermits() == 0);
@@ -139,7 +139,7 @@ public class UploaderTest {
                 .withTime(System.currentTimeMillis())
                 .build();
 
-        uploader.upload(ImmutableList.of(event));
+        uploader.upload(new LinkedList<>(Arrays.asList(event)));
 
         assertTrue(uploader.onRequestCompletion.availablePermits() == 0);
         assertTrue(uploader.onRequestRejection.tryAcquire(1, TimeUnit.SECONDS));
@@ -199,9 +199,9 @@ public class UploaderTest {
                 .build();
 
         // Upload 3 batches
-        uploader.upload(ImmutableList.of(event0));
-        uploader.upload(ImmutableList.of(event1));
-        uploader.upload(ImmutableList.of(event2));
+        uploader.upload(new LinkedList<>(Arrays.asList(event0)));
+        uploader.upload(new LinkedList<>(Arrays.asList(event1)));
+        uploader.upload(new LinkedList<>(Arrays.asList(event2)));
 
         assertTrue(uploader.onRequestCompletion.tryAcquire(1, TimeUnit.SECONDS));
         assertTrue(uploader.onRequestCompletion.tryAcquire(1, TimeUnit.SECONDS));

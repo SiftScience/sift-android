@@ -15,4 +15,11 @@ public class Utils {
         return MobileEventJson.newBuilder(first).withTime(currentTime).build()
                 .equals(MobileEventJson.newBuilder(second).withTime(currentTime).build());
     }
+
+    public static boolean equals(Object a, Object b) {
+        if (a == null || b == null) {
+            return a == b;
+        }
+        return a.equals(b);
+    }
 }
