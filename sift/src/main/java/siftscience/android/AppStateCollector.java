@@ -131,7 +131,8 @@ public class AppStateCollector implements LocationListener,
                 .withBatteryState((long) status)
                 .withBatteryHealth((long) health)
                 .withPlugState((long) plugState)
-                .withNetworkAddresses(ipAddresses);
+                .withNetworkAddresses(ipAddresses)
+                .withSdkVersion(Sift.SDK_VERSION);
 
         if (this.location != null) {
             return builder.withLocation(this.getLocation()).build();
