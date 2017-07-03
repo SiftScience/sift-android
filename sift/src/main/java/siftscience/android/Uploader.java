@@ -17,6 +17,7 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -143,7 +144,7 @@ class Uploader {
         this.client = client;
 
         // Check if we have unfinished batches
-        executor.submit(checkState);
+        safeSubmit(checkState);
     }
 
     String archive() throws JsonProcessingException {
@@ -155,7 +156,7 @@ class Uploader {
         if (!events.isEmpty()) {
             batches.append(events);
         }
-        executor.submit(checkState);
+        safeSubmit(checkState);
     }
 
     /**
@@ -175,7 +176,7 @@ class Uploader {
                 }
                 if (state.request == null) {
                     // Nothing to upload at the moment; check again a minute later
-                    executor.schedule(checkState, 60, TimeUnit.SECONDS);
+                    safeSchedule(checkState, 60, TimeUnit.SECONDS);
                     return;
                 }
 
@@ -183,7 +184,7 @@ class Uploader {
                 if (state.nextUploadTime > now) {
                     // We've woken up too early; go back to sleep
                     long delay = state.nextUploadTime - now;
-                    executor.schedule(checkState, delay, TimeUnit.MILLISECONDS);
+                    safeSchedule(checkState, delay, TimeUnit.MILLISECONDS);
                     return;
                 }
 
@@ -199,7 +200,7 @@ class Uploader {
                         // Success, reset the state and move on to the next batch
                         state.reset();
                         batches.pop();
-                        executor.submit(checkState);
+                        safeSubmit(checkState);
 
                         // This is for testing
                         if (onRequestCompletion != null) {
@@ -216,7 +217,7 @@ class Uploader {
                         Log.e(TAG, "Drop batch due to 400");
                         state.reset();
                         batches.pop();
-                        executor.submit(checkState);
+                        safeSubmit(checkState);
                     }
 
                     state.numRejects++;
@@ -232,7 +233,7 @@ class Uploader {
                     state.reset();
                     batches.pop();
 
-                    executor.submit(checkState);
+                    safeSubmit(checkState);
 
                     // This is for testing
                     if (onRequestRejection != null) {
@@ -243,7 +244,7 @@ class Uploader {
                 }
 
                 // This request was rejected; retry this request later
-                executor.schedule(checkState, state.backoff, TimeUnit.MILLISECONDS);
+                safeSchedule(checkState, state.backoff, TimeUnit.MILLISECONDS);
                 state.nextUploadTime = now + state.backoff;
                 state.backoff *= 2;  // Exponential backoff.
             }
@@ -305,5 +306,29 @@ class Uploader {
                 .header("Content-Encoding", "gzip")
                 .put(RequestBody.create(JSON, os.toByteArray()))
                 .build();
+    }
+
+    private boolean canUseExecutor() {
+        return executor != null && !executor.isTerminated() && !executor.isShutdown();
+    }
+
+    private void safeSchedule(Runnable command, long delay, TimeUnit unit) {
+        if (canUseExecutor()) {
+            try {
+                executor.schedule(command, delay, unit);
+            } catch (RejectedExecutionException e) {
+                Log.e(TAG, "Dropped scheduled task due to RejectedExecutionException");
+            }
+        }
+    }
+
+    private void safeSubmit(Runnable command) {
+        if (canUseExecutor()) {
+            try {
+                executor.submit(command);
+            } catch (RejectedExecutionException e) {
+                Log.e(TAG, "Dropped submitted task due to RejectedExecutionException");
+            }
+        }
     }
 }
