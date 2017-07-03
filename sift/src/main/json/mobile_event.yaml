@@ -69,6 +69,7 @@ properties:
     properties:
       activity_class_name: {type: string, required: false}
       location: {$ref: android_device_location.yaml, required: false}
+      sdk_version: {type: string, required: false}
 
       battery_level: {type: number, required: false}
       battery_state: {type: integer, required: false}
@@ -91,6 +92,8 @@ properties:
           - UIApplicationStateActive
           - UIApplicationStateInactive
           - UIApplicationStateBackground
+
+      sdk_version: {type: string, required: false}
 
       window_root_view_controller_titles: {type: array, items: {type: string}, required: false}
 
