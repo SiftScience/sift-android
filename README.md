@@ -19,7 +19,7 @@ Add Sift to your application’s build.gradle file:
 ```
 dependencies {
   ...
-  compile 'com.siftscience:sift-android:0.9.3'
+  compile 'com.siftscience:sift-android:0.9.4'
   ...
 }
 ```
@@ -151,7 +151,7 @@ public class OtherActivity extends AppCompatActivity {
     protected void onStart(Bundle savedInstanceState) {
         super.onStart();
         Sift.open(this);
-        // For Fragments, use Sift.collect(this.getActivity()) instead
+        // For Fragments, use Sift.open(this.getActivity()) instead
         Sift.collect();
     }
     @Override
