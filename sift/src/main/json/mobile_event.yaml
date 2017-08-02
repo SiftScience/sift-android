@@ -60,6 +60,12 @@ properties:
       evidence_properties: {type: array, items: {type: string}, required: false}
       evidence_directories_writable: {type: array, items: {type: string}, required: false}
 
+      build_brand: {type: string, required: false}
+      build_device: {type: string, required: false}
+      build_fingerprint: {type: string, required: false}
+      build_hardware: {type: string, required: false}
+      build_product: {type: string, required: false}
+
   android_app_state:
     scope: public
     type: object
@@ -301,6 +307,8 @@ properties:
       evidence_url_schemes_openable: {type: array, items: {type: string}, required: false}
 
       evidence_dylds_present: {type: array, items: {type: string}, required: false}
+
+      is_simulator: {type: boolean, required: false}
 
   metrics:
     type: object

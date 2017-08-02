@@ -116,16 +116,12 @@ public class DevicePropertiesCollector {
                 this.context.getSystemService(Context.TELEPHONY_SERVICE));
 
         String androidId;
-        String deviceManufacturer;
-        String deviceModel;
         String mobileCarrierName;
         String mobileCarrierIsoCountryCode;
         String systemVersion;
 
         mobileCarrierName = telephonyManager.getNetworkOperatorName();
         mobileCarrierIsoCountryCode = telephonyManager.getSimCountryIso();
-        deviceManufacturer = Build.MANUFACTURER;
-        deviceModel = Build.MODEL;
         androidId = Settings.Secure.getString(this.context.getContentResolver(),
                 Settings.Secure.ANDROID_ID);
         systemVersion = Build.VERSION.RELEASE;
@@ -133,7 +129,6 @@ public class DevicePropertiesCollector {
         // The following are different methods to detect whether the device is rooted.
         // If Build.TAGS contains "test-keys", then it's rooted.
         // If any of the other evidence* methods return a non-empty list, then it's rooted.
-        String buildTags = Build.TAGS;
         List<String> evidenceFiles = existingRootFiles();
         List<String> evidencePackages = existingRootPackages();
         List<String> evidenceProperties = existingDangerousProperties();
@@ -144,12 +139,17 @@ public class DevicePropertiesCollector {
                 .withAppVersion(appVersion)
                 .withSdkVersion(Sift.SDK_VERSION)
                 .withAndroidId(androidId)
-                .withDeviceManufacturer(deviceManufacturer)
-                .withDeviceModel(deviceModel)
+                .withDeviceManufacturer(Build.MANUFACTURER)
+                .withDeviceModel(Build.MODEL)
                 .withMobileCarrierName(mobileCarrierName)
                 .withMobileIsoCountryCode(mobileCarrierIsoCountryCode)
                 .withDeviceSystemVersion(systemVersion)
-                .withBuildTags(buildTags)
+                .withBuildBrand(Build.BRAND)
+                .withBuildDevice(Build.DEVICE)
+                .withBuildFingerprint(Build.FINGERPRINT)
+                .withBuildHardware(Build.HARDWARE)
+                .withBuildProduct(Build.PRODUCT)
+                .withBuildTags(Build.TAGS)
                 .withEvidenceFilesPresent(evidenceFiles)
                 .withEvidencePackagesPresent(evidencePackages)
                 .withEvidenceProperties(evidenceProperties)
