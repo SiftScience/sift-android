@@ -4,6 +4,7 @@ package siftscience.android;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.provider.Settings;
@@ -11,6 +12,7 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.sift.api.representations.AndroidDevicePropertiesJson;
+import com.sift.api.representations.AndroidInstalledAppJson;
 import com.sift.api.representations.MobileEventJson;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -134,6 +136,8 @@ public class DevicePropertiesCollector {
         List<String> evidenceProperties = existingDangerousProperties();
         List<String> evidenceRWPaths = existingRWPaths();
 
+        List<AndroidInstalledAppJson> installedApps = getInstalledApps();
+
         return AndroidDevicePropertiesJson.newBuilder()
                 .withAppName(appName)
                 .withAppVersion(appVersion)
@@ -154,6 +158,7 @@ public class DevicePropertiesCollector {
                 .withEvidencePackagesPresent(evidencePackages)
                 .withEvidenceProperties(evidenceProperties)
                 .withEvidenceDirectoriesWritable(evidenceRWPaths)
+                .withInstalledApps(installedApps)
                 .build();
     }
 
@@ -293,5 +298,24 @@ public class DevicePropertiesCollector {
             Log.e(TAG, "Error reading mount", e);
         }
         return allPaths.split("\n");
+    }
+
+    private List<AndroidInstalledAppJson> getInstalledApps() {
+        final PackageManager pm = context.getPackageManager();
+        List<AndroidInstalledAppJson> installedApps = new ArrayList<>();
+
+        List<PackageInfo> packageList = pm.getInstalledPackages(0);
+        for (PackageInfo packageInfo : packageList) {
+            if ((packageInfo.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0) {
+                String appName = packageInfo.applicationInfo.loadLabel(pm).toString();
+                String packageName = packageInfo.packageName;
+                installedApps.add(AndroidInstalledAppJson.newBuilder()
+                        .withAppName(appName)
+                        .withPackageName(packageName)
+                        .build());
+            }
+        }
+
+        return installedApps;
     }
 }
