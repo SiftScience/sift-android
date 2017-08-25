@@ -4,6 +4,7 @@ package siftscience.android;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.provider.Settings;
@@ -11,6 +12,7 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.sift.api.representations.AndroidDevicePropertiesJson;
+import com.sift.api.representations.AndroidInstalledAppJson;
 import com.sift.api.representations.MobileEventJson;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -116,16 +118,12 @@ public class DevicePropertiesCollector {
                 this.context.getSystemService(Context.TELEPHONY_SERVICE));
 
         String androidId;
-        String deviceManufacturer;
-        String deviceModel;
         String mobileCarrierName;
         String mobileCarrierIsoCountryCode;
         String systemVersion;
 
         mobileCarrierName = telephonyManager.getNetworkOperatorName();
         mobileCarrierIsoCountryCode = telephonyManager.getSimCountryIso();
-        deviceManufacturer = Build.MANUFACTURER;
-        deviceModel = Build.MODEL;
         androidId = Settings.Secure.getString(this.context.getContentResolver(),
                 Settings.Secure.ANDROID_ID);
         systemVersion = Build.VERSION.RELEASE;
@@ -133,27 +131,34 @@ public class DevicePropertiesCollector {
         // The following are different methods to detect whether the device is rooted.
         // If Build.TAGS contains "test-keys", then it's rooted.
         // If any of the other evidence* methods return a non-empty list, then it's rooted.
-        String buildTags = Build.TAGS;
         List<String> evidenceFiles = existingRootFiles();
         List<String> evidencePackages = existingRootPackages();
         List<String> evidenceProperties = existingDangerousProperties();
         List<String> evidenceRWPaths = existingRWPaths();
+
+        List<AndroidInstalledAppJson> installedApps = getInstalledApps();
 
         return AndroidDevicePropertiesJson.newBuilder()
                 .withAppName(appName)
                 .withAppVersion(appVersion)
                 .withSdkVersion(Sift.SDK_VERSION)
                 .withAndroidId(androidId)
-                .withDeviceManufacturer(deviceManufacturer)
-                .withDeviceModel(deviceModel)
+                .withDeviceManufacturer(Build.MANUFACTURER)
+                .withDeviceModel(Build.MODEL)
                 .withMobileCarrierName(mobileCarrierName)
                 .withMobileIsoCountryCode(mobileCarrierIsoCountryCode)
                 .withDeviceSystemVersion(systemVersion)
-                .withBuildTags(buildTags)
+                .withBuildBrand(Build.BRAND)
+                .withBuildDevice(Build.DEVICE)
+                .withBuildFingerprint(Build.FINGERPRINT)
+                .withBuildHardware(Build.HARDWARE)
+                .withBuildProduct(Build.PRODUCT)
+                .withBuildTags(Build.TAGS)
                 .withEvidenceFilesPresent(evidenceFiles)
                 .withEvidencePackagesPresent(evidencePackages)
                 .withEvidenceProperties(evidenceProperties)
                 .withEvidenceDirectoriesWritable(evidenceRWPaths)
+                .withInstalledApps(installedApps)
                 .build();
     }
 
@@ -293,5 +298,24 @@ public class DevicePropertiesCollector {
             Log.e(TAG, "Error reading mount", e);
         }
         return allPaths.split("\n");
+    }
+
+    private List<AndroidInstalledAppJson> getInstalledApps() {
+        final PackageManager pm = context.getPackageManager();
+        List<AndroidInstalledAppJson> installedApps = new ArrayList<>();
+
+        List<PackageInfo> packageList = pm.getInstalledPackages(0);
+        for (PackageInfo packageInfo : packageList) {
+            if ((packageInfo.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0) {
+                String appName = packageInfo.applicationInfo.loadLabel(pm).toString();
+                String packageName = packageInfo.packageName;
+                installedApps.add(AndroidInstalledAppJson.newBuilder()
+                        .withAppName(appName)
+                        .withPackageName(packageName)
+                        .build());
+            }
+        }
+
+        return installedApps;
     }
 }
