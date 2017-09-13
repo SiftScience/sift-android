@@ -10,6 +10,7 @@ import android.util.Base64;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sift.api.representations.MobileEventJson;
+import com.sift.api.representations.ListRequestJson;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -251,15 +252,6 @@ class Uploader {
         }
     };
 
-    /** The list request class as defined in Sift API doc. */
-    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-    private static class ListRequest {
-        final List<MobileEventJson> data;
-        ListRequest(List<MobileEventJson> data) {
-            this.data = data;
-        }
-    }
-
     private static final MediaType JSON = MediaType.parse("application/json");
 
     // StandardCharsets.US_ASCII is defined in API level 19 and we are
@@ -292,7 +284,9 @@ class Uploader {
         String encodedBeaconKey =  Base64.encodeToString(config.beaconKey.getBytes(US_ASCII),
                 Base64.NO_WRAP);
 
-        ListRequest request = new ListRequest(events);
+        ListRequestJson<MobileEventJson> request = ListRequestJson.<MobileEventJson>newBuilder()
+                .withData(events)
+                .build();
 
         byte[] data = Sift.JSON.writeValueAsBytes(request);
         ByteArrayOutputStream os = new ByteArrayOutputStream();
