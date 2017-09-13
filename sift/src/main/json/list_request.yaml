@@ -1,0 +1,12 @@
+---
+title: ListRequest
+description: user submits a collection
+type: object
+javaType: com.sift.api.representations.ListRequestJson<T>
+properties:
+  data:
+    type: array
+    items:
+      type: object
+      javaType: T
+additionalProperties: false
