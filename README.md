@@ -180,3 +180,24 @@ If the user logs out of your application, you should unset the user id:
 ```
 Sift.get().unsetUserId();
 ```
+
+#### Pro-guard setting
+Add the following lines in proguard rules
+```
+# ----------------------------------------
+# Sift Science
+# ----------------------------------------
+-keep class siftscience.android.** { *; }
+
+# ----------------------------------------
+# Jackson
+# ----------------------------------------
+-keep @com.fasterxml.jackson.annotation.JsonIgnoreProperties class * { *; }
+-keep class com.fasterxml.** { *; }
+-keep class org.codehaus.** { *; }
+-keepnames class com.fasterxml.jackson.** { *; }
+-keepclassmembers public final enum com.fasterxml.jackson.annotation.JsonAutoDetect$Visibility {
+    public static final com.fasterxml.jackson.annotation.JsonAutoDetect$Visibility *;
+}
+```
+
