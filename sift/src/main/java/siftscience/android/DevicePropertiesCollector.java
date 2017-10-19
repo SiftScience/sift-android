@@ -34,6 +34,8 @@ public class DevicePropertiesCollector {
     private final Sift sift;
     private final Context context;
 
+    private long timestamp;
+
     // Constants used to determine whether a device is rooted
     private static final String[] SU_PATHS = {
             "/system/app/Superuser.apk",
@@ -83,6 +85,7 @@ public class DevicePropertiesCollector {
     public DevicePropertiesCollector(Sift sift, Context context) {
         this.sift = sift;
         this.context = context;
+        this.timestamp = Time.now();
     }
 
     public void collect() {
@@ -91,7 +94,7 @@ public class DevicePropertiesCollector {
                 MobileEventJson.newBuilder()
                         .withAndroidDeviceProperties(deviceProperties)
                         .withInstallationId(deviceProperties.androidId)
-                        .withTime(Time.now())
+                        .withTime(this.timestamp)
                         .build());
     }
 
