@@ -72,6 +72,7 @@ public class Sift {
     /**
      * Return the shared Sift object.
      */
+    @Nullable
     public static synchronized Sift get() {
         return instance;
     }
