@@ -7,7 +7,6 @@ import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 import android.util.Base64;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sift.api.representations.MobileEventJson;
 import com.sift.api.representations.ListRequestJson;
