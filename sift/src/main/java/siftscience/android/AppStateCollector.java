@@ -32,6 +32,9 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -44,14 +47,19 @@ public class AppStateCollector implements LocationListener,
     private final Sift sift;
     private final Context context;
 
+    private long timestamp;
+    private boolean acquiredNewLocation;
     private GoogleApiClient googleApiClient;
     private LocationRequest locationRequest;
 
     private Location location;
+    private Location lastLocation;
 
     public AppStateCollector(Sift sift, Context context) {
         this.sift = sift;
         this.context = context;
+        this.timestamp = Time.now();
+        this.acquiredNewLocation = false;
 
         if (!sift.getConfig().disallowLocationCollection) {
             try {
@@ -65,6 +73,7 @@ public class AppStateCollector implements LocationListener,
                 Log.e(TAG, e.toString());
             }
         } else {
+            // Collect without location if disallowed on Sift config
             this.collect();
         }
     }
@@ -76,7 +85,7 @@ public class AppStateCollector implements LocationListener,
                 MobileEventJson.newBuilder()
                         .withAndroidAppState(this.get())
                         .withInstallationId(installationId)
-                        .withTime(Time.now())
+                        .withTime(this.timestamp)
                         .build());
     }
 
@@ -134,7 +143,7 @@ public class AppStateCollector implements LocationListener,
                 .withNetworkAddresses(ipAddresses)
                 .withSdkVersion(Sift.SDK_VERSION);
 
-        if (this.location != null) {
+        if (this.hasLocation()) {
             return builder.withLocation(this.getLocation()).build();
         }
 
@@ -165,12 +174,21 @@ public class AppStateCollector implements LocationListener,
         return addresses;
     }
 
+    private boolean hasLocation() {
+        return this.location != null || this.lastLocation != null;
+    }
+
     private AndroidDeviceLocationJson getLocation() {
+        Log.d(TAG, "Using " + (this.acquiredNewLocation ?
+                "new location" : "last location"));
+
+        Location location = this.acquiredNewLocation ? this.location : this.lastLocation;
+
         return AndroidDeviceLocationJson.newBuilder()
-                .withTime(this.location.getTime())
-                .withLatitude(this.location.getLatitude())
-                .withLongitude(this.location.getLongitude())
-                .withAccuracy(new BigDecimal(this.location.getAccuracy()).doubleValue())
+                .withTime(location.getTime())
+                .withLatitude(location.getLatitude())
+                .withLongitude(location.getLongitude())
+                .withAccuracy(new BigDecimal(location.getAccuracy()).doubleValue())
                 .build();
     }
 
@@ -188,6 +206,7 @@ public class AppStateCollector implements LocationListener,
                         .ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             LocationServices.FusedLocationApi.requestLocationUpdates(this.googleApiClient,
                     this.locationRequest, this);
+
         }
     }
 
@@ -195,13 +214,14 @@ public class AppStateCollector implements LocationListener,
     public void onLocationChanged(Location location) {
         Log.d(TAG, "Location changed");
 
+        this.acquiredNewLocation = true;
+        this.location = location;
+
         try {
             if (!this.sift.getConfig().disallowLocationCollection &&
                     this.googleApiClient.isConnected()) {
-                this.location = location;
                 LocationServices.FusedLocationApi
                         .removeLocationUpdates(this.googleApiClient, this);
-                this.collect();
             }
         } catch (Exception e) {
             Log.e(TAG, "Encountered Exception in onLocationChanged", e);
@@ -219,12 +239,19 @@ public class AppStateCollector implements LocationListener,
             Location lastLocation = LocationServices.FusedLocationApi.getLastLocation(
                     this.googleApiClient);
             if (lastLocation != null) {
-                this.location = lastLocation;
+                this.lastLocation = lastLocation;
             }
             this.requestLocation();
+            Executors.newSingleThreadScheduledExecutor().schedule(new Runnable() {
+                @Override
+                public void run() {
+                    AppStateCollector.this.collect();
+                }
+            }, 3, TimeUnit.SECONDS);
+        } else {
+            // Collect without location if disallowed on application or client level
+            this.collect();
         }
-
-        this.collect();
     }
 
     @Override
@@ -234,6 +261,6 @@ public class AppStateCollector implements LocationListener,
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        this.collect();
+
     }
 }

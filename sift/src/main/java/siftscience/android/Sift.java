@@ -28,7 +28,7 @@ import com.sift.api.representations.MobileEventJson;
 
 /** The main class of the Sift client library. */
 public class Sift {
-    public static final String SDK_VERSION = "0.9.6";
+    public static final String SDK_VERSION = "0.9.7";
     private static final String TAG = Sift.class.getName();
 
     private static Sift instance;
@@ -72,6 +72,7 @@ public class Sift {
     /**
      * Return the shared Sift object.
      */
+    @Nullable
     public static synchronized Sift get() {
         return instance;
     }
