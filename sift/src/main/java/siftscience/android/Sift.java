@@ -51,9 +51,12 @@ public class Sift {
     public static synchronized void open(@NonNull Context context, Config config) {
         if (instance == null) {
             try {
-                instance = new Sift(context, config);
-                devicePropertiesCollector = new DevicePropertiesCollector(instance, context);
-                appStateCollector = new AppStateCollector(instance, context);
+                Context c = context.getApplicationContext();
+
+                instance = new Sift(c, config);
+                devicePropertiesCollector = new DevicePropertiesCollector(instance, c);
+                appStateCollector = new AppStateCollector(instance, c,
+                        context.getClass().getSimpleName());
             } catch (IOException e) {
                 Log.e(TAG, "Encountered IOException in open", e);
             }

@@ -84,7 +84,7 @@ public class DevicePropertiesCollector {
 
     public DevicePropertiesCollector(Sift sift, Context context) {
         this.sift = sift;
-        this.context = context;
+        this.context = context.getApplicationContext();
         this.timestamp = Time.now();
     }
 
