@@ -4,7 +4,6 @@ package siftscience.android;
 
 import com.sift.api.representations.AndroidDevicePropertiesJson;
 import com.sift.api.representations.MobileEventJson;
-// Copyright (c) 2017 Sift Science. All rights reserved.
 
 import org.junit.After;
 import org.junit.Before;
