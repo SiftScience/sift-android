@@ -46,6 +46,7 @@ public class AppStateCollector implements LocationListener,
     private static final String TAG = AppStateCollector.class.getSimpleName();
     private final Sift sift;
     private final Context context;
+    private final String activityClassName;
 
     private long timestamp;
     private boolean acquiredNewLocation;
@@ -55,9 +56,11 @@ public class AppStateCollector implements LocationListener,
     private Location location;
     private Location lastLocation;
 
-    public AppStateCollector(Sift sift, Context context) {
+    public AppStateCollector(Sift sift, Context context, String activityClassName) {
         this.sift = sift;
-        this.context = context;
+        this.context = context.getApplicationContext();
+        this.activityClassName = activityClassName;
+
         this.timestamp = Time.now();
         this.acquiredNewLocation = false;
 
@@ -135,7 +138,7 @@ public class AppStateCollector implements LocationListener,
         List<String> ipAddresses = getIpAddresses();
 
         AndroidAppStateJson.Builder builder = AndroidAppStateJson.newBuilder()
-                .withActivityClassName(this.context.getClass().getSimpleName())
+                .withActivityClassName(this.activityClassName)
                 .withBatteryLevel(batteryLevel)
                 .withBatteryState((long) status)
                 .withBatteryHealth((long) health)

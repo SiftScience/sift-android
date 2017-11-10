@@ -28,7 +28,7 @@ import com.sift.api.representations.MobileEventJson;
 
 /** The main class of the Sift client library. */
 public class Sift {
-    public static final String SDK_VERSION = "0.9.7";
+    public static final String SDK_VERSION = "0.9.8";
     private static final String TAG = Sift.class.getName();
 
     private static Sift instance;
@@ -51,9 +51,12 @@ public class Sift {
     public static synchronized void open(@NonNull Context context, Config config) {
         if (instance == null) {
             try {
-                instance = new Sift(context, config);
-                devicePropertiesCollector = new DevicePropertiesCollector(instance, context);
-                appStateCollector = new AppStateCollector(instance, context);
+                Context c = context.getApplicationContext();
+
+                instance = new Sift(c, config);
+                devicePropertiesCollector = new DevicePropertiesCollector(instance, c);
+                appStateCollector = new AppStateCollector(instance, c,
+                        context.getClass().getSimpleName());
             } catch (IOException e) {
                 Log.e(TAG, "Encountered IOException in open", e);
             }

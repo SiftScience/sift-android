@@ -298,8 +298,9 @@ public class SiftTest {
     }
 
     private Context mockContext(SharedPreferences preferences) {
-        Context context = mock(Context.class);
-        when(context.getSharedPreferences(anyString(), anyInt())).thenReturn(preferences);
-        return context;
+        Context ctx = mock(Context.class);
+        when(ctx.getSharedPreferences(anyString(), anyInt())).thenReturn(preferences);
+        when(ctx.getApplicationContext()).thenReturn(ctx);
+        return ctx;
     }
 }
