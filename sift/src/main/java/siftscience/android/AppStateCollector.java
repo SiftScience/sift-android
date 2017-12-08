@@ -13,7 +13,7 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -203,9 +203,9 @@ public class AppStateCollector implements LocationListener,
                 .setInterval(TimeUnit.MINUTES.toMillis(1))
                 .setFastestInterval(TimeUnit.SECONDS.toMillis(10));
 
-        if (ActivityCompat.checkSelfPermission(this.context,
+        if (ContextCompat.checkSelfPermission(this.context,
                 Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this.context, Manifest.permission
+                ContextCompat.checkSelfPermission(this.context, Manifest.permission
                         .ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             LocationServices.FusedLocationApi.requestLocationUpdates(this.googleApiClient,
                     this.locationRequest, this);
@@ -235,9 +235,9 @@ public class AppStateCollector implements LocationListener,
     public void onConnected(@Nullable Bundle bundle) {
         Log.d(TAG, "Connected to Google API Client");
 
-        if (ActivityCompat.checkSelfPermission(this.context,
+        if (ContextCompat.checkSelfPermission(this.context,
                 Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this.context, Manifest.permission
+                ContextCompat.checkSelfPermission(this.context, Manifest.permission
                         .ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             Location lastLocation = LocationServices.FusedLocationApi.getLastLocation(
                     this.googleApiClient);

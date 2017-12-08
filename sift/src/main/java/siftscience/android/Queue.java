@@ -5,8 +5,7 @@ package siftscience.android;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.gson.JsonParseException;
 import com.sift.api.representations.MobileEventJson;
 
 import java.io.IOException;
@@ -128,7 +127,6 @@ public class Queue {
     }
 
     // States that are archived.
-    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
     private static class State {
 
         Config config;
@@ -154,14 +152,28 @@ public class Queue {
           ScheduledExecutorService executor,
           UserIdProvider userIdProvider,
           UploadRequester uploadRequester) throws IOException {
-        state = archive == null ? new State() : Sift.JSON.readValue(archive, State.class);
+        state = unarchive(archive);
+
         this.executor = executor;
         this.userIdProvider = userIdProvider;
         this.uploadRequester = uploadRequester;
     }
 
-    synchronized String archive() throws JsonProcessingException {
-        return Sift.JSON.writeValueAsString(state);
+    synchronized String archive() throws JsonParseException {
+        return Sift.GSON.toJson(state);
+    }
+
+    State unarchive(String archive) {
+        if (archive == null) {
+            return new State();
+        }
+
+        try {
+            return Sift.GSON.fromJson(archive, State.class);
+        } catch (JsonParseException e) {
+            Log.e(TAG, "Encountered JsonProcessingException in State constructor", e);
+            return new State();
+        }
     }
 
     /** Return the queue configuration. */

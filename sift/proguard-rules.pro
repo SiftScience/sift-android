@@ -4,25 +4,14 @@
 -keep class siftscience.android.** { *; }
 
 # ----------------------------------------
-# Jackson
+# GSON
 # ----------------------------------------
--keep class org.codehaus.** { *; }
--keep class com.fasterxml.** { *; }
--keep class com.fasterxml.jackson.databind.ext.*
--keep @com.fasterxml.jackson.annotation.JsonIgnoreProperties class * { *; }
-
--dontwarn com.fasterxml.jackson.databind.ext.*
-
--keepclassmembers class * {
-    @com.fasterxml.jackson.annotation.JsonCreator *;
-    @com.fasterxml.jackson.annotation.JsonProperty *;
-}
-
--keepclassmembers public final enum com.fasterxml.jackson.annotation.JsonAutoDetect$Visibility {
-    public static final com.fasterxml.jackson.annotation.JsonAutoDetect$Visibility *;
-}
-
--keepnames class com.fasterxml.jackson.** { *; }
+-keepattributes Signature
+-keepattributes *Annotation*
+-keepattributes EnclosingMethod
+-keep class sun.misc.Unsafe { *; }
+-keep class com.google.gson.stream.** { *; }
+-keep class com.sift.api.representations.** { *; }
 
 # ----------------------------------------
 # Other

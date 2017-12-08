@@ -202,7 +202,7 @@ public class SiftTest {
                 "\"unknown\":\"property\"," +
                 "\"disallowLocationCollection\":true}";
 
-        sift.JSON.readValue(jsonAsString, Sift.Config.class);
+        sift.GSON.fromJson(jsonAsString, Sift.Config.class);
     }
 
     @Test

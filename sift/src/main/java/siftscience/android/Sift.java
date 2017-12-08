@@ -4,16 +4,11 @@ package siftscience.android;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.util.Log;
-
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -24,6 +19,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParseException;
 import com.sift.api.representations.MobileEventJson;
 
 /** The main class of the Sift client library. */
@@ -69,7 +68,12 @@ public class Sift {
      * AppStateCollector will wait for location callback.
      */
     public static synchronized void collect() {
-        devicePropertiesCollector.collect();
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                devicePropertiesCollector.collect();
+            }
+        });
     }
 
     /**
@@ -202,7 +206,9 @@ public class Sift {
      * The JSON object shared within this package, which is configured
      * to generate JSON messages complied with our API doc.
      */
-    static final ObjectMapper JSON = new ObjectMapper();
+    static final Gson GSON = new GsonBuilder()
+            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+            .create();
 
     // The default queue
     public static final String DEVICE_PROPERTIES_QUEUE_IDENTIFIER = "siftscience.android.device";
@@ -277,12 +283,22 @@ public class Sift {
         this(context, config, Executors.newSingleThreadScheduledExecutor());
     }
 
+    private Config unarchive(String archive, Config c) {
+        if (archive == null) {
+            return c == null ? new Config() : c;
+        }
+
+        try {
+            return Sift.GSON.fromJson(archive, Config.class);
+        } catch (JsonParseException e) {
+            Log.e(TAG, "Encountered JsonProcessingException in Config constructor", e);
+            return new Config();
+        }
+    }
+
     @VisibleForTesting
     Sift(Context context, Config conf, ScheduledExecutorService executor)
             throws IOException {
-        JSON.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-        JSON.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
         archives = context.getSharedPreferences(ARCHIVE_NAME, Context.MODE_PRIVATE);
         this.executor = executor;
 
@@ -291,11 +307,7 @@ public class Sift {
 
         archive = archives.getString(ArchiveKey.CONFIG.key, null);
 
-        if (archive == null) {
-            config = conf == null ? new Config() : conf;
-        } else {
-            config = JSON.readValue(archive, Config.class);
-        }
+        config = unarchive(archive, conf);
 
         userId = archives.getString(ArchiveKey.USER_ID.key, null);
 
@@ -346,7 +358,7 @@ public class Sift {
         SharedPreferences.Editor editor = archives.edit();
         editor.clear();
         try {
-            editor.putString(ArchiveKey.CONFIG.key, JSON.writeValueAsString(config));
+            editor.putString(ArchiveKey.CONFIG.key, GSON.toJson(config));
             editor.putString(ArchiveKey.USER_ID.key, userId);
             editor.putString(ArchiveKey.UPLOADER.key, uploader.archive());
             for (Map.Entry<String, Queue> entry : queues.entrySet()) {
@@ -355,7 +367,7 @@ public class Sift {
                 editor.putString(identifier, entry.getValue().archive());
             }
             editor.apply();
-        } catch (JsonProcessingException e) {
+        } catch (JsonParseException e) {
             Log.e(TAG, "Encountered JsonProcessingException in save", e);
         }
         this.appStateCollector.disconnectLocationServices();
