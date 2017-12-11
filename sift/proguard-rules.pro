@@ -4,25 +4,14 @@
 -keep class siftscience.android.** { *; }
 
 # ----------------------------------------
-# Jackson
+# GSON
 # ----------------------------------------
--keep class org.codehaus.** { *; }
--keep class com.fasterxml.** { *; }
--keep class com.fasterxml.jackson.databind.ext.*
--keep @com.fasterxml.jackson.annotation.JsonIgnoreProperties class * { *; }
-
--dontwarn com.fasterxml.jackson.databind.ext.*
-
--keepclassmembers class * {
-    @com.fasterxml.jackson.annotation.JsonCreator *;
-    @com.fasterxml.jackson.annotation.JsonProperty *;
-}
-
--keepclassmembers public final enum com.fasterxml.jackson.annotation.JsonAutoDetect$Visibility {
-    public static final com.fasterxml.jackson.annotation.JsonAutoDetect$Visibility *;
-}
-
--keepnames class com.fasterxml.jackson.** { *; }
+-keepattributes Signature
+-keepattributes *Annotation*
+-keepattributes EnclosingMethod
+-keep class sun.misc.Unsafe { *; }
+-keep class com.google.gson.stream.** { *; }
+-keep class com.sift.api.representations.** { *; }
 
 # ----------------------------------------
 # Other
@@ -31,6 +20,7 @@
 -dontwarn com.google.common.**
 
 -keep class okio.*
+-dontnote okhttp3.internal.platform.*
 -dontwarn okio.*
 
 -keep class com.google.android.gms.dynamic.zzd
@@ -40,4 +30,6 @@
 -dontnote org.apache.http.**
 -dontnote com.google.android.gms.internal.*
 -dontnote com.google.common.**
--dontnote okhttp3.internal.platform.*
+
+-keep class org.apache.commons.lang3.** { <init>(...); *; }
+-keep enum org.apache.commons.lang3.** { <init>(...); *; }
