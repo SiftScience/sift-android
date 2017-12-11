@@ -7,13 +7,15 @@ import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 import android.util.Base64;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.gson.JsonParseException;
 import com.sift.api.representations.MobileEventJson;
 import com.sift.api.representations.ListRequestJson;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
@@ -41,7 +43,7 @@ class Uploader {
     }
 
     @VisibleForTesting static final int REJECTION_LIMIT = 3;
-    private static final long INITIAL_BACKOFF = TimeUnit.SECONDS.toMillis(1);
+    private static final long INITIAL_BACKOFF = TimeUnit.SECONDS.toMillis(5);
 
     /**
      * The state of uploader.
@@ -89,8 +91,8 @@ class Uploader {
             batches = new LinkedList<>();
         }
 
-        synchronized String archive() throws JsonProcessingException {
-            return Sift.JSON.writeValueAsString(this);
+        synchronized String archive() throws JsonParseException {
+            return Sift.GSON.toJson(this);
         }
 
         /** Append a batch to the end of FIFO. */
@@ -136,7 +138,7 @@ class Uploader {
              ScheduledExecutorService executor,
              ConfigProvider configProvider,
              OkHttpClient client) throws IOException {
-        batches = archive == null ? new Batches() : Sift.JSON.readValue(archive, Batches.class);
+        batches = unarchive(archive);
 
         state = new State(initialBackoff);
         this.executor = executor;
@@ -147,9 +149,23 @@ class Uploader {
         safeSubmit(checkState);
     }
 
-    String archive() throws JsonProcessingException {
+    String archive() throws JsonParseException {
         return batches.archive();
     }
+
+    Batches unarchive(String archive) {
+        if (archive == null) {
+            return new Batches();
+        }
+
+        try {
+            return Sift.GSON.fromJson(archive, Batches.class);
+        } catch (JsonParseException e) {
+            Log.e(TAG, "Encountered JsonProcessingException in Batches constructor", e);
+            return new Batches();
+        }
+    }
+
 
     void upload(List<MobileEventJson> events) {
         Log.d(TAG, String.format("Append batch: size=%d", events.size()));
@@ -208,19 +224,15 @@ class Uploader {
                         }
 
                         return;
+                    } else if (code == 400) {
+                        state.numRejects = REJECTION_LIMIT;
+                    } else {
+                        state.numRejects++;
                     }
 
                     Log.e(TAG, String.format(
                             "HTTP error when uploading batch: status=%d response=%s", code, body));
 
-                    if (code == 400) {
-                        Log.e(TAG, "Drop batch due to 400");
-                        state.reset();
-                        batches.pop();
-                        safeSubmit(checkState);
-                    }
-
-                    state.numRejects++;
 
                 } catch (IOException e) {
                     Log.e(TAG, "Network error when uploading batch", e);
@@ -256,6 +268,7 @@ class Uploader {
     // StandardCharsets.US_ASCII is defined in API level 19 and we are
     // targeting API level 16.
     private static final Charset US_ASCII = Charset.forName("US-ASCII");
+    private static final Charset UTF8 = Charset.forName("UTF-8");
 
     /** Make an HTTP request object from the first batch of events. */
     @Nullable
@@ -287,11 +300,11 @@ class Uploader {
                 .withData(events)
                 .build();
 
-        byte[] data = Sift.JSON.writeValueAsBytes(request);
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         OutputStream gzip = new GZIPOutputStream(os);
-        gzip.write(data);
-        gzip.close();
+        Writer writer = new OutputStreamWriter(gzip, UTF8);
+        Sift.GSON.toJson(request, writer);
+        writer.close();
 
         return new Request.Builder()
                 .url(String.format(config.serverUrlFormat, config.accountId))

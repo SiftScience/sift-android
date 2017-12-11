@@ -52,7 +52,7 @@ public class EventTest {
                 .withTime(System.currentTimeMillis())
                 .build();
 
-        MobileEventJson actual = Sift.JSON.readValue(Sift.JSON.writeValueAsBytes(event),
+        MobileEventJson actual = Sift.GSON.fromJson(Sift.GSON.toJson(event),
                 MobileEventJson.class);
 
         assertTrue(Utils.eventsAreBasicallyEqual(event, actual));
