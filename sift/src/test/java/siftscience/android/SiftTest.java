@@ -189,7 +189,7 @@ public class SiftTest {
     }
 
     @Test
-    public void testUnmarshallUnknown() throws IOException {
+    public void testUnarchiveUnknownProperty() throws IOException {
         MemorySharedPreferences preferences = new MemorySharedPreferences();
 
         Sift sift = new Sift(
@@ -202,7 +202,63 @@ public class SiftTest {
                 "\"unknown\":\"property\"," +
                 "\"disallowLocationCollection\":true}";
 
-        sift.GSON.fromJson(jsonAsString, Sift.Config.class);
+        Sift.Config c = sift.GSON.fromJson(jsonAsString, Sift.Config.class);
+
+        // Unknown properties should be dropped
+        assertEquals(c, new Sift.Config.Builder()
+                .withAccountId("foo")
+                .withBeaconKey("bar")
+                .withServerUrlFormat("baz")
+                .withDisallowLocationCollection(true)
+                .build()
+        );
+    }
+
+    @Test
+    public void testSerializeConfig() throws IOException {
+        MemorySharedPreferences preferences = new MemorySharedPreferences();
+
+        Sift.Config c = new Sift.Config.Builder()
+                .withAccountId("a")
+                .withBeaconKey("b")
+                .withServerUrlFormat("s")
+                .withDisallowLocationCollection(false)
+                .build();
+
+        Sift sift = new Sift(
+                mockContext(preferences), c, mock(ScheduledExecutorService.class));
+
+        String configString = sift.archiveConfig();
+
+        assertEquals(configString,
+                "{\"account_id\":\"a\"," +
+                        "\"beacon_key\":\"b\"," +
+                        "\"server_url_format\":\"s\"," +
+                        "\"disallow_location_collection\":false}");
+
+        assertEquals(sift.GSON.fromJson(configString, Sift.Config.class), c);
+    }
+
+    @Test
+    public void testUnarchiveLegacyConfig() throws IOException {
+        MemorySharedPreferences preferences = new MemorySharedPreferences();
+
+        Sift sift = new Sift(
+                mockContext(preferences), null, mock(ScheduledExecutorService.class));
+
+        String legacyConfig = "{\"accountId\":\"a\"," +
+                "\"beaconKey\":\"b\"," +
+                "\"disallowLocationCollection\":false," +
+                "\"serverUrlFormat\":\"s\"}";
+
+        Sift.Config c = sift.GSON.fromJson(legacyConfig, Sift.Config.class);
+
+        assertEquals(c, new Sift.Config.Builder()
+                .withAccountId("a")
+                .withBeaconKey("b")
+                .withServerUrlFormat("s")
+                .withDisallowLocationCollection(false)
+                .build());
     }
 
     @Test
