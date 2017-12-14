@@ -19,7 +19,7 @@ Add Sift to your application’s build.gradle file:
 ```
 dependencies {
   ...
-  compile 'com.siftscience:sift-android:0.9.9'
+  compile 'com.siftscience:sift-android:0.9.10'
   ...
 }
 ```
@@ -68,12 +68,11 @@ public class App extends Application {
         super.onCreate();
         registerActivityLifecycleCallbacks(new ActivityLifecycleCallbacksHandler());
     }
-    
+
     private static final class ActivityLifecycleCallbacksHandler
             implements ActivityLifecycleCallbacks {
         public void onActivityCreated(Activity activity, Bundle bundle) {
-            Sift.open(activity);
-            Sift.get().setConfig(new Sift.Config.Builder()
+            Sift.open(activity, new Sift.Config.Builder()
                 .withAccountId("YOUR_ACCOUNT_ID")
                 .withBeaconKey("YOUR_BEACON_KEY")
                 // Uncomment to disallow location collection
@@ -119,8 +118,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_hello_sift);
-        Sift.open(this);
-        Sift.get().setConfig(new Sift.Config.Builder()
+        Sift.open(this, new Sift.Config.Builder()
             .withAccountId("YOUR_ACCOUNT_ID")
             .withBeaconKey("YOUR_BEACON_KEY")
             // Uncomment to disallow location collection

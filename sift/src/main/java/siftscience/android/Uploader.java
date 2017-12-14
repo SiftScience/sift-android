@@ -8,6 +8,8 @@ import android.util.Log;
 import android.util.Base64;
 
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.annotations.SerializedName;
 import com.sift.api.representations.MobileEventJson;
 import com.sift.api.representations.ListRequestJson;
 
@@ -85,6 +87,7 @@ class Uploader {
      * batch) to provide atomic operations.
      */
     private static class Batches {
+        @SerializedName(value="batches")
         private final List<List<MobileEventJson>> batches;
 
         Batches() {
@@ -160,8 +163,8 @@ class Uploader {
 
         try {
             return Sift.GSON.fromJson(archive, Batches.class);
-        } catch (JsonParseException e) {
-            Log.e(TAG, "Encountered JsonProcessingException in Batches constructor", e);
+        } catch (JsonSyntaxException e) {
+            Log.d(TAG, "Encountered exception in Batches unarchive");
             return new Batches();
         }
     }

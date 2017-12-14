@@ -6,6 +6,8 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.annotations.SerializedName;
 import com.sift.api.representations.MobileEventJson;
 
 import java.io.IOException;
@@ -39,12 +41,14 @@ public class Queue {
          * This may optimize some resource usage when you expect that
          * the value of events appended to this queue is rarely changed.
          */
+        @SerializedName(value="accept_same_event_after", alternate={"acceptSameEventAfter"})
         public final long acceptSameEventAfter;
 
         /**
          * Upload events when the number of events is more than
          * `uploadWhenMoreThan` (non-positive value will be ignored).
          */
+        @SerializedName(value="upload_when_more_than", alternate={"uploadWhenMoreThan"})
         public final int uploadWhenMoreThan;
 
         /**
@@ -52,6 +56,7 @@ public class Queue {
          * `uploadWhenOlderThan` milliseconds ago (non-positive value
          * will be ignored).
          */
+        @SerializedName(value="upload_when_older_than", alternate={"uploadWhenOlderThan"})
         public final long uploadWhenOlderThan;
 
         // The default no-args constructor.
@@ -128,10 +133,13 @@ public class Queue {
 
     // States that are archived.
     private static class State {
-
+        @SerializedName("config")
         Config config;
+        @SerializedName("queue")
         List<MobileEventJson> queue;
+        @SerializedName(value="last_event", alternate={"lastEvent"})
         MobileEventJson lastEvent;
+        @SerializedName(value="last_upload_timestamp", alternate={"lastUploadTimestamp"})
         long lastUploadTimestamp;
 
         State() {
@@ -170,8 +178,8 @@ public class Queue {
 
         try {
             return Sift.GSON.fromJson(archive, State.class);
-        } catch (JsonParseException e) {
-            Log.e(TAG, "Encountered JsonProcessingException in State constructor", e);
+        } catch (JsonSyntaxException e) {
+            Log.d(TAG, "Encountered exception in Queue state unarchive");
             return new State();
         }
     }

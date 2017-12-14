@@ -23,11 +23,13 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.annotations.SerializedName;
 import com.sift.api.representations.MobileEventJson;
 
 /** The main class of the Sift client library. */
 public class Sift {
-    public static final String SDK_VERSION = "0.9.9";
+    public static final String SDK_VERSION = "0.9.10";
     private static final String TAG = Sift.class.getName();
 
     private static Sift instance;
@@ -120,15 +122,19 @@ public class Sift {
                 "https://api3.siftscience.com/v3/accounts/%s/mobile_events";
 
         /** Your account ID; defaults to null. */
+        @SerializedName(value="account_id", alternate={"accountId"})
         public final String accountId;
 
         /** Your beacon key; defaults to null. */
+        @SerializedName(value="beacon_key", alternate={"beaconKey"})
         public final String beaconKey;
 
         /** The location of the API endpoint. May be overwritten for testing. */
+        @SerializedName(value="server_url_format", alternate={"serverUrlFormat"})
         public final String serverUrlFormat;
 
         /** Whether to allow location collection; defaults to false. */
+        @SerializedName(value="disallow_location_collection", alternate={"disallowLocationCollection"})
         public final boolean disallowLocationCollection;
 
         // The default no-args constructor for JSON.
@@ -202,10 +208,8 @@ public class Sift {
         }
     }
 
-    /**
-     * The JSON object shared within this package, which is configured
-     * to generate JSON messages complied with our API doc.
-     */
+    // Technically we don't need a naming policy since we have full @SerializedName coverage –
+    // this is just defensive to ensure consistent writes in case we leave something out
     static final Gson GSON = new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .create();
@@ -297,6 +301,24 @@ public class Sift {
     }
 
     @VisibleForTesting
+    String archiveConfig() {
+        return GSON.toJson(config);
+    }
+
+    Config unarchiveConfig(String archive, Config c) {
+        if (archive == null) {
+            return c == null ? new Config() : c;
+        }
+
+        try {
+            return Sift.GSON.fromJson(archive, Config.class);
+        } catch (JsonSyntaxException e) {
+            Log.d(TAG, "Encountered exception in Sift config unarchive");
+            return c == null ? new Config() : c;
+        }
+    }
+
+    @VisibleForTesting
     Sift(Context context, Config conf, ScheduledExecutorService executor)
             throws IOException {
         archives = context.getSharedPreferences(ARCHIVE_NAME, Context.MODE_PRIVATE);
@@ -307,7 +329,7 @@ public class Sift {
 
         archive = archives.getString(ArchiveKey.CONFIG.key, null);
 
-        config = unarchive(archive, conf);
+        config = unarchiveConfig(archive, conf);
 
         userId = archives.getString(ArchiveKey.USER_ID.key, null);
 
@@ -358,7 +380,7 @@ public class Sift {
         SharedPreferences.Editor editor = archives.edit();
         editor.clear();
         try {
-            editor.putString(ArchiveKey.CONFIG.key, GSON.toJson(config));
+            editor.putString(ArchiveKey.CONFIG.key, archiveConfig());
             editor.putString(ArchiveKey.USER_ID.key, userId);
             editor.putString(ArchiveKey.UPLOADER.key, uploader.archive());
             for (Map.Entry<String, Queue> entry : queues.entrySet()) {
