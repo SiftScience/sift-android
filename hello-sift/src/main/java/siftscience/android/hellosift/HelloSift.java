@@ -10,6 +10,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
+import java.util.Collections;
+
 import siftscience.android.Sift;
 
 public class HelloSift extends AppCompatActivity {
