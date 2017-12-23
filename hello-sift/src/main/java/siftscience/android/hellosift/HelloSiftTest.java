@@ -31,6 +31,7 @@ public class HelloSiftTest extends AppCompatActivity {
                 .withAccountId("bar")
                 .withBeaconKey("baz")
                 .withDisallowLocationCollection(true)
+                .withEnableDebugLogging(true)
                 .build());
 
         Sift.get().setUserId("foo");
