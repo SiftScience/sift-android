@@ -77,6 +77,8 @@ public class App extends Application {
                 .withBeaconKey("YOUR_BEACON_KEY")
                 // Uncomment to disallow location collection
                 // .withDisallowLocationCollection(true)
+                // Uncomment to enable debug logging for development and testing
+                // .withDebugLoggingEnabled(true)
                 .build());
             Sift.collect();
         }
@@ -123,6 +125,8 @@ public class MainActivity extends AppCompatActivity {
             .withBeaconKey("YOUR_BEACON_KEY")
             // Uncomment to disallow location collection
             // .withDisallowLocationCollection(true)
+            // Uncomment to enable debug logging for development and testing
+            // .withDebugLoggingEnabled(true)
             .build());
         Sift.collect();
     }
