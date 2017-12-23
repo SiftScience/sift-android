@@ -212,7 +212,7 @@ public class SiftTest {
                 .withBeaconKey("bar")
                 .withServerUrlFormat("baz")
                 .withDisallowLocationCollection(true)
-                .withEnableDebugLogging(true)
+                .withDebugLoggingEnabled(true)
                 .build()
         );
     }
@@ -226,7 +226,7 @@ public class SiftTest {
                 .withBeaconKey("b")
                 .withServerUrlFormat("s")
                 .withDisallowLocationCollection(false)
-                .withEnableDebugLogging(false)
+                .withDebugLoggingEnabled(false)
                 .build();
 
         Sift sift = new Sift(
@@ -264,7 +264,7 @@ public class SiftTest {
                 .withBeaconKey("b")
                 .withServerUrlFormat("s")
                 .withDisallowLocationCollection(false)
-                .withEnableDebugLogging(false)
+                .withDebugLoggingEnabled(false)
                 .build());
     }
 
