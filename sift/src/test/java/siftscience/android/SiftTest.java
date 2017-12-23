@@ -170,6 +170,7 @@ public class SiftTest {
         assertNull(sift.getConfig().beaconKey);
         assertNotNull(sift.getConfig().serverUrlFormat);
         assertFalse(sift.getConfig().disallowLocationCollection);
+        assertFalse(sift.getConfig().enableDebugLogging);
 
         assertNull(sift.getUserId());
 
@@ -200,7 +201,8 @@ public class SiftTest {
                 "\"beaconKey\":\"bar\"," +
                 "\"serverUrlFormat\":\"baz\"," +
                 "\"unknown\":\"property\"," +
-                "\"disallowLocationCollection\":true}";
+                "\"disallowLocationCollection\":true," +
+                "\"enableDebugLogging\":true}";
 
         Sift.Config c = sift.GSON.fromJson(jsonAsString, Sift.Config.class);
 
@@ -210,6 +212,7 @@ public class SiftTest {
                 .withBeaconKey("bar")
                 .withServerUrlFormat("baz")
                 .withDisallowLocationCollection(true)
+                .withDebugLoggingEnabled(true)
                 .build()
         );
     }
@@ -223,6 +226,7 @@ public class SiftTest {
                 .withBeaconKey("b")
                 .withServerUrlFormat("s")
                 .withDisallowLocationCollection(false)
+                .withDebugLoggingEnabled(false)
                 .build();
 
         Sift sift = new Sift(
@@ -234,7 +238,8 @@ public class SiftTest {
                 "{\"account_id\":\"a\"," +
                         "\"beacon_key\":\"b\"," +
                         "\"server_url_format\":\"s\"," +
-                        "\"disallow_location_collection\":false}");
+                        "\"disallow_location_collection\":false," +
+                        "\"enable_debug_logging\":false}");
 
         assertEquals(sift.GSON.fromJson(configString, Sift.Config.class), c);
     }
@@ -249,6 +254,7 @@ public class SiftTest {
         String legacyConfig = "{\"accountId\":\"a\"," +
                 "\"beaconKey\":\"b\"," +
                 "\"disallowLocationCollection\":false," +
+                "\"enableDebugLogging\":false," +
                 "\"serverUrlFormat\":\"s\"}";
 
         Sift.Config c = sift.GSON.fromJson(legacyConfig, Sift.Config.class);
@@ -258,6 +264,7 @@ public class SiftTest {
                 .withBeaconKey("b")
                 .withServerUrlFormat("s")
                 .withDisallowLocationCollection(false)
+                .withDebugLoggingEnabled(false)
                 .build());
     }
 

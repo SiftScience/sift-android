@@ -59,7 +59,7 @@ public class Sift {
                 appStateCollector = new AppStateCollector(instance, c,
                         context.getClass().getSimpleName());
             } catch (IOException e) {
-                Log.e(TAG, "Encountered IOException in open", e);
+                if (config.enableDebugLogging) Log.e(TAG, "Encountered IOException in open", e);
             }
         }
         openCount++;
@@ -137,19 +137,25 @@ public class Sift {
         @SerializedName(value="disallow_location_collection", alternate={"disallowLocationCollection"})
         public final boolean disallowLocationCollection;
 
+        /** Whether to allow location collection; defaults to false. */
+        @SerializedName(value="enable_debug_logging", alternate={"enableDebugLogging"})
+        public final boolean enableDebugLogging;
+
         // The default no-args constructor for JSON.
         Config() {
-            this(null, null, DEFAULT_SERVER_URL_FORMAT, false);
+            this(null, null, DEFAULT_SERVER_URL_FORMAT, false, false);
         }
 
         private Config(String accountId,
                        String beaconKey,
                        String serverUrlFormat,
-                       boolean disallowLocationCollection) {
+                       boolean disallowLocationCollection,
+                       boolean enableDebugLogging) {
             this.accountId = accountId;
             this.beaconKey = beaconKey;
             this.serverUrlFormat = serverUrlFormat;
             this.disallowLocationCollection = disallowLocationCollection;
+            this.enableDebugLogging = enableDebugLogging;
         }
 
         @Override
@@ -161,7 +167,8 @@ public class Sift {
             return Utils.equals(accountId, that.accountId) &&
                     Utils.equals(beaconKey, that.beaconKey) &&
                     Utils.equals(serverUrlFormat, that.serverUrlFormat) &&
-                    Utils.equals(disallowLocationCollection, that.disallowLocationCollection);
+                    Utils.equals(disallowLocationCollection, that.disallowLocationCollection) &&
+                    Utils.equals(enableDebugLogging, that.enableDebugLogging);
         }
 
         public static class Builder {
@@ -175,6 +182,7 @@ public class Sift {
                 beaconKey = config.beaconKey;
                 serverUrlFormat = config.serverUrlFormat;
                 disallowLocationCollection = config.disallowLocationCollection;
+                enableDebugLogging = config.enableDebugLogging;
             }
 
             private String accountId;
@@ -201,9 +209,15 @@ public class Sift {
                 return this;
             }
 
+            private boolean enableDebugLogging;
+            public Builder withDebugLoggingEnabled(boolean enableDebugLogging) {
+                this.enableDebugLogging = enableDebugLogging;
+                return this;
+            }
+
             public Config build() {
                 return new Config(accountId, beaconKey, serverUrlFormat,
-                        disallowLocationCollection);
+                        disallowLocationCollection, enableDebugLogging);
             }
         }
     }
@@ -295,7 +309,7 @@ public class Sift {
         try {
             return Sift.GSON.fromJson(archive, Config.class);
         } catch (JsonParseException e) {
-            Log.e(TAG, "Encountered JsonProcessingException in Config constructor", e);
+            if (config.enableDebugLogging) Log.e(TAG, "Encountered JsonProcessingException in Config constructor", e);
             return new Config();
         }
     }
@@ -313,7 +327,7 @@ public class Sift {
         try {
             return Sift.GSON.fromJson(archive, Config.class);
         } catch (JsonSyntaxException e) {
-            Log.d(TAG, "Encountered exception in Sift config unarchive");
+            if (config.enableDebugLogging) Log.d(TAG, "Encountered exception in Sift config unarchive");
             return c == null ? new Config() : c;
         }
     }
@@ -363,10 +377,10 @@ public class Sift {
         executor.shutdown();
         try {
             if (!executor.awaitTermination(1, TimeUnit.SECONDS)) {
-                Log.w(TAG, "Some tasks are not terminated yet before timeout");
+                if (config.enableDebugLogging) Log.w(TAG, "Some tasks are not terminated yet before timeout");
             }
         } catch (InterruptedException e) {
-            Log.e(TAG, "Interrupted when awaiting executor", e);
+            if (config.enableDebugLogging) Log.e(TAG, "Interrupted when awaiting executor", e);
         }
     }
 
@@ -390,7 +404,7 @@ public class Sift {
             }
             editor.apply();
         } catch (JsonParseException e) {
-            Log.e(TAG, "Encountered JsonProcessingException in save", e);
+            if (config.enableDebugLogging) Log.e(TAG, "Encountered JsonProcessingException in save", e);
         }
         this.appStateCollector.disconnectLocationServices();
     }

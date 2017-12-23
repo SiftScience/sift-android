@@ -324,7 +324,7 @@ public class QueueTest {
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
         String queueState = "{\"config\":{\"accept_same_event_after\":1,\"upload_when_more_than\":2," +
-                "\"upload_when_older_than\":3},\"queue\":[],\"last_event\":{\"time\":1513206382563," +
+                "\"upload_when_older_than\":3,\"enable_debug_logging\":false},\"queue\":[],\"last_event\":{\"time\":1513206382563," +
                 "\"user_id\":\"USER_ID\",\"installation_id\":\"a4c7e6b6cae420e9\"," +
                 "\"android_app_state\":{\"activity_class_name\":\"HelloSift\"," +
                 "\"sdk_version\":\"0.9.7\",\"battery_level\":0.5,\"battery_state\":2," +
