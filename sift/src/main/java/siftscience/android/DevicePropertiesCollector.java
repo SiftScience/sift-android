@@ -113,7 +113,7 @@ public class DevicePropertiesCollector {
             appVersion = packageManager.getPackageInfo(this.context.getPackageName(), 0)
                     .versionName;
         } catch (final PackageManager.NameNotFoundException e) {
-            Log.e(TAG, "Encountered NameNotFoundException in get", e);
+            if (sift.getConfig().enableDebugLogging) Log.e(TAG, "Encountered NameNotFoundException in get", e);
         }
 
         // Telephony properties
@@ -234,7 +234,7 @@ public class DevicePropertiesCollector {
             String[] args = line.split(" ");
             if (args.length < 4){
                 // If we don't have enough options per line, skip this and log an error
-                Log.e(TAG, String.format("Error formatting mount: %s", line));
+                if (sift.getConfig().enableDebugLogging) Log.e(TAG, String.format("Error formatting mount: %s", line));
                 continue;
             }
             String mountPoint = args[1];
@@ -264,7 +264,7 @@ public class DevicePropertiesCollector {
         try {
             inputstream = Runtime.getRuntime().exec("getprop").getInputStream();
         } catch (IOException e) {
-            Log.e(TAG, "Error reading properties", e);
+            if (sift.getConfig().enableDebugLogging) Log.e(TAG, "Error reading properties", e);
         }
         if (inputstream == null) {
             return ArrayUtils.EMPTY_STRING_ARRAY;
@@ -274,7 +274,7 @@ public class DevicePropertiesCollector {
         try {
             allProperties = new Scanner(inputstream).useDelimiter("\\A").next();
         } catch (NoSuchElementException e) {
-            Log.e(TAG, "Error reading properties", e);
+            if (sift.getConfig().enableDebugLogging) Log.e(TAG, "Error reading properties", e);
         }
         return allProperties.split("\n");
     }
@@ -288,7 +288,7 @@ public class DevicePropertiesCollector {
         try {
             inputstream = Runtime.getRuntime().exec("mount").getInputStream();
         } catch (IOException e) {
-            Log.e(TAG, "Error reading mount", e);
+            if (sift.getConfig().enableDebugLogging) Log.e(TAG, "Error reading mount", e);
         }
         if (inputstream == null) {
             return ArrayUtils.EMPTY_STRING_ARRAY;
@@ -298,7 +298,7 @@ public class DevicePropertiesCollector {
         try {
             allPaths = new Scanner(inputstream).useDelimiter("\\A").next();
         } catch (NoSuchElementException e) {
-            Log.e(TAG, "Error reading mount", e);
+            if (sift.getConfig().enableDebugLogging) Log.e(TAG, "Error reading mount", e);
         }
         return allPaths.split("\n");
     }

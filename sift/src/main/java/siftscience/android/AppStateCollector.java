@@ -73,7 +73,7 @@ public class AppStateCollector implements LocationListener,
                         .build();
                 this.googleApiClient.connect();
             } catch (Exception e) {
-                Log.e(TAG, e.toString());
+                if (sift.getConfig().enableDebugLogging)Log.e(TAG, e.toString());
             }
         } else {
             // Collect without location if disallowed on Sift config
@@ -93,7 +93,7 @@ public class AppStateCollector implements LocationListener,
     }
 
     public void disconnectLocationServices() {
-        Log.d(TAG, "Disconnect location services");
+        if (sift.getConfig().enableDebugLogging)Log.d(TAG, "Disconnect location services");
 
         try {
             if (!this.sift.getConfig().disallowLocationCollection &&
@@ -101,19 +101,19 @@ public class AppStateCollector implements LocationListener,
                 this.googleApiClient.disconnect();
             }
         } catch (Exception e) {
-            Log.e(TAG, e.toString());
+            if (sift.getConfig().enableDebugLogging)Log.e(TAG, e.toString());
         }
     }
 
     public void reconnectLocationServices() {
-        Log.d(TAG, "Reconnect location services");
+        if (sift.getConfig().enableDebugLogging)Log.d(TAG, "Reconnect location services");
 
         try {
             if (!this.sift.getConfig().disallowLocationCollection) {
                 this.googleApiClient.connect();
             }
         } catch (Exception e) {
-            Log.e(TAG, e.toString());
+            if (sift.getConfig().enableDebugLogging)Log.e(TAG, e.toString());
         }
     }
 
@@ -172,7 +172,7 @@ public class AppStateCollector implements LocationListener,
                 }
             }
         } catch (SocketException e) {
-            Log.e(TAG, e.toString());
+            if (sift.getConfig().enableDebugLogging)Log.e(TAG, e.toString());
         }
         return addresses;
     }
@@ -182,7 +182,7 @@ public class AppStateCollector implements LocationListener,
     }
 
     private AndroidDeviceLocationJson getLocation() {
-        Log.d(TAG, "Using " + (this.acquiredNewLocation ?
+        if (sift.getConfig().enableDebugLogging)Log.d(TAG, "Using " + (this.acquiredNewLocation ?
                 "new location" : "last location"));
 
         Location location = this.acquiredNewLocation ? this.location : this.lastLocation;
@@ -196,7 +196,7 @@ public class AppStateCollector implements LocationListener,
     }
 
     private void requestLocation() {
-        Log.d(TAG, "Requested location");
+        if (sift.getConfig().enableDebugLogging)Log.d(TAG, "Requested location");
 
         this.locationRequest = LocationRequest.create()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
@@ -215,7 +215,7 @@ public class AppStateCollector implements LocationListener,
 
     @Override
     public void onLocationChanged(Location location) {
-        Log.d(TAG, "Location changed");
+        if (sift.getConfig().enableDebugLogging)Log.d(TAG, "Location changed");
 
         this.acquiredNewLocation = true;
         this.location = location;
@@ -227,13 +227,13 @@ public class AppStateCollector implements LocationListener,
                         .removeLocationUpdates(this.googleApiClient, this);
             }
         } catch (Exception e) {
-            Log.e(TAG, "Encountered Exception in onLocationChanged", e);
+            if (sift.getConfig().enableDebugLogging)Log.e(TAG, "Encountered Exception in onLocationChanged", e);
         }
     }
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        Log.d(TAG, "Connected to Google API Client");
+        if (sift.getConfig().enableDebugLogging)Log.d(TAG, "Connected to Google API Client");
 
         if (ContextCompat.checkSelfPermission(this.context,
                 Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&

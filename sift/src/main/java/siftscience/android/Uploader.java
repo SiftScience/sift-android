@@ -164,14 +164,14 @@ class Uploader {
         try {
             return Sift.GSON.fromJson(archive, Batches.class);
         } catch (JsonSyntaxException e) {
-            Log.d(TAG, "Encountered exception in Batches unarchive");
+            if (configProvider.getConfig().enableDebugLogging) Log.d(TAG, "Encountered exception in Batches unarchive");
             return new Batches();
         }
     }
 
 
     void upload(List<MobileEventJson> events) {
-        Log.d(TAG, String.format("Append batch: size=%d", events.size()));
+        if (configProvider.getConfig().enableDebugLogging) Log.d(TAG, String.format("Append batch: size=%d", events.size()));
         if (!events.isEmpty()) {
             batches.append(events);
         }
@@ -190,7 +190,7 @@ class Uploader {
                     try {
                         state.request = makeRequest();
                     } catch (IOException e) {
-                        Log.e(TAG, "Encountered IOException in makeRequest", e);
+                        if (configProvider.getConfig().enableDebugLogging) Log.e(TAG, "Encountered IOException in makeRequest", e);
                     }
                 }
                 if (state.request == null) {
@@ -208,7 +208,7 @@ class Uploader {
                 }
 
                 try {
-                    Log.d(TAG, "Send HTTP request");
+                    if (configProvider.getConfig().enableDebugLogging) Log.d(TAG, "Send HTTP request");
                     // try-with needs API level 19+ :(
                     Response response = client.newCall(state.request).execute();
                     int code = response.code();
@@ -233,18 +233,18 @@ class Uploader {
                         state.numRejects++;
                     }
 
-                    Log.e(TAG, String.format(
+                    if (configProvider.getConfig().enableDebugLogging) Log.e(TAG, String.format(
                             "HTTP error when uploading batch: status=%d response=%s", code, body));
 
 
                 } catch (IOException e) {
-                    Log.e(TAG, "Network error when uploading batch", e);
+                    if (configProvider.getConfig().enableDebugLogging) Log.e(TAG, "Network error when uploading batch", e);
                 }
 
                 if (state.numRejects >= REJECTION_LIMIT) {
                     // This request has been rejected repeatedly;
                     // reset the state and move on to the next batch
-                    Log.e(TAG, "Drop batch due to repeated rejection");
+                    if (configProvider.getConfig().enableDebugLogging) Log.e(TAG, "Drop batch due to repeated rejection");
                     state.reset();
                     batches.pop();
 
@@ -283,18 +283,18 @@ class Uploader {
 
         Sift.Config config = configProvider.getConfig();
         if (config == null) {
-            Log.d(TAG, "Missing Sift.Config object");
+            if (configProvider.getConfig().enableDebugLogging) Log.d(TAG, "Missing Sift.Config object");
             return null;
         }
 
         if (config.accountId == null ||
                 config.beaconKey == null ||
                 config.serverUrlFormat == null) {
-            Log.w(TAG, "Missing account ID, beacon key, and/or server URL format");
+            if (configProvider.getConfig().enableDebugLogging) Log.w(TAG, "Missing account ID, beacon key, and/or server URL format");
             return null;
         }
 
-        Log.i(TAG, String.format("Create HTTP request for batch: size=%d", events.size()));
+        if (configProvider.getConfig().enableDebugLogging) Log.i(TAG, String.format("Create HTTP request for batch: size=%d", events.size()));
 
         String encodedBeaconKey =  Base64.encodeToString(config.beaconKey.getBytes(US_ASCII),
                 Base64.NO_WRAP);
@@ -326,7 +326,7 @@ class Uploader {
             try {
                 executor.schedule(command, delay, unit);
             } catch (RejectedExecutionException e) {
-                Log.e(TAG, "Dropped scheduled task due to RejectedExecutionException");
+                if (configProvider.getConfig().enableDebugLogging) Log.e(TAG, "Dropped scheduled task due to RejectedExecutionException");
             }
         }
     }
@@ -336,7 +336,7 @@ class Uploader {
             try {
                 executor.submit(command);
             } catch (RejectedExecutionException e) {
-                Log.e(TAG, "Dropped submitted task due to RejectedExecutionException");
+                if (configProvider.getConfig().enableDebugLogging) Log.e(TAG, "Dropped submitted task due to RejectedExecutionException");
             }
         }
     }

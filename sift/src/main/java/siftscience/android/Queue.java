@@ -59,17 +59,22 @@ public class Queue {
         @SerializedName(value="upload_when_older_than", alternate={"uploadWhenOlderThan"})
         public final long uploadWhenOlderThan;
 
+        @SerializedName(value="enable_debug_logging", alternate={"enableDebugLogging"})
+        public final boolean enableDebugLogging;
+
         // The default no-args constructor.
         Config() {
-            this(0, -1, 0);
+            this(0, -1, 0, false);
         }
 
         private Config(long acceptSameEventAfter,
                        int uploadWhenMoreThan,
-                       long uploadWhenOlderThan) {
+                       long uploadWhenOlderThan,
+                       boolean enableDebugLogging) {
             this.acceptSameEventAfter = acceptSameEventAfter;
             this.uploadWhenMoreThan = uploadWhenMoreThan;
             this.uploadWhenOlderThan = uploadWhenOlderThan;
+            this.enableDebugLogging = enableDebugLogging;
         }
 
         @Override
@@ -102,8 +107,14 @@ public class Queue {
                 return this;
             }
 
+            private boolean enableDebugLogging = false;
+            public Builder withDebugLoggingEnabled(boolean enableDebugLogging) {
+                this.enableDebugLogging = enableDebugLogging;
+                return this;
+            }
+
             public Config build() {
-                return new Config(acceptSameEventAfter, uploadWhenMoreThan, uploadWhenOlderThan);
+                return new Config(acceptSameEventAfter, uploadWhenMoreThan, uploadWhenOlderThan, enableDebugLogging);
             }
         }
     }
@@ -179,7 +190,7 @@ public class Queue {
         try {
             return Sift.GSON.fromJson(archive, State.class);
         } catch (JsonSyntaxException e) {
-            Log.d(TAG, "Encountered exception in Queue state unarchive");
+            if (getConfig().enableDebugLogging) Log.d(TAG, "Encountered exception in Queue state unarchive");
             return new State();
         }
     }
@@ -212,11 +223,11 @@ public class Queue {
                 state.lastEvent != null &&
                 now < state.lastEvent.time + state.config.acceptSameEventAfter &&
                 Utils.eventsAreBasicallyEqual(state.lastEvent, event)) {
-            Log.d(TAG, String.format("Drop duplicate event \"%s\"", event.toString()));
+            if (getConfig().enableDebugLogging) Log.d(TAG, String.format("Drop duplicate event \"%s\"", event.toString()));
             return;
         }
 
-        Log.i(TAG, String.format("Append event \"%s\"", event.toString()));
+        if (getConfig().enableDebugLogging) Log.i(TAG, String.format("Append event \"%s\"", event.toString()));
         state.queue.add(event);
         state.lastEvent = event;
 

@@ -210,7 +210,7 @@ public class Sift {
             }
 
             private boolean enableDebugLogging;
-            public Builder withEnableDebugLogging(boolean enableDebugLogging) {
+            public Builder withDebugLoggingEnabled(boolean enableDebugLogging) {
                 this.enableDebugLogging = enableDebugLogging;
                 return this;
             }
