@@ -164,7 +164,7 @@ class Uploader {
         try {
             return Sift.GSON.fromJson(archive, Batches.class);
         } catch (JsonSyntaxException e) {
-            Log.d(TAG, "Encountered exception in Batches unarchive");
+            Log.d(TAG, "Encountered exception in Batches unarchive", e);
             return new Batches();
         }
     }

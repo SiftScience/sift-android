@@ -179,7 +179,7 @@ public class Queue {
         try {
             return Sift.GSON.fromJson(archive, State.class);
         } catch (JsonSyntaxException e) {
-            Log.d(TAG, "Encountered exception in Queue state unarchive");
+            Log.d(TAG, "Encountered exception in Queue state unarchive", e);
             return new State();
         }
     }
