@@ -12,9 +12,9 @@ import org.junit.Test;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ScheduledExecutorService;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -37,7 +37,6 @@ public class QueueTest {
     public void testAppend() throws IOException {
         long now = 1001;
 
-        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
         MobileEventJson event0 = MobileEventJson.newBuilder()
@@ -75,14 +74,13 @@ public class QueueTest {
 
         List<MobileEventJson> expect = new LinkedList<>(Arrays.asList(event0, event1, event2));
 
-        Queue queue = new Queue(null, executor, USER_ID_PROVIDER, uploadRequester);
+        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester);
         queue.setConfig(new Queue.Config.Builder().withUploadWhenMoreThan(10).build());
 
         for (MobileEventJson event : expect) {
             queue.append(event);
         }
         assertFalse(queue.isEventsReadyForUpload(now));
-        verifyZeroInteractions(executor);
         verifyZeroInteractions(uploadRequester);
 
         String archive = queue.archive();
@@ -90,16 +88,15 @@ public class QueueTest {
         assertEquals(expect, queue.transfer());
 
         // Test un-archived events
-        Queue another = new Queue(archive, executor, USER_ID_PROVIDER, uploadRequester);
+        Queue another = new Queue(archive, USER_ID_PROVIDER, uploadRequester);
         assertEquals(expect, another.transfer());
     }
 
     @Test
     public void testAcceptSameEventAfter() throws IOException {
-        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
-        Queue queue = new Queue(null, executor, USER_ID_PROVIDER, uploadRequester);
+        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester);
         queue.setConfig(new Queue.Config.Builder().withAcceptSameEventAfter(60000).build());
 
         MobileEventJson event0, event1;
@@ -145,10 +142,9 @@ public class QueueTest {
         assertTrue(Time.currentTime == event1.time);
         queue.append(event1);
 
-        verifyZeroInteractions(executor);
         verifyZeroInteractions(uploadRequester);
 
-        assertEquals(new LinkedList<>(Arrays.asList(event0)), queue.transfer());
+        assertEquals(Collections.singletonList(event0), queue.transfer());
 
         Time.currentTime = 1000 + 60000;
         event1 = MobileEventJson.newBuilder()
@@ -164,19 +160,17 @@ public class QueueTest {
         assertTrue(Time.currentTime == event1.time);
         queue.append(event1);
 
-        verifyZeroInteractions(executor);
         verifyZeroInteractions(uploadRequester);
-        assertEquals(new LinkedList<>(Arrays.asList(event1)), queue.transfer());
+        assertEquals(Collections.singletonList(event1), queue.transfer());
     }
 
     @Test
     public void testUploadWhenMoreThan() throws IOException {
         long now = 1001;
 
-        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
-        Queue queue = new Queue(null, executor, USER_ID_PROVIDER, uploadRequester);
+        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester);
         queue.setConfig(new Queue.Config.Builder().withUploadWhenMoreThan(1).build());
 
         MobileEventJson event = MobileEventJson.newBuilder()
@@ -190,12 +184,10 @@ public class QueueTest {
                 .build();
 
         assertFalse(queue.isEventsReadyForUpload(now));
-        verifyZeroInteractions(executor);
         verifyZeroInteractions(uploadRequester);
 
         queue.append(event);
         assertFalse(queue.isEventsReadyForUpload(now));
-        verifyZeroInteractions(executor);
         verifyZeroInteractions(uploadRequester);
 
         queue.append(event);
@@ -205,10 +197,9 @@ public class QueueTest {
 
     @Test
     public void testUploadWhenOlderThan() throws IOException {
-        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
-        Queue queue = new Queue(null, executor, USER_ID_PROVIDER, uploadRequester);
+        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester);
         queue.setConfig(new Queue.Config.Builder().withUploadWhenOlderThan(1).build());
 
         Time.currentTime = 1000;
@@ -232,10 +223,9 @@ public class QueueTest {
     // Ensures that the first event appended will get uploaded
     @Test
     public void testUploadFirstEvent() throws IOException {
-        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
-        Queue queue = new Queue(null, executor, USER_ID_PROVIDER, uploadRequester);
+        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester);
         queue.setConfig(new Queue.Config.Builder().withUploadWhenMoreThan(5)
                 .withUploadWhenOlderThan(10000).build());
 
@@ -257,10 +247,9 @@ public class QueueTest {
     // Checks that appending after waiting will request an upload
     @Test
     public void testUploadEventAfterWait() throws IOException, InterruptedException {
-        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
-        Queue queue = new Queue(null, executor, USER_ID_PROVIDER, uploadRequester);
+        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester);
         // note that this TTL is 1 second
         queue.setConfig(new Queue.Config.Builder().withUploadWhenMoreThan(5)
                 .withUploadWhenOlderThan(1000).build());
@@ -291,10 +280,9 @@ public class QueueTest {
     // Checks that appending without waiting will not request an upload
     @Test
     public void testUploadEventWithoutWait() throws IOException {
-        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
-        Queue queue = new Queue(null, executor, USER_ID_PROVIDER, uploadRequester);
+        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester);
         queue.setConfig(new Queue.Config.Builder().withUploadWhenMoreThan(5)
                 .withUploadWhenOlderThan(10000).build());
 
@@ -320,7 +308,6 @@ public class QueueTest {
 
     @Test
     public void testSerializeQueueState() throws IOException, NoSuchFieldException, IllegalAccessException {
-        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
         String queueState = "{\"config\":{\"accept_same_event_after\":1,\"upload_when_more_than\":2," +
@@ -333,7 +320,7 @@ public class QueueTest {
                 "\"last_upload_timestamp\":1513206386326}";
 
         // First, test that we can construct a State from the archive
-        Object q = new Queue(queueState, executor, USER_ID_PROVIDER, uploadRequester)
+        Object q = new Queue(queueState, USER_ID_PROVIDER, uploadRequester)
                 .unarchive(queueState);
 
         Field field = q.getClass().getDeclaredField("config");
@@ -369,13 +356,12 @@ public class QueueTest {
         );
 
         // Next, test that we can archive back to the expected string
-        String archive = new Queue(queueState, executor, USER_ID_PROVIDER, uploadRequester).archive();
+        String archive = new Queue(queueState, USER_ID_PROVIDER, uploadRequester).archive();
         assertEquals(archive, queueState);
     }
 
     @Test
     public void testUnarchiveLegacyQueueState() throws IOException, NoSuchFieldException, IllegalAccessException {
-        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
         String legacyQueueState = "{\"config\":{\"acceptSameEventAfter\":1,\"uploadWhenMoreThan\":2," +
@@ -387,7 +373,7 @@ public class QueueTest {
                 "\"network_addresses\":[\"10.0.2.15\",\"fe80::5054:ff:fe12:3456\"]}}," +
                 "\"lastUploadTimestamp\":1513206386326}";
 
-        Object o = new Queue(null, executor, USER_ID_PROVIDER, uploadRequester)
+        Object o = new Queue(null, USER_ID_PROVIDER, uploadRequester)
                 .unarchive(legacyQueueState);
 
         Field field = o.getClass().getDeclaredField("config");

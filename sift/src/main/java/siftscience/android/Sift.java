@@ -11,8 +11,9 @@ import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -29,7 +30,7 @@ import com.sift.api.representations.MobileEventJson;
 
 /** The main class of the Sift client library. */
 public class Sift {
-    public static final String SDK_VERSION = "0.9.10";
+    public static final String SDK_VERSION = BuildConfig.VERSION_NAME;
     private static final String TAG = Sift.class.getName();
 
     private static Sift instance;
@@ -329,7 +330,7 @@ public class Sift {
             if (identifier != null) {
                 Log.i(TAG, String.format("Load queue \"%s\"", identifier));
                 archive = (String) entry.getValue();
-                Queue queue = new Queue(archive, executor, userIdProvider, uploadRequester);
+                Queue queue = new Queue(archive, userIdProvider, uploadRequester);
                 queues.put(identifier, queue);
             }
         }
@@ -425,7 +426,7 @@ public class Sift {
         }
 
         Log.i(TAG, String.format("Create queue \"%s\"", identifier));
-        Queue queue = new Queue(null, executor, userIdProvider, uploadRequester);
+        Queue queue = new Queue(null, userIdProvider, uploadRequester);
         queue.setConfig(config);
         queues.put(identifier, queue);
         return queue;
@@ -445,14 +446,23 @@ public class Sift {
      * queue's batching policy.
      */
     public synchronized void upload(boolean force) {
-        List<MobileEventJson> events = new LinkedList<>();
-        for (Queue queue : queues.values()) {
-            if (force || queue.isEventsReadyForUpload(Time.now())) {
+        // Upload all queues if any are ready for upload
+        boolean shouldUpload = force;
+        Iterator<Queue> iterator = queues.values().iterator();
+        while (!shouldUpload && iterator.hasNext()) {
+            shouldUpload = iterator.next().isEventsReadyForUpload(Time.now());
+        }
+
+        if (shouldUpload) {
+            List<MobileEventJson> events = new ArrayList<>();
+
+            for (Queue queue : queues.values()) {
                 events.addAll(queue.transfer());
             }
-        }
-        if (!events.isEmpty()) {
-            uploader.upload(events);
+
+            if (!events.isEmpty()) {
+                uploader.upload(events);
+            }
         }
     }
 }

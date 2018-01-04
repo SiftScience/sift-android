@@ -11,9 +11,8 @@ import com.google.gson.annotations.SerializedName;
 import com.sift.api.representations.MobileEventJson;
 
 import java.io.IOException;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * The main class for batching events before sending them to the Sift
@@ -144,25 +143,22 @@ public class Queue {
 
         State() {
             config = new Config();
-            queue = new LinkedList<>();
+            queue = new ArrayList<>();
             lastEvent = null;
             lastUploadTimestamp = 0;
         }
     }
 
     private final State state;
-    private final ScheduledExecutorService executor;
 
     private final UserIdProvider userIdProvider;
     private final UploadRequester uploadRequester;
 
     Queue(String archive,
-          ScheduledExecutorService executor,
           UserIdProvider userIdProvider,
           UploadRequester uploadRequester) throws IOException {
         state = unarchive(archive);
 
-        this.executor = executor;
         this.userIdProvider = userIdProvider;
         this.uploadRequester = uploadRequester;
     }
@@ -241,7 +237,7 @@ public class Queue {
     /** Transfer the ownership of the events. */
     synchronized List<MobileEventJson> transfer() {
         List<MobileEventJson> events = state.queue;
-        state.queue = new LinkedList<>();
+        state.queue = new ArrayList<>();
         return events;
     }
 }
