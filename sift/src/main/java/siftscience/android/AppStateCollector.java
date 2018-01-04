@@ -32,6 +32,7 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Locale;
 import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -163,7 +164,7 @@ public class AppStateCollector implements LocationListener,
                      enumIpAddr.hasMoreElements();) {
                     InetAddress inetAddress = enumIpAddr.nextElement();
                     if (!inetAddress.isLoopbackAddress()) {
-                        String address = inetAddress.getHostAddress().toLowerCase();
+                        String address = inetAddress.getHostAddress().toLowerCase(Locale.US);
                         if (address.indexOf('%') > -1) { // Truncate zone in IPv6 if present
                             address = address.substring(0, address.indexOf('%'));
                         }
