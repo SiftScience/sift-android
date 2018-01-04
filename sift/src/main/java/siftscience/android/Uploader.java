@@ -317,25 +317,21 @@ class Uploader {
                 .build();
     }
 
-    private boolean canUseExecutor() {
-        return executor != null && !executor.isTerminated() && !executor.isShutdown();
-    }
-
     private void safeSchedule(Runnable command, long delay, TimeUnit unit) {
-        if (canUseExecutor()) {
-            try {
-                executor.schedule(command, delay, unit);
-            } catch (RejectedExecutionException e) {
+        try {
+            executor.schedule(command, delay, unit);
+        } catch (RejectedExecutionException e) {
+            if (!executor.isShutdown()) {
                 Log.e(TAG, "Dropped scheduled task due to RejectedExecutionException");
             }
         }
     }
 
     private void safeSubmit(Runnable command) {
-        if (canUseExecutor()) {
-            try {
-                executor.submit(command);
-            } catch (RejectedExecutionException e) {
+        try {
+            executor.submit(command);
+        } catch (RejectedExecutionException e) {
+            if (!executor.isShutdown()) {
                 Log.e(TAG, "Dropped submitted task due to RejectedExecutionException");
             }
         }
