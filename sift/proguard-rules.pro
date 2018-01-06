@@ -14,6 +14,13 @@
 -keep class com.sift.api.representations.** { *; }
 
 # ----------------------------------------
+# Log
+# ----------------------------------------
+-assumenosideeffects class android.util.Log {
+    public static *** d(...);
+}
+
+# ----------------------------------------
 # Other
 # ----------------------------------------
 -keep class com.google.common.**

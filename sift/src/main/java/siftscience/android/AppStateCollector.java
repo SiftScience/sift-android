@@ -33,9 +33,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Locale;
-import java.util.TimerTask;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -48,6 +46,7 @@ public class AppStateCollector implements LocationListener,
     private final Sift sift;
     private final Context context;
     private final String activityClassName;
+    private final ScheduledExecutorService executor;
 
     private long timestamp;
     private boolean acquiredNewLocation;
@@ -57,10 +56,12 @@ public class AppStateCollector implements LocationListener,
     private Location location;
     private Location lastLocation;
 
-    public AppStateCollector(Sift sift, Context context, String activityClassName) {
+    public AppStateCollector(Sift sift, Context context, String activityClassName,
+                             ScheduledExecutorService executor) {
         this.sift = sift;
         this.context = context.getApplicationContext();
         this.activityClassName = activityClassName;
+        this.executor = executor;
 
         this.timestamp = Time.now();
         this.acquiredNewLocation = false;
@@ -246,7 +247,7 @@ public class AppStateCollector implements LocationListener,
                 this.lastLocation = lastLocation;
             }
             this.requestLocation();
-            Executors.newSingleThreadScheduledExecutor().schedule(new Runnable() {
+            executor.schedule(new Runnable() {
                 @Override
                 public void run() {
                     AppStateCollector.this.collect();

@@ -58,7 +58,7 @@ public class Sift {
                 instance = new Sift(c, config);
                 devicePropertiesCollector = new DevicePropertiesCollector(instance, c);
                 appStateCollector = new AppStateCollector(instance, c,
-                        context.getClass().getSimpleName());
+                        context.getClass().getSimpleName(), get().executor);
             } catch (IOException e) {
                 Log.e(TAG, "Encountered IOException in open", e);
             }
@@ -290,7 +290,7 @@ public class Sift {
 
     @VisibleForTesting
     String archiveConfig() {
-        return GSON.toJson(config);
+        return Sift.GSON.toJson(config);
     }
 
     Config unarchiveConfig(String archive, Config c) {
@@ -328,7 +328,7 @@ public class Sift {
         for (Map.Entry<String, ?> entry : archives.getAll().entrySet()) {
             String identifier = ArchiveKey.getQueueIdentifier(entry.getKey());
             if (identifier != null) {
-                Log.i(TAG, String.format("Load queue \"%s\"", identifier));
+                Log.d(TAG, String.format("Load queue \"%s\"", identifier));
                 archive = (String) entry.getValue();
                 Queue queue = new Queue(archive, userIdProvider, uploadRequester);
                 queues.put(identifier, queue);
@@ -364,7 +364,7 @@ public class Sift {
      * `onSaveInstanceState()` method.
      */
     public synchronized void save() {
-        Log.i(TAG, "Save Sift object states");
+        Log.d(TAG, "Save Sift object states");
         SharedPreferences.Editor editor = archives.edit();
         editor.clear();
         try {
@@ -373,7 +373,7 @@ public class Sift {
             editor.putString(ArchiveKey.UPLOADER.key, uploader.archive());
             for (Map.Entry<String, Queue> entry : queues.entrySet()) {
                 String identifier = ArchiveKey.getKeyForQueueIdentifier(entry.getKey());
-                Log.i(TAG, String.format("Save queue \"%s\"", identifier));
+                Log.d(TAG, String.format("Save queue \"%s\"", identifier));
                 editor.putString(identifier, entry.getValue().archive());
             }
             editor.apply();
@@ -384,7 +384,7 @@ public class Sift {
     }
 
     public synchronized void resume() {
-        Log.i(TAG, "Save Sift object states");
+        Log.d(TAG, "Save Sift object states");
         this.appStateCollector.reconnectLocationServices();
     }
 
@@ -424,7 +424,7 @@ public class Sift {
         if (getQueue(identifier) != null) {
             throw new IllegalStateException("queue exists: " + identifier);
         }
-
+        
         Log.i(TAG, String.format("Create queue \"%s\"", identifier));
         Queue queue = new Queue(null, userIdProvider, uploadRequester);
         queue.setConfig(config);

@@ -212,7 +212,7 @@ public class Queue {
             return;
         }
 
-        Log.i(TAG, String.format("Append event \"%s\"", event.toString()));
+        Log.d(TAG, String.format("Append event \"%s\"", event.toString()));
         state.queue.add(event);
         state.lastEvent = event;
 

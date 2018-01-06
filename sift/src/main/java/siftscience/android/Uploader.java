@@ -21,6 +21,8 @@ import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
@@ -117,11 +119,13 @@ class Uploader {
     }
 
     private final ScheduledExecutorService executor;
-    private final Batches batches;
     private final State state;
+    private final Future unarchiveFuture;
 
     private final ConfigProvider configProvider;
     private final OkHttpClient client;
+
+    private Batches batches = new Batches();
 
     // These two semaphores are used as counters in unit tests
     @VisibleForTesting
@@ -136,23 +140,35 @@ class Uploader {
     }
 
     @VisibleForTesting
-    Uploader(String archive,
+    Uploader(final String archive,
              long initialBackoff,
              ScheduledExecutorService executor,
              ConfigProvider configProvider,
              OkHttpClient client) throws IOException {
-        batches = unarchive(archive);
 
         state = new State(initialBackoff);
         this.executor = executor;
         this.configProvider = configProvider;
         this.client = client;
 
-        // Check if we have unfinished batches
-        safeSubmit(checkState);
+        this.unarchiveFuture = this.executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (state) {
+                    batches = unarchive(archive);
+                    safeSubmit(checkState);
+                }
+            }
+        });
     }
 
     String archive() throws JsonParseException {
+        try {
+            this.unarchiveFuture.get();
+        } catch (InterruptedException e) {
+        } catch (ExecutionException e) {
+        }
+
         return batches.archive();
     }
 
@@ -171,6 +187,12 @@ class Uploader {
 
 
     void upload(List<MobileEventJson> events) {
+        try {
+            this.unarchiveFuture.get();
+        } catch (InterruptedException e) {
+        } catch (ExecutionException e) {
+        }
+
         Log.d(TAG, String.format("Append batch: size=%d", events.size()));
         if (!events.isEmpty()) {
             batches.append(events);
@@ -294,7 +316,7 @@ class Uploader {
             return null;
         }
 
-        Log.i(TAG, String.format("Create HTTP request for batch: size=%d", events.size()));
+        Log.d(TAG, String.format("Create HTTP request for batch: size=%d", events.size()));
 
         String encodedBeaconKey =  Base64.encodeToString(config.beaconKey.getBytes(US_ASCII),
                 Base64.NO_WRAP);

@@ -8,6 +8,8 @@ import android.support.annotation.Nullable;
 
 import com.sift.api.representations.MobileEventJson;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -16,7 +18,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -31,6 +35,18 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class SiftTest {
+    private ScheduledExecutorService executor;
+
+    @Before
+    public void setUp() {
+        executor = Executors.newSingleThreadScheduledExecutor();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        executor.shutdown();
+        executor.awaitTermination(1, TimeUnit.SECONDS);
+    }
 
     private static class MemorySharedPreferences implements SharedPreferences {
 
@@ -162,7 +178,7 @@ public class SiftTest {
         MemorySharedPreferences preferences = new MemorySharedPreferences();
 
         Sift sift = new Sift(
-                mockContext(preferences), null, mock(ScheduledExecutorService.class));
+                mockContext(preferences), null, executor);
 
         assertNotNull(sift.getConfig());
         // Verify default values
@@ -193,7 +209,7 @@ public class SiftTest {
         MemorySharedPreferences preferences = new MemorySharedPreferences();
 
         Sift sift = new Sift(
-                mockContext(preferences), null, mock(ScheduledExecutorService.class));
+                mockContext(preferences), null, executor);
 
         String jsonAsString =
                 "{\"accountId\":\"foo\"," +
@@ -226,7 +242,7 @@ public class SiftTest {
                 .build();
 
         Sift sift = new Sift(
-                mockContext(preferences), c, mock(ScheduledExecutorService.class));
+                mockContext(preferences), c, executor);
 
         String configString = sift.archiveConfig();
 
@@ -244,7 +260,7 @@ public class SiftTest {
         MemorySharedPreferences preferences = new MemorySharedPreferences();
 
         Sift sift = new Sift(
-                mockContext(preferences), null, mock(ScheduledExecutorService.class));
+                mockContext(preferences), null, executor);
 
         String legacyConfig = "{\"accountId\":\"a\"," +
                 "\"beaconKey\":\"b\"," +
@@ -269,7 +285,7 @@ public class SiftTest {
 
         Sift sift1 =
                 new Sift(mockContext(preferences), null,
-                        mock(ScheduledExecutorService.class));
+                        executor);
         assertTrue(preferences.fields.isEmpty());
 
         sift1.getQueue(Sift.DEVICE_PROPERTIES_QUEUE_IDENTIFIER)
@@ -289,7 +305,7 @@ public class SiftTest {
         // Load saved Sift instance state
         Sift sift2 =
                 new Sift(mockContext(preferences), null,
-                        mock(ScheduledExecutorService.class));
+                        executor);
         assertEquals(sift1.getConfig(), sift2.getConfig());
         assertNull(sift2.getUserId());
 
@@ -322,7 +338,7 @@ public class SiftTest {
         // Load saved Sift instance state again
         Sift sift3 =
                 new Sift(mockContext(preferences), null,
-                        mock(ScheduledExecutorService.class));
+                        executor);
         assertNotEquals(sift1.getConfig(), sift3.getConfig());
         assertEquals(sift2.getConfig(), sift3.getConfig());
         assertEquals("user-id", sift3.getUserId());
@@ -336,7 +352,7 @@ public class SiftTest {
         MemorySharedPreferences preferences = new MemorySharedPreferences();
 
         Sift sift = new Sift(mockContext(preferences), null,
-                mock(ScheduledExecutorService.class));
+                executor);
 
         sift.setUserId("gary");
 
