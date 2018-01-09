@@ -234,7 +234,8 @@ public class UploaderTest {
     }
 
     @Test
-    public void testUnarchiveLegacyBatches() throws IOException, NoSuchFieldException, IllegalAccessException {
+    public void testUnarchiveLegacyBatches() throws IOException, NoSuchFieldException,
+            IllegalAccessException, InterruptedException {
         OkHttpClient client = mock(OkHttpClient.class);
         String legacyBatches = "{\"batches\":[[" +
                 "{\"time\":1513206382563,\"user_id\":\"USER_ID\",\"installation_id\":\"a4c7e6b6cae420e9\"," +
@@ -243,6 +244,9 @@ public class UploaderTest {
                 "\"network_addresses\":[\"10.0.2.15\",\"fe80::5054:ff:fe12:3456\"]}}],[]]}";
 
         Uploader uploader = new Uploader(legacyBatches, 0L, executor, CONFIG_PROVIDER, client);
+
+        executor.shutdown();
+        executor.awaitTermination(3, TimeUnit.SECONDS);
 
         Field field = uploader.getClass().getDeclaredField("batches");
         field.setAccessible(true);

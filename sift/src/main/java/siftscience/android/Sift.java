@@ -11,8 +11,9 @@ import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -29,7 +30,7 @@ import com.sift.api.representations.MobileEventJson;
 
 /** The main class of the Sift client library. */
 public class Sift {
-    public static final String SDK_VERSION = "0.9.10";
+    public static final String SDK_VERSION = BuildConfig.VERSION_NAME;
     private static final String TAG = Sift.class.getName();
 
     private static Sift instance;
@@ -57,7 +58,7 @@ public class Sift {
                 instance = new Sift(c, config);
                 devicePropertiesCollector = new DevicePropertiesCollector(instance, c);
                 appStateCollector = new AppStateCollector(instance, c,
-                        context.getClass().getSimpleName());
+                        context.getClass().getSimpleName(), get().executor);
             } catch (IOException e) {
                 Log.e(TAG, "Encountered IOException in open", e);
             }
@@ -319,6 +320,24 @@ public class Sift {
     }
 
     @VisibleForTesting
+    String archiveConfig() {
+        return Sift.GSON.toJson(config);
+    }
+
+    Config unarchiveConfig(String archive, Config c) {
+        if (archive == null) {
+            return c == null ? new Config() : c;
+        }
+
+        try {
+            return Sift.GSON.fromJson(archive, Config.class);
+        } catch (JsonSyntaxException e) {
+            Log.d(TAG, "Encountered exception in Sift config unarchive", e);
+            return c == null ? new Config() : c;
+        }
+    }
+
+    @VisibleForTesting
     Sift(Context context, Config conf, ScheduledExecutorService executor)
             throws IOException {
         archives = context.getSharedPreferences(ARCHIVE_NAME, Context.MODE_PRIVATE);
@@ -340,9 +359,9 @@ public class Sift {
         for (Map.Entry<String, ?> entry : archives.getAll().entrySet()) {
             String identifier = ArchiveKey.getQueueIdentifier(entry.getKey());
             if (identifier != null) {
-                Log.i(TAG, String.format("Load queue \"%s\"", identifier));
+                Log.d(TAG, String.format("Load queue \"%s\"", identifier));
                 archive = (String) entry.getValue();
-                Queue queue = new Queue(archive, executor, userIdProvider, uploadRequester);
+                Queue queue = new Queue(archive, userIdProvider, uploadRequester);
                 queues.put(identifier, queue);
             }
         }
@@ -376,7 +395,7 @@ public class Sift {
      * `onSaveInstanceState()` method.
      */
     public synchronized void save() {
-        Log.i(TAG, "Save Sift object states");
+        Log.d(TAG, "Save Sift object states");
         SharedPreferences.Editor editor = archives.edit();
         editor.clear();
         try {
@@ -385,7 +404,7 @@ public class Sift {
             editor.putString(ArchiveKey.UPLOADER.key, uploader.archive());
             for (Map.Entry<String, Queue> entry : queues.entrySet()) {
                 String identifier = ArchiveKey.getKeyForQueueIdentifier(entry.getKey());
-                Log.i(TAG, String.format("Save queue \"%s\"", identifier));
+                Log.d(TAG, String.format("Save queue \"%s\"", identifier));
                 editor.putString(identifier, entry.getValue().archive());
             }
             editor.apply();
@@ -396,7 +415,7 @@ public class Sift {
     }
 
     public synchronized void resume() {
-        Log.i(TAG, "Save Sift object states");
+        Log.d(TAG, "Save Sift object states");
         this.appStateCollector.reconnectLocationServices();
     }
 
@@ -436,9 +455,9 @@ public class Sift {
         if (getQueue(identifier) != null) {
             throw new IllegalStateException("queue exists: " + identifier);
         }
-
+        
         Log.i(TAG, String.format("Create queue \"%s\"", identifier));
-        Queue queue = new Queue(null, executor, userIdProvider, uploadRequester);
+        Queue queue = new Queue(null, userIdProvider, uploadRequester);
         queue.setConfig(config);
         queues.put(identifier, queue);
         return queue;
@@ -458,14 +477,23 @@ public class Sift {
      * queue's batching policy.
      */
     public synchronized void upload(boolean force) {
-        List<MobileEventJson> events = new LinkedList<>();
-        for (Queue queue : queues.values()) {
-            if (force || queue.isEventsReadyForUpload(Time.now())) {
+        // Upload all queues if any are ready for upload
+        boolean shouldUpload = force;
+        Iterator<Queue> iterator = queues.values().iterator();
+        while (!shouldUpload && iterator.hasNext()) {
+            shouldUpload = iterator.next().isEventsReadyForUpload(Time.now());
+        }
+
+        if (shouldUpload) {
+            List<MobileEventJson> events = new ArrayList<>();
+
+            for (Queue queue : queues.values()) {
                 events.addAll(queue.transfer());
             }
-        }
-        if (!events.isEmpty()) {
-            uploader.upload(events);
+
+            if (!events.isEmpty()) {
+                uploader.upload(events);
+            }
         }
     }
 }
