@@ -19,7 +19,7 @@ Add Sift to your application’s build.gradle file:
 ```
 dependencies {
   ...
-  compile 'com.siftscience:sift-android:0.9.10'
+  compile 'com.siftscience:sift-android:0.9.11'
   ...
 }
 ```
