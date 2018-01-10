@@ -424,7 +424,7 @@ public class Sift {
         if (getQueue(identifier) != null) {
             throw new IllegalStateException("queue exists: " + identifier);
         }
-        
+
         Log.i(TAG, String.format("Create queue \"%s\"", identifier));
         Queue queue = new Queue(null, userIdProvider, uploadRequester);
         queue.setConfig(config);
