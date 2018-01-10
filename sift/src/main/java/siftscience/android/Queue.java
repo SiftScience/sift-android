@@ -11,9 +11,8 @@ import com.google.gson.annotations.SerializedName;
 import com.sift.api.representations.MobileEventJson;
 
 import java.io.IOException;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * The main class for batching events before sending them to the Sift
@@ -144,25 +143,22 @@ public class Queue {
 
         State() {
             config = new Config();
-            queue = new LinkedList<>();
+            queue = new ArrayList<>();
             lastEvent = null;
             lastUploadTimestamp = 0;
         }
     }
 
     private final State state;
-    private final ScheduledExecutorService executor;
 
     private final UserIdProvider userIdProvider;
     private final UploadRequester uploadRequester;
 
     Queue(String archive,
-          ScheduledExecutorService executor,
           UserIdProvider userIdProvider,
           UploadRequester uploadRequester) throws IOException {
         state = unarchive(archive);
 
-        this.executor = executor;
         this.userIdProvider = userIdProvider;
         this.uploadRequester = uploadRequester;
     }
@@ -179,7 +175,7 @@ public class Queue {
         try {
             return Sift.GSON.fromJson(archive, State.class);
         } catch (JsonSyntaxException e) {
-            Log.d(TAG, "Encountered exception in Queue state unarchive");
+            Log.d(TAG, "Encountered exception in Queue state unarchive", e);
             return new State();
         }
     }
@@ -216,7 +212,7 @@ public class Queue {
             return;
         }
 
-        Log.i(TAG, String.format("Append event \"%s\"", event.toString()));
+        Log.d(TAG, String.format("Append event \"%s\"", event.toString()));
         state.queue.add(event);
         state.lastEvent = event;
 
@@ -241,7 +237,7 @@ public class Queue {
     /** Transfer the ownership of the events. */
     synchronized List<MobileEventJson> transfer() {
         List<MobileEventJson> events = state.queue;
-        state.queue = new LinkedList<>();
+        state.queue = new ArrayList<>();
         return events;
     }
 }
