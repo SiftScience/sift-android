@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -247,12 +248,16 @@ public class AppStateCollector implements LocationListener,
                 this.lastLocation = lastLocation;
             }
             this.requestLocation();
-            executor.schedule(new Runnable() {
-                @Override
-                public void run() {
-                    AppStateCollector.this.collect();
-                }
-            }, 3, TimeUnit.SECONDS);
+            try {
+                executor.schedule(new Runnable() {
+                    @Override
+                    public void run() {
+                        AppStateCollector.this.collect();
+                    }
+                }, 3, TimeUnit.SECONDS);
+            } catch (RejectedExecutionException e) {
+                Log.d(TAG, "Dropped AppState collection due to RejectedExecutionException");
+            }
         } else {
             // Collect without location if disallowed on application or client level
             this.collect();
