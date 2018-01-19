@@ -303,7 +303,7 @@ public class Sift {
 
     @VisibleForTesting
     String archiveConfig() {
-        return GSON.toJson(config);
+        return Sift.GSON.toJson(config);
     }
 
     Config unarchiveConfig(String archive, Config c) {
@@ -314,7 +314,7 @@ public class Sift {
         try {
             return Sift.GSON.fromJson(archive, Config.class);
         } catch (JsonSyntaxException e) {
-            Log.d(TAG, "Encountered exception in Sift config unarchive");
+            Log.d(TAG, "Encountered exception in Sift config unarchive", e);
             return c == null ? new Config() : c;
         }
     }

@@ -343,9 +343,7 @@ class Uploader {
         try {
             executor.schedule(command, delay, unit);
         } catch (RejectedExecutionException e) {
-            if (!executor.isShutdown()) {
-                Log.e(TAG, "Dropped scheduled task due to RejectedExecutionException");
-            }
+            Log.d(TAG, "Dropped scheduled task due to RejectedExecutionException");
         }
     }
 
@@ -353,9 +351,7 @@ class Uploader {
         try {
             executor.submit(command);
         } catch (RejectedExecutionException e) {
-            if (!executor.isShutdown()) {
-                Log.e(TAG, "Dropped submitted task due to RejectedExecutionException");
-            }
+            Log.d(TAG, "Dropped submitted task due to RejectedExecutionException");
         }
     }
 }
