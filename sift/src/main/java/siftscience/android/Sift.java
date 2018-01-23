@@ -288,37 +288,6 @@ public class Sift {
         this(context, config, Executors.newSingleThreadScheduledExecutor());
     }
 
-    private Config unarchive(String archive, Config c) {
-        if (archive == null) {
-            return c == null ? new Config() : c;
-        }
-
-        try {
-            return Sift.GSON.fromJson(archive, Config.class);
-        } catch (JsonParseException e) {
-            Log.e(TAG, "Encountered JsonProcessingException in Config constructor", e);
-            return new Config();
-        }
-    }
-
-    @VisibleForTesting
-    String archiveConfig() {
-        return Sift.GSON.toJson(config);
-    }
-
-    Config unarchiveConfig(String archive, Config c) {
-        if (archive == null) {
-            return c == null ? new Config() : c;
-        }
-
-        try {
-            return Sift.GSON.fromJson(archive, Config.class);
-        } catch (JsonSyntaxException e) {
-            Log.d(TAG, "Encountered exception in Sift config unarchive", e);
-            return c == null ? new Config() : c;
-        }
-    }
-
     @VisibleForTesting
     String archiveConfig() {
         return Sift.GSON.toJson(config);
