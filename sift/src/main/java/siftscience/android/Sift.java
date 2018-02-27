@@ -224,7 +224,7 @@ public class Sift {
 
     public static final String APP_STATE_QUEUE_IDENTIFIER = "siftscience.android.app";
     private static final Queue.Config APP_STATE_QUEUE_CONFIG = new Queue.Config.Builder()
-            .withUploadWhenMoreThan(32)
+            .withUploadWhenMoreThan(8)
             .withUploadWhenOlderThan(TimeUnit.MINUTES.toMillis(1))
             .build();
 

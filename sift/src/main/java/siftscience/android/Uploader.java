@@ -96,7 +96,7 @@ class Uploader {
             batches = new LinkedList<>();
         }
 
-        synchronized String archive() throws JsonParseException {
+        String archive() throws JsonParseException {
             return Sift.GSON.toJson(this);
         }
 
