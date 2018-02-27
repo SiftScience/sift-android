@@ -163,7 +163,7 @@ public class Queue {
         this.uploadRequester = uploadRequester;
     }
 
-    synchronized String archive() throws JsonParseException {
+    String archive() throws JsonParseException {
         return Sift.GSON.toJson(state);
     }
 
