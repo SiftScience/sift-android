@@ -20,6 +20,8 @@ import java.util.List;
  */
 public class Queue {
     private static final String TAG = Queue.class.getName();
+    private final UserIdProvider userIdProvider;
+    private final UploadRequester uploadRequester;
 
     /**
      * Configure queue's batching policy.
@@ -108,26 +110,11 @@ public class Queue {
     }
 
     interface UserIdProvider {
-        /**
-         * Return the current user ID.
-         *
-         * A queue object will use this ID when an event object does
-         * not have one.
-         */
         String getUserId();
     }
 
     interface UploadRequester {
-        /**
-         * Request an upload.
-         *
-         * A queue object would normally request an upload when its
-         * events are ready for upload (but note that events of other
-         * queues may not be ready yet).
-         *
-         * This method should not be blocking.
-         */
-        void requestUpload();
+        void requestUpload(Queue queue);
     }
 
     // States that are archived.
@@ -151,12 +138,9 @@ public class Queue {
 
     private final State state;
 
-    private final UserIdProvider userIdProvider;
-    private final UploadRequester uploadRequester;
-
     Queue(String archive,
           UserIdProvider userIdProvider,
-          UploadRequester uploadRequester) throws IOException {
+          UploadRequester uploadRequester) {
         state = unarchive(archive);
 
         this.userIdProvider = userIdProvider;
@@ -181,21 +165,20 @@ public class Queue {
     }
 
     /** Return the queue configuration. */
-    public synchronized Config getConfig() {
+    Config getConfig() {
         return state.config;
     }
 
     /** Replace the queue configuration. */
-    public synchronized void setConfig(Config config) {
+    void setConfig(Config config) {
         state.config = config;
     }
 
     /**
      * Append an event to this queue.
-     *
      * The event could be ignored if `acceptSameEventAfter` is set.
      */
-    public synchronized void append(@NonNull MobileEventJson event) {
+    void append(@NonNull MobileEventJson event) {
         long now = Time.now();
 
         if (event.userId == null) {
@@ -216,9 +199,9 @@ public class Queue {
         state.queue.add(event);
         state.lastEvent = event;
 
-        if (isEventsReadyForUpload(now)) {
-            uploadRequester.requestUpload();
+        if (this.isReadyForUpload(now)) {
             state.lastUploadTimestamp = now;
+            this.uploadRequester.requestUpload(this);
         }
     }
 
@@ -226,7 +209,7 @@ public class Queue {
      * True if events of this queue are ready for upload as specified
      * by the queue config.
      */
-    synchronized boolean isEventsReadyForUpload(long now) {
+    boolean isReadyForUpload(long now) {
         return (state.config.uploadWhenMoreThan >= 0 &&
                 state.queue.size() > state.config.uploadWhenMoreThan) ||
                (state.config.uploadWhenOlderThan > 0 &&
@@ -234,8 +217,8 @@ public class Queue {
                 now > state.lastUploadTimestamp + state.config.uploadWhenOlderThan);
     }
 
-    /** Transfer the ownership of the events. */
-    synchronized List<MobileEventJson> transfer() {
+    /** Flushes queue */
+    public List<MobileEventJson> flush() {
         List<MobileEventJson> events = state.queue;
         state.queue = new ArrayList<>();
         return events;

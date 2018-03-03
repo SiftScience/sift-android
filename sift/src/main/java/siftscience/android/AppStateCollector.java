@@ -47,7 +47,7 @@ public class AppStateCollector implements LocationListener,
     private final Sift sift;
     private final Context context;
     private final String activityClassName;
-    private final ScheduledExecutorService executor;
+    private final TaskManager taskManager;
 
     private long timestamp;
     private boolean acquiredNewLocation;
@@ -58,13 +58,12 @@ public class AppStateCollector implements LocationListener,
     private Location lastLocation;
 
     public AppStateCollector(Sift sift, Context context, String activityClassName,
-                             ScheduledExecutorService executor) {
+                             TaskManager taskManager) {
         this.sift = sift;
         this.context = context.getApplicationContext();
         this.activityClassName = activityClassName;
-        this.executor = executor;
+        this.taskManager = taskManager;
 
-        this.timestamp = Time.now();
         this.acquiredNewLocation = false;
 
         if (!sift.getConfig().disallowLocationCollection) {
@@ -87,11 +86,11 @@ public class AppStateCollector implements LocationListener,
     public void collect() {
         String installationId = Settings.Secure.getString(this.context.getContentResolver(),
                 Settings.Secure.ANDROID_ID);
-        this.sift.getQueue(Sift.APP_STATE_QUEUE_IDENTIFIER).append(
+        this.sift.appendAppStateEvent(
                 MobileEventJson.newBuilder()
                         .withAndroidAppState(this.get())
                         .withInstallationId(installationId)
-                        .withTime(this.timestamp)
+                        .withTime(Time.now())
                         .build());
     }
 
@@ -112,7 +111,8 @@ public class AppStateCollector implements LocationListener,
         Log.d(TAG, "Reconnect location services");
 
         try {
-            if (!this.sift.getConfig().disallowLocationCollection) {
+            if (!this.sift.getConfig().disallowLocationCollection &&
+                    !this.googleApiClient.isConnected()) {
                 this.googleApiClient.connect();
             }
         } catch (Exception e) {
@@ -249,7 +249,7 @@ public class AppStateCollector implements LocationListener,
             }
             this.requestLocation();
             try {
-                executor.schedule(new Runnable() {
+                taskManager.schedule(new Runnable() {
                     @Override
                     public void run() {
                         AppStateCollector.this.collect();
