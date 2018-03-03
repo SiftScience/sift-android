@@ -32,7 +32,7 @@ public class BetterUploader {
 
     @VisibleForTesting
     static final int REJECTION_LIMIT = 3;
-    private static final long BACKOFF_DURATION = TimeUnit.SECONDS.toMillis(1);
+    private static final long BACKOFF_MULTIPLIER = TimeUnit.SECONDS.toMillis(2);
     private static final long BACKOFF_EXPONENT = 2;
     private static final TimeUnit BACKOFF_UNIT = TimeUnit.MILLISECONDS;
     private TaskManager taskManager;
@@ -73,8 +73,8 @@ public class BetterUploader {
 
         this.taskManager.schedule(
                 new UploadTask(this, request, attempt),
-                (long) (Math.pow(attempt, BACKOFF_EXPONENT) * BACKOFF_DURATION),
-                TimeUnit.MILLISECONDS
+                (long) (Math.pow(attempt, BACKOFF_EXPONENT) * BACKOFF_MULTIPLIER),
+                BACKOFF_UNIT
         );
     }
 
