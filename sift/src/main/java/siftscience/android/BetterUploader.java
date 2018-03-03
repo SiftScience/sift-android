@@ -27,10 +27,6 @@ import okhttp3.Response;
 /**
  * Created by gary on 3/2/18.
  */
-
-/**
- * The BetterUploader is the new stateless version of the
- */
 public class BetterUploader {
     private static final String TAG = BetterUploader.class.getName();
 
