@@ -38,8 +38,6 @@ public class Sift {
     public static final String DEVICE_PROPERTIES_QUEUE_IDENTIFIER = "siftscience.android.device";
     public static final String APP_STATE_QUEUE_IDENTIFIER = "siftscience.android.app";
 
-    // Technically we don't need a naming policy since we have full @SerializedName coverage –
-    // this is just defensive to ensure consistent writes in case we leave something out
     public static final Gson GSON = new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .create();
@@ -69,46 +67,55 @@ public class Sift {
     //================================================================================
 
     /**
-     * Call this method in every Activity instance's `onCreate()`
-     * method.
+     * Call this method in the application's main Activity instance's onCreate()
      */
-    public static void open(@NonNull Context context) {
-        open(context, null);
-    }
-
-    /**
-     * Call this method in your application's main Activity.
-     */
-    public static void open(@NonNull Context context, Config config) {
+    public static synchronized void open(@NonNull Context context,
+                                         Config config,
+                                         String activityName) {
         if (instance == null) {
             try {
                 Context c = context.getApplicationContext();
-
                 instance = new Sift(c, config);
                 devicePropertiesCollector = new DevicePropertiesCollector(instance, c);
-                appStateCollector = new AppStateCollector(instance, c,
-                        context.getClass().getSimpleName(), get().taskManager);
+                appStateCollector = new AppStateCollector(instance, c);
             } catch (IOException e) {
                 Log.e(TAG, "Encountered IOException in open", e);
             }
         }
+
+        appStateCollector.setActivityName(activityName == null ?
+                context.getClass().getSimpleName() : activityName);
         openCount++;
     }
 
     /**
-     * Invoke a collection for DevicePropertiesCollector only.
-     * AppStateCollector will wait for location callback.
+     * Call this method in every Activity instance's onCreate()
      */
-    public static void collect() {
-        devicePropertiesCollector.collect();
+    public static synchronized void open(@NonNull Context context) {
+        open(context, null, null);
     }
 
     /**
-     * Return the shared Sift object.
+     * Call this method in every Activity instance's onCreate()
+     */
+    public static synchronized void open(@NonNull Context context, String activityName) {
+        open(context, null, activityName);
+    }
+
+    /**
+     * Returns the shared Sift object.
      */
     @Nullable
     public static synchronized Sift get() {
         return instance;
+    }
+
+    /**
+     * Invokes a collection for DevicePropertiesCollector only.
+     * AppStateCollector will wait for location callback.
+     */
+    public static void collect() {
+        devicePropertiesCollector.collect();
     }
 
     /**
@@ -216,7 +223,7 @@ public class Sift {
             return Sift.GSON.fromJson(archive, Config.class);
         } catch (JsonSyntaxException e) {
             Log.d(TAG, "Encountered exception in Sift config unarchive", e);
-            return config == null ? new Config() :config;
+            return config == null ? new Config() : config;
         }
     }
 
@@ -238,12 +245,12 @@ public class Sift {
     }
 
     /** Return the configurations of this Sift object. */
-    public Config getConfig() {
+    public synchronized Config getConfig() {
         return config;
     }
 
     /** Replace the configurations of this Sift object. */
-    public void setConfig(Config config) {
+    public synchronized void setConfig(Config config) {
         this.config = config;
     }
 
@@ -251,7 +258,7 @@ public class Sift {
      * Return the default user ID.  We will use this ID if you didn't
      * set one in the Event object.
      */
-    public String getUserId() {
+    public synchronized String getUserId() {
         return this.userId;
     }
 
@@ -259,11 +266,11 @@ public class Sift {
      * Set the default user ID.  We will use this ID if you didn't set
      * one in the Event object.
      */
-    public void setUserId(String userId) {
+    public synchronized void setUserId(String userId) {
         this.userId = userId;
     }
 
-    public void unsetUserId() {
+    public synchronized void unsetUserId() {
         this.userId = null;
     }
 
@@ -285,6 +292,16 @@ public class Sift {
         appStateCollector.reconnectLocationServices();
     }
 
+    /**
+     * Save Sift object states (including sub-objects like Uploader and
+     * Queue).  You should call this in your `onPause()` or
+     * `onSaveInstanceState()` method.
+     */
+    public void save() {
+        this.taskManager.submit(new ArchiveTask());
+        appStateCollector.disconnectLocationServices();
+    }
+
     public void appendAppStateEvent(MobileEventJson event) {
         this.taskManager.submit(new AppendTask(
                 this.getQueue(APP_STATE_QUEUE_IDENTIFIER),
@@ -299,7 +316,7 @@ public class Sift {
         ));
     }
 
-    public void upload(Queue queue) {
+    private void upload(Queue queue) {
         this.uploader.upload(queue.flush());
     }
 
@@ -343,8 +360,7 @@ public class Sift {
                 Log.d(TAG, String.format("Archived User ID: \"%s\"", getUserId()));
                 for (Map.Entry<String, Queue> entry : queues.entrySet()) {
                     String identifier = ArchiveKey.getKeyForQueueIdentifier(entry.getKey());
-                    Log.d(TAG, String.format("Archived \"%s\" Queue: \"%s\"", identifier,
-                            entry.getValue().get().toString()));
+                    Log.d(TAG, String.format("Archived \"%s\" Queue", identifier));
                     editor.putString(identifier, entry.getValue().archive());
                 }
                 editor.apply();
@@ -514,22 +530,10 @@ public class Sift {
     //================================================================================
 
     /**
-     * Save Sift object states (including sub-objects like Uploader and
-     * Queue).  You should call this in your `onPause()` or
-     * `onSaveInstanceState()` method.
-     */
-    @Deprecated
-    public void save() {
-        this.taskManager.submit(new ArchiveTask());
-        appStateCollector.disconnectLocationServices();
-    }
-
-    /**
      * Request an upload.  If `force` is true, it will disregard the
      * queue's batching policy.
      */
     @Deprecated
     public void upload(boolean force) {
-        // TODO(gary): retrofit this
     }
 }
