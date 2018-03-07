@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Sift Science. All rights reserved.
+// Copyright (c) 2018 Sift Science. All rights reserved.
 
 package siftscience.android;
 
@@ -38,7 +38,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Collects AndroidAppState.
+ * Collects App State events.
  */
 public class AppStateCollector implements LocationListener,
         GoogleApiClient.ConnectionCallbacks,

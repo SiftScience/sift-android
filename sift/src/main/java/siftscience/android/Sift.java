@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Sift Science. All rights reserved.
+// Copyright (c) 2018 Sift Science. All rights reserved.
 
 package siftscience.android;
 
@@ -28,8 +28,9 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
 import com.sift.api.representations.MobileEventJson;
 
-/** The main class of the Sift client library. */
+/** The public API of the Sift client library. */
 public class Sift {
+
     //================================================================================
     // Static members
     //================================================================================
@@ -67,7 +68,23 @@ public class Sift {
     //================================================================================
 
     /**
-     * Call this method in the application's main Activity instance's onCreate()
+     * Call Sift.open() in the onCreate() callback of each Activity.
+     *
+     * Creates the Sift singleton and collectors if they do not exist,
+     * and passes along the current Activity context.
+     *
+     * For your application's main Activity, make sure to provide a Sift.Config
+     * object as the second parameter.
+     *
+     * If you are integrating per-Activity rather than at the Application level,
+     * you can specify the name that will be associated with each Activity event
+     * (defaults to the class name of the embedding Activity).
+     *
+     * There are overloaded methods below for your convenience.
+     *
+     * @param context the Activity context
+     * @param config the Sift.Config object
+     * @param activityName the Activity
      */
     public static synchronized void open(@NonNull Context context,
                                          Config config,
@@ -88,44 +105,43 @@ public class Sift {
         openCount++;
     }
 
-    /**
-     * Call this method in every Activity instance's onCreate()
-     */
+    public static synchronized void open(@NonNull Context context, String activityName) {
+        open(context, null, activityName);
+    }
+
+    public static synchronized void open(@NonNull Context context, Config config) {
+        open(context, config, null);
+    }
+
     public static synchronized void open(@NonNull Context context) {
         open(context, null, null);
     }
 
     /**
-     * Call this method in every Activity instance's onCreate()
-     */
-    public static synchronized void open(@NonNull Context context, String activityName) {
-        open(context, null, activityName);
-    }
-
-    /**
-     * Returns the shared Sift object.
-     */
-    @Nullable
-    public static synchronized Sift get() {
-        return instance;
-    }
-
-    /**
-     * Invokes a collection for DevicePropertiesCollector only.
-     * AppStateCollector will wait for location callback.
+     * Call Sift.collect() after the Sift.open() call in each Activity.
+     *
+     * Collect SDK events for Device Properties and Application State.
      */
     public static void collect() {
         devicePropertiesCollector.collect();
+        appStateCollector.collect();
     }
 
     /**
-     * Call this method in every Activity instance's `onDestroy()`
-     * method. In the last calling Activity, this method will release
-     * the shared Sift object.
+     * Call Sift.pause() in the onPause() callback of each Activity.
      *
-     * Note that Android runtime does not guarantee to call your
-     * `onDestroy()` method and so you should call `Sift.save()` in
-     * your `onPause()` or `onSaveInstanceState()` method.
+     * Persists instance state to disk and disconnects location services.
+     */
+    public static void pause() {
+        instance.save();
+    }
+
+    /**
+     * Call Sift.close() in the onDestroy() callback of each Activity.
+     *
+     * Persists instance state to disk and disconnects location services.
+     * In the last calling Activity, releases the Sift singleton and its
+     * executor.
      */
     public static void close() {
         if (instance != null) {
@@ -143,6 +159,14 @@ public class Sift {
             openCount = 0;
         }
         appStateCollector.disconnectLocationServices();
+    }
+
+    /**
+     * @return the Sift singleton instance
+     */
+    @Nullable
+    public static synchronized Sift get() {
+        return instance;
     }
 
 
@@ -167,8 +191,8 @@ public class Sift {
 
     private final Queue.UploadRequester uploadRequester = new Queue.UploadRequester() {
         @Override
-        public void requestUpload(Queue queue) {
-            Sift.this.upload(queue);
+        public void requestUpload(List<MobileEventJson> events) {
+            Sift.this.upload(events);
         }
     };
 
@@ -179,12 +203,11 @@ public class Sift {
         }
     };
 
-    /** Keys we use in the archive. */
     private enum ArchiveKey {
         CONFIG("config"),
         USER_ID("user_id"),
-        UPLOADER("uploader"),  // For the Uploader instance
-        QUEUE("queue");  // For Queue instances
+        UPLOADER("uploader"),
+        QUEUE("queue");
 
         public final String key;
 
@@ -244,34 +267,56 @@ public class Sift {
         this.taskManager.submit(new UnarchiveTask());
     }
 
-    /** Return the configurations of this Sift object. */
+    /**
+     * @return the configuration for the Sift instance
+     */
     public synchronized Config getConfig() {
         return config;
     }
 
-    /** Replace the configurations of this Sift object. */
+    /**
+     * Sets the configuration for the Sift instance
+     *
+     * @param config
+     */
     public synchronized void setConfig(Config config) {
         this.config = config;
     }
 
     /**
-     * Return the default user ID.  We will use this ID if you didn't
-     * set one in the Event object.
+     * @return the user ID for the Sift instance
      */
     public synchronized String getUserId() {
         return this.userId;
     }
 
     /**
-     * Set the default user ID.  We will use this ID if you didn't set
-     * one in the Event object.
+     * Sets the user ID for the Sift instance
+     *
+     * @param userId
      */
     public synchronized void setUserId(String userId) {
         this.userId = userId;
     }
 
+    /**
+     * Unsets the user ID for the Sift instance.
+     */
     public synchronized void unsetUserId() {
         this.userId = null;
+    }
+
+    /**
+     * Save Sift object states.
+     *
+     * Call Sift.get().save() in the onPause() or onSaveInstanceState()
+     * callbacks of each Activity.
+     *
+     * Prefer to use the static method Sift.pause() instead.
+     */
+    public void save() {
+        this.taskManager.submit(new ArchiveTask());
+        appStateCollector.disconnectLocationServices();
     }
 
     @VisibleForTesting
@@ -279,27 +324,8 @@ public class Sift {
         this.taskManager.shutdown();
     }
 
-    /**
-     * Saves Sift object states.
-     * You should call this in your `onPause()` or `onSaveInstanceState()` method.
-     */
-    public void pause() {
-        this.taskManager.submit(new ArchiveTask());
-        appStateCollector.disconnectLocationServices();
-    }
-
     public void resume() {
         appStateCollector.reconnectLocationServices();
-    }
-
-    /**
-     * Save Sift object states (including sub-objects like Uploader and
-     * Queue).  You should call this in your `onPause()` or
-     * `onSaveInstanceState()` method.
-     */
-    public void save() {
-        this.taskManager.submit(new ArchiveTask());
-        appStateCollector.disconnectLocationServices();
     }
 
     public void appendAppStateEvent(MobileEventJson event) {
@@ -316,14 +342,13 @@ public class Sift {
         ));
     }
 
-    private void upload(Queue queue) {
-        this.uploader.upload(queue.flush());
+    private void upload(List<MobileEventJson> events) {
+        this.uploader.upload(events);
     }
 
-    /** Create an event queue. */
     private Queue createQueue(@NonNull String identifier, Queue.Config config) {
         if (getQueue(identifier) != null) {
-            throw new IllegalStateException("queue exists: " + identifier);
+            throw new IllegalStateException("Queue exists: \"%s\"" + identifier);
         }
 
         Queue queue = new Queue(null, userIdProvider, uploadRequester);
@@ -333,10 +358,6 @@ public class Sift {
         return queue;
     }
 
-    /**
-     * Return the event queue for the given identifier or null if none
-     * exists.
-     */
     @Nullable
     private Queue getQueue(@NonNull String identifier) {
         return queues.get(identifier);
@@ -348,6 +369,9 @@ public class Sift {
     // Tasks
     //================================================================================
 
+    /**
+     * Saves all of the Sift instance state to disk.
+     */
     private class ArchiveTask implements Runnable {
         @Override
         public void run() {
@@ -370,6 +394,9 @@ public class Sift {
         }
     }
 
+    /**
+     * Restores all of the Sift instance state from disk.
+     */
     private class UnarchiveTask implements Runnable {
         @Override
         public void run() {
@@ -395,8 +422,6 @@ public class Sift {
                 }
             }
 
-            // Construction is completed; now you may call instance methods.
-            // Create the queues if they don't exist.
             if (!queues.containsKey(DEVICE_PROPERTIES_QUEUE_IDENTIFIER)) {
                 createQueue(DEVICE_PROPERTIES_QUEUE_IDENTIFIER, DEVICE_PROPERTIES_QUEUE_CONFIG);
             }
@@ -407,6 +432,9 @@ public class Sift {
         }
     }
 
+    /**
+     * Appends an event to the specified queue.
+     */
     private class AppendTask implements Runnable {
         private Queue queue;
         private MobileEventJson event;
@@ -429,8 +457,7 @@ public class Sift {
     //================================================================================
 
     /**
-     * Configurations of the Sift object. Use the Builder class to
-     * create configurations.
+     * Configurations of the Sift object.
      */
     public static class Config {
         private static final String DEFAULT_SERVER_URL_FORMAT =
@@ -452,7 +479,6 @@ public class Sift {
         @SerializedName(value="disallow_location_collection", alternate={"disallowLocationCollection"})
         public final boolean disallowLocationCollection;
 
-        // The default no-args constructor for JSON.
         Config() {
             this(null, null, DEFAULT_SERVER_URL_FORMAT, false);
         }
@@ -530,8 +556,11 @@ public class Sift {
     //================================================================================
 
     /**
-     * Request an upload.  If `force` is true, it will disregard the
+     * Requests an upload.  If `force` is true, it will disregard the
      * queue's batching policy.
+     *
+     * This is now a no-op, since we do not want to allow arbitrary
+     * uploads to be triggered.
      */
     @Deprecated
     public void upload(boolean force) {

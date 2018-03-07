@@ -1,3 +1,5 @@
+// Copyright (c) 2018 Sift Science. All rights reserved.
+
 package siftscience.android;
 
 import android.util.Log;

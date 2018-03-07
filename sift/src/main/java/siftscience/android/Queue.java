@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Sift Science. All rights reserved.
+// Copyright (c) 2018 Sift Science. All rights reserved.
 
 package siftscience.android;
 
@@ -15,8 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The main class for batching events before sending them to the Sift
- * server with configurable batching policy.
+ * Data structure for holding events until they are ready for upload.
  */
 public class Queue {
     private static final String TAG = Queue.class.getName();
@@ -24,43 +23,29 @@ public class Queue {
     private final UploadRequester uploadRequester;
 
     /**
-     * Configure queue's batching policy.
-     *
-     * At the moment the batching policy is not sophisticated.  When
-     * either the number of events or the age of the last event exceeds
-     * some threshold, all events of this queue will be uploaded to the
-     * Sift server.
+     * Configuration for Queue's batching policy.
      */
     public static class Config {
 
         /**
-         * When you are appending an event, if it basically equals to
-         * the last event and the last event was appended less than
-         * `acceptSameEventAfter` milliseconds ago, the new event will
-         * be ignored (non-positive value will be ignored).
-         *
-         * This may optimize some resource usage when you expect that
-         * the value of events appended to this queue is rarely changed.
+         * Time after which an event that is basically the same as the most
+         * recently appended event can be appended again.
          */
         @SerializedName(value="accept_same_event_after", alternate={"acceptSameEventAfter"})
         public final long acceptSameEventAfter;
 
         /**
-         * Upload events when the number of events is more than
-         * `uploadWhenMoreThan` (non-positive value will be ignored).
+         * Max queue depth before flush and upload request.
          */
         @SerializedName(value="upload_when_more_than", alternate={"uploadWhenMoreThan"})
         public final int uploadWhenMoreThan;
 
         /**
-         * Upload events when the last event was appended more than
-         * `uploadWhenOlderThan` milliseconds ago (non-positive value
-         * will be ignored).
+         * Max queue age before flush and upload request.
          */
         @SerializedName(value="upload_when_older_than", alternate={"uploadWhenOlderThan"})
         public final long uploadWhenOlderThan;
 
-        // The default no-args constructor.
         Config() {
             this(0, -1, 0);
         }
@@ -114,10 +99,9 @@ public class Queue {
     }
 
     interface UploadRequester {
-        void requestUpload(Queue queue);
+        void requestUpload(List<MobileEventJson> events);
     }
 
-    // States that are archived.
     private static class State {
         @SerializedName("config")
         Config config;
@@ -147,10 +131,20 @@ public class Queue {
         this.uploadRequester = uploadRequester;
     }
 
+    /**
+     *
+     * @return
+     * @throws JsonParseException
+     */
     String archive() throws JsonParseException {
         return Sift.GSON.toJson(state);
     }
 
+    /**
+     *
+     * @param archive
+     * @return
+     */
     State unarchive(String archive) {
         if (archive == null) {
             return new State();
@@ -164,19 +158,35 @@ public class Queue {
         }
     }
 
-    /** Return the queue configuration. */
+    /**
+     *
+     * @return
+     */
     Config getConfig() {
         return state.config;
     }
 
-    /** Replace the queue configuration. */
+    /**
+     *
+     * @param config
+     */
     void setConfig(Config config) {
         state.config = config;
     }
 
     /**
-     * Append an event to this queue.
-     * The event could be ignored if `acceptSameEventAfter` is set.
+     *
+     * @return
+     */
+    public List<MobileEventJson> flush() {
+        List<MobileEventJson> events = state.queue;
+        state.queue = new ArrayList<>();
+        return events;
+    }
+
+    /**
+     *
+     * @param event
      */
     void append(@NonNull MobileEventJson event) {
         long now = Time.now();
@@ -201,26 +211,20 @@ public class Queue {
 
         if (this.isReadyForUpload(now)) {
             state.lastUploadTimestamp = now;
-            this.uploadRequester.requestUpload(this);
+            this.uploadRequester.requestUpload(flush());
         }
     }
 
     /**
-     * True if events of this queue are ready for upload as specified
-     * by the queue config.
+     *
+     * @param now
+     * @return
      */
-    boolean isReadyForUpload(long now) {
+    private boolean isReadyForUpload(long now) {
         return (state.config.uploadWhenMoreThan >= 0 &&
                 state.queue.size() > state.config.uploadWhenMoreThan) ||
                (state.config.uploadWhenOlderThan > 0 &&
                 !state.queue.isEmpty() &&
                 now > state.lastUploadTimestamp + state.config.uploadWhenOlderThan);
-    }
-
-    /** Flushes queue */
-    public List<MobileEventJson> flush() {
-        List<MobileEventJson> events = state.queue;
-        state.queue = new ArrayList<>();
-        return events;
     }
 }

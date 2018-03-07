@@ -27,7 +27,7 @@ import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 /**
- * Collects AndroidDeviceProperties.
+ * Collects Device Properties events.
  */
 public class DevicePropertiesCollector {
     private static final String TAG = DevicePropertiesCollector.class.getName();
