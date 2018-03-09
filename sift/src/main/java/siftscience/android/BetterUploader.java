@@ -27,23 +27,21 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 /**
- * Created by gary on 3/2/18.
+ *
  */
 public class BetterUploader {
     private static final String TAG = BetterUploader.class.getName();
 
     @VisibleForTesting
-    static final int REJECTION_LIMIT = 3;
-    private static final long BACKOFF_MULTIPLIER = TimeUnit.SECONDS.toMillis(2);
+    static final int MAX_RETRIES = 3;
+    private static final long BACKOFF_MULTIPLIER = TimeUnit.SECONDS.toSeconds(2);
     private static final long BACKOFF_EXPONENT = 2;
-    private static final TimeUnit BACKOFF_UNIT = TimeUnit.MILLISECONDS;
+    private static final TimeUnit BACKOFF_UNIT = TimeUnit.SECONDS;
     private TaskManager taskManager;
     private ConfigProvider configProvider;
 
     private static final MediaType JSON = MediaType.parse("application/json");
 
-    // StandardCharsets.US_ASCII is defined in API level 19 and we are
-    // targeting API level 16.
     private static final Charset US_ASCII = Charset.forName("US-ASCII");
     private static final Charset UTF8 = Charset.forName("UTF-8");
     private OkHttpClient client;
@@ -62,20 +60,20 @@ public class BetterUploader {
         // Kick-off the first upload
         try {
             Request request = buildRequest(batch);
-            this.doUpload(request, 0);
+            this.doUpload(request, MAX_RETRIES);
         } catch (IOException e) {
             Log.e(TAG, "Encountered IOException in doUpload", e);
         }
     }
 
-    private void doUpload(Request request, int attempt) {
-        if (attempt > REJECTION_LIMIT) {
+    private void doUpload(Request request, int attemptsRemaining) {
+        if (attemptsRemaining == 0) {
             return;
         }
 
         this.taskManager.schedule(
-                new UploadTask(this, request, attempt),
-                (long) (Math.pow(attempt, BACKOFF_EXPONENT) * BACKOFF_MULTIPLIER),
+                new UploadTask(this, request, attemptsRemaining),
+                (long) (Math.pow(attemptsRemaining, BACKOFF_EXPONENT) * BACKOFF_MULTIPLIER),
                 BACKOFF_UNIT
         );
     }
@@ -124,12 +122,12 @@ public class BetterUploader {
     private class UploadTask implements Runnable {
         private BetterUploader uploader;
         private Request request;
-        private int attempt;
+        private int attemptsRemaining;
 
-        UploadTask(BetterUploader uploader, Request request, int attempt) {
+        UploadTask(BetterUploader uploader, Request request, int attemptsRemaining) {
             this.uploader = uploader;
             this.request = request;
-            this.attempt = attempt;
+            this.attemptsRemaining = attemptsRemaining;
         }
 
         @Override
@@ -152,7 +150,7 @@ public class BetterUploader {
                 } else {
                     Log.d(TAG, String.format(
                             "HTTP error: status=%d response=%s", code, body));
-                    this.uploader.doUpload(this.request, this.attempt + 1);
+                    this.uploader.doUpload(this.request, this.attemptsRemaining - 1);
                 }
             } catch (IOException e) {
                 Log.e(TAG, "Network error in UploadTask", e);

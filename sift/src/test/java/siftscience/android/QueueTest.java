@@ -29,7 +29,7 @@ public class QueueTest {
     private static final Queue.UserIdProvider USER_ID_PROVIDER = new Queue.UserIdProvider() {
         @Override
         public String getUserId() {
-            return "user-id";
+            return null;
         }
     };
 
@@ -80,16 +80,16 @@ public class QueueTest {
         for (MobileEventJson event : expect) {
             queue.append(event);
         }
-        assertFalse(queue.isEventsReadyForUpload(now));
+        assertFalse(queue.isReadyForUpload(now));
         verifyZeroInteractions(uploadRequester);
 
         String archive = queue.archive();
 
-        assertEquals(expect, queue.transfer());
+        assertEquals(expect, queue.flush());
 
         // Test un-archived events
         Queue another = new Queue(archive, USER_ID_PROVIDER, uploadRequester);
-        assertEquals(expect, another.transfer());
+        assertEquals(expect, another.flush());
     }
 
     @Test
@@ -144,7 +144,7 @@ public class QueueTest {
 
         verifyZeroInteractions(uploadRequester);
 
-        assertEquals(Collections.singletonList(event0), queue.transfer());
+        assertEquals(Collections.singletonList(event0), queue.flush());
 
         Time.currentTime = 1000 + 60000;
         event1 = MobileEventJson.newBuilder()
@@ -161,7 +161,7 @@ public class QueueTest {
         queue.append(event1);
 
         verifyZeroInteractions(uploadRequester);
-        assertEquals(Collections.singletonList(event1), queue.transfer());
+        assertEquals(Collections.singletonList(event1), queue.flush());
     }
 
     @Test
@@ -183,16 +183,15 @@ public class QueueTest {
                 .withTime(System.currentTimeMillis())
                 .build();
 
-        assertFalse(queue.isEventsReadyForUpload(now));
+        assertFalse(queue.isReadyForUpload(now));
         verifyZeroInteractions(uploadRequester);
 
         queue.append(event);
-        assertFalse(queue.isEventsReadyForUpload(now));
+        assertFalse(queue.isReadyForUpload(now));
         verifyZeroInteractions(uploadRequester);
 
         queue.append(event);
-        assertTrue(queue.isEventsReadyForUpload(now));
-        verify(uploadRequester).requestUpload();
+        verify(uploadRequester).requestUpload(Arrays.asList(event, event));
     }
 
     @Test
@@ -215,9 +214,7 @@ public class QueueTest {
                 .build();
 
         queue.append(event);
-        assertFalse(queue.isEventsReadyForUpload(Time.currentTime));
-        Time.currentTime += 2;
-        assertTrue(queue.isEventsReadyForUpload(Time.currentTime));
+        verify(uploadRequester).requestUpload(Collections.singletonList(event));
     }
 
     // Ensures that the first event appended will get uploaded
@@ -241,7 +238,7 @@ public class QueueTest {
 
         // Should have uploaded
         queue.append(event);
-        verify(uploadRequester).requestUpload();
+        verify(uploadRequester).requestUpload(Collections.singletonList(event));
     }
 
     // Checks that appending after waiting will request an upload
@@ -266,7 +263,7 @@ public class QueueTest {
 
         // Should have uploaded the first event
         queue.append(event);
-        verify(uploadRequester).requestUpload();
+        verify(uploadRequester).requestUpload(Collections.singletonList(event));
         reset(uploadRequester);
 
         // Sleep for 2 seconds (in excess of TTL)
@@ -274,7 +271,7 @@ public class QueueTest {
 
         // Should have uploaded the second event (sufficiently stale)
         queue.append(event);
-        verify(uploadRequester).requestUpload();
+        verify(uploadRequester).requestUpload(Collections.singletonList(event));
     }
 
     // Checks that appending without waiting will not request an upload
@@ -298,12 +295,12 @@ public class QueueTest {
 
         // Should have uploaded the first event
         queue.append(event);
-        verify(uploadRequester).requestUpload();
+        verify(uploadRequester).requestUpload(Collections.singletonList(event));
         reset(uploadRequester);
 
         // Should not have uploaded the second event (not stale enough)
         queue.append(event);
-        verify(uploadRequester, never()).requestUpload();
+        verifyZeroInteractions(uploadRequester);
     }
 
     @Test

@@ -4,20 +4,14 @@ package siftscience.android;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import com.google.gson.FieldNamingPolicy;
@@ -228,16 +222,15 @@ public class Sift {
         }
     }
 
-    private Sift(Context context, Config config) throws IOException {
+    Sift(Context context, Config config) throws IOException {
         this(context, config, new TaskManager());
     }
 
-    @VisibleForTesting
-    private String archiveConfig() {
+    String archiveConfig() {
         return Sift.GSON.toJson(config);
     }
 
-    private Config unarchiveConfig(String archive) {
+    Config unarchiveConfig(String archive) {
         if (archive == null) {
             return config == null ? new Config() : config;
         }
@@ -256,7 +249,6 @@ public class Sift {
     // Instance API
     //================================================================================
 
-    @VisibleForTesting
     Sift(Context context, Config conf, TaskManager taskManager)
             throws IOException {
         this.archives = context.getSharedPreferences(ARCHIVE_NAME, Context.MODE_PRIVATE);
@@ -319,7 +311,6 @@ public class Sift {
         appStateCollector.disconnectLocationServices();
     }
 
-    @VisibleForTesting
     public void stop() {
         this.taskManager.shutdown();
     }
@@ -346,9 +337,9 @@ public class Sift {
         this.uploader.upload(events);
     }
 
-    private Queue createQueue(@NonNull String identifier, Queue.Config config) {
+    Queue createQueue(@NonNull String identifier, Queue.Config config) {
         if (getQueue(identifier) != null) {
-            throw new IllegalStateException("Queue exists: \"%s\"" + identifier);
+            throw new IllegalStateException(String.format("Queue exists: \"%s\"", identifier));
         }
 
         Queue queue = new Queue(null, userIdProvider, uploadRequester);
@@ -359,7 +350,7 @@ public class Sift {
     }
 
     @Nullable
-    private Queue getQueue(@NonNull String identifier) {
+    Queue getQueue(@NonNull String identifier) {
         return queues.get(identifier);
     }
 

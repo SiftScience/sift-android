@@ -10,12 +10,11 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
 import com.sift.api.representations.MobileEventJson;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Data structure for holding events until they are ready for upload.
+ * Queue for holding events until they are ready for upload.
  */
 public class Queue {
     private static final String TAG = Queue.class.getName();
@@ -26,25 +25,24 @@ public class Queue {
      * Configuration for Queue's batching policy.
      */
     public static class Config {
-
         /**
          * Time after which an event that is basically the same as the most
          * recently appended event can be appended again.
          */
-        @SerializedName(value="accept_same_event_after", alternate={"acceptSameEventAfter"})
-        public final long acceptSameEventAfter;
+        @SerializedName(value = "accept_same_event_after", alternate = {"acceptSameEventAfter"})
+        private final long acceptSameEventAfter;
 
         /**
          * Max queue depth before flush and upload request.
          */
         @SerializedName(value="upload_when_more_than", alternate={"uploadWhenMoreThan"})
-        public final int uploadWhenMoreThan;
+        private final int uploadWhenMoreThan;
 
         /**
          * Max queue age before flush and upload request.
          */
         @SerializedName(value="upload_when_older_than", alternate={"uploadWhenOlderThan"})
-        public final long uploadWhenOlderThan;
+        private final long uploadWhenOlderThan;
 
         Config() {
             this(0, -1, 0);
@@ -71,19 +69,19 @@ public class Queue {
 
         public static class Builder {
             private long acceptSameEventAfter = 0;
-            public Builder withAcceptSameEventAfter(long acceptSameEventAfter) {
+            Builder withAcceptSameEventAfter(long acceptSameEventAfter) {
                 this.acceptSameEventAfter = acceptSameEventAfter;
                 return this;
             }
 
             private int uploadWhenMoreThan = -1;
-            public Builder withUploadWhenMoreThan(int uploadWhenMoreThan) {
+            Builder withUploadWhenMoreThan(int uploadWhenMoreThan) {
                 this.uploadWhenMoreThan = uploadWhenMoreThan;
                 return this;
             }
 
             private long uploadWhenOlderThan = 0;
-            public Builder withUploadWhenOlderThan(long uploadWhenOlderThan) {
+            Builder withUploadWhenOlderThan(long uploadWhenOlderThan) {
                 this.uploadWhenOlderThan = uploadWhenOlderThan;
                 return this;
             }
@@ -131,20 +129,10 @@ public class Queue {
         this.uploadRequester = uploadRequester;
     }
 
-    /**
-     *
-     * @return
-     * @throws JsonParseException
-     */
     String archive() throws JsonParseException {
         return Sift.GSON.toJson(state);
     }
 
-    /**
-     *
-     * @param archive
-     * @return
-     */
     State unarchive(String archive) {
         if (archive == null) {
             return new State();
@@ -158,36 +146,14 @@ public class Queue {
         }
     }
 
-    /**
-     *
-     * @return
-     */
     Config getConfig() {
         return state.config;
     }
 
-    /**
-     *
-     * @param config
-     */
     void setConfig(Config config) {
         state.config = config;
     }
 
-    /**
-     *
-     * @return
-     */
-    public List<MobileEventJson> flush() {
-        List<MobileEventJson> events = state.queue;
-        state.queue = new ArrayList<>();
-        return events;
-    }
-
-    /**
-     *
-     * @param event
-     */
     void append(@NonNull MobileEventJson event) {
         long now = Time.now();
 
@@ -215,12 +181,13 @@ public class Queue {
         }
     }
 
-    /**
-     *
-     * @param now
-     * @return
-     */
-    private boolean isReadyForUpload(long now) {
+    List<MobileEventJson> flush() {
+        List<MobileEventJson> events = state.queue == null ? new ArrayList<MobileEventJson>() : state.queue;
+        state.queue = new ArrayList<>();
+        return events;
+    }
+
+    boolean isReadyForUpload(long now) {
         return (state.config.uploadWhenMoreThan >= 0 &&
                 state.queue.size() > state.config.uploadWhenMoreThan) ||
                (state.config.uploadWhenOlderThan > 0 &&
