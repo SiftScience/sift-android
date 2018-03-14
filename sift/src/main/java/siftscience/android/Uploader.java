@@ -26,8 +26,8 @@ import java.util.zip.GZIPOutputStream;
 /**
  * Stateless utility class for sending MobileEventJson batches to Sift backend
  */
-public class BetterUploader {
-    private static final String TAG = BetterUploader.class.getName();
+public class Uploader {
+    private static final String TAG = Uploader.class.getName();
 
     @VisibleForTesting
     static final int MAX_RETRIES = 3;
@@ -46,7 +46,7 @@ public class BetterUploader {
         Sift.Config getConfig();
     }
 
-    BetterUploader(TaskManager taskManager, ConfigProvider configProvider) {
+    Uploader(TaskManager taskManager, ConfigProvider configProvider) {
         this.taskManager = taskManager;
         this.configProvider = configProvider;
     }
@@ -132,11 +132,11 @@ public class BetterUploader {
     }
 
     private class UploadTask implements Runnable {
-        private BetterUploader uploader;
+        private Uploader uploader;
         private final byte[] requestBody;
         private int retriesRemaining;
 
-        UploadTask(BetterUploader uploader, byte[] requestBody, int retriesRemaining) {
+        UploadTask(Uploader uploader, byte[] requestBody, int retriesRemaining) {
             this.uploader = uploader;
             this.requestBody = requestBody;
             this.retriesRemaining = retriesRemaining;

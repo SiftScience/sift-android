@@ -34,11 +34,11 @@ import static org.mockito.Mockito.verify;
  * Created by gary on 3/8/18.
  */
 
-public class BetterUploaderTest {
+public class UploaderTest {
     private static final String ACCOUNT_ID = "foo";
     private static final String BEACON_KEY = "bar";
 
-    private BetterUploader.ConfigProvider configProvider;
+    private Uploader.ConfigProvider configProvider;
     private String requestPath;
     private TaskManager taskManager;
 
@@ -71,7 +71,7 @@ public class BetterUploaderTest {
                 .withServerUrlFormat(urlFormat)
                 .build();
 
-        configProvider = new BetterUploader.ConfigProvider() {
+        configProvider = new Uploader.ConfigProvider() {
             @Override
             public Sift.Config getConfig() {
                 return config;
@@ -83,7 +83,7 @@ public class BetterUploaderTest {
 
     @Test
     public void testUploadNothing() {
-        BetterUploader bu = new BetterUploader(taskManager, configProvider);
+        Uploader bu = new Uploader(taskManager, configProvider);
         bu.upload(Collections.<MobileEventJson>emptyList());
         assertThat(WireMock.findUnmatchedRequests(), Matchers.empty());
     }
@@ -92,7 +92,7 @@ public class BetterUploaderTest {
     public void testUpload200() throws Exception {
         WireMock.stubFor(makeCall(200));
 
-        BetterUploader bu = new BetterUploader(taskManager, configProvider);
+        Uploader bu = new Uploader(taskManager, configProvider);
         bu.upload(Collections.singletonList(TEST_EVENT));
 
         WireMock.verify(1, WireMock.putRequestedFor(WireMock.urlEqualTo(requestPath)));
@@ -103,7 +103,7 @@ public class BetterUploaderTest {
     public void testUpload400() throws Exception {
         WireMock.stubFor(makeCall(400));
 
-        BetterUploader bu = new BetterUploader(taskManager, configProvider);
+        Uploader bu = new Uploader(taskManager, configProvider);
         bu.upload(Collections.singletonList(TEST_EVENT));
 
         WireMock.verify(1, WireMock.putRequestedFor(WireMock.urlEqualTo(requestPath)));
@@ -114,7 +114,7 @@ public class BetterUploaderTest {
     public void testUploadOtherErrorExhaustRetries() throws Exception {
         WireMock.stubFor(makeCall(429));
 
-        BetterUploader bu = new BetterUploader(taskManager, configProvider);
+        Uploader bu = new Uploader(taskManager, configProvider);
         bu.upload(Collections.singletonList(TEST_EVENT));
 
         // ((3 - 3) ^ 2) * 3 = 0
@@ -146,7 +146,7 @@ public class BetterUploaderTest {
                 .willSetStateTo("success")
         );
 
-        BetterUploader bu = new BetterUploader(taskManager, configProvider);
+        Uploader bu = new Uploader(taskManager, configProvider);
         bu.upload(Collections.singletonList(TEST_EVENT));
 
         WireMock.verify(2, WireMock.putRequestedFor(WireMock.urlEqualTo(requestPath)));

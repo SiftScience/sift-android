@@ -174,7 +174,7 @@ public class Sift {
     private Config config;
     private String userId;
     private final Map<String, Queue> queues;
-    private final BetterUploader uploader;
+    private final Uploader uploader;
 
     private final Queue.UserIdProvider userIdProvider = new Queue.UserIdProvider() {
         @Override
@@ -190,7 +190,7 @@ public class Sift {
         }
     };
 
-    private final BetterUploader.ConfigProvider configProvider = new BetterUploader.ConfigProvider() {
+    private final Uploader.ConfigProvider configProvider = new Uploader.ConfigProvider() {
         @Override
         public Config getConfig() {
             return Sift.this.getConfig();
@@ -255,7 +255,7 @@ public class Sift {
         this.taskManager = taskManager;
         this.config = conf;
         this.queues = new HashMap<>();
-        this.uploader = new BetterUploader(taskManager, configProvider);
+        this.uploader = new Uploader(taskManager, configProvider);
         this.taskManager.submit(new UnarchiveTask());
     }
 
