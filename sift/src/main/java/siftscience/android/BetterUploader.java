@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
 
 /**
- *
+ * Stateless utility class for sending MobileEventJson batches to Sift backend
  */
 public class BetterUploader {
     private static final String TAG = BetterUploader.class.getName();
