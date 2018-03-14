@@ -57,7 +57,9 @@ public class BetterUploader {
         // Kick-off the first upload
         try {
             byte[] requestBody = buildRequest(batch);
-            this.doUpload(requestBody, MAX_RETRIES);
+            if (requestBody != null) {
+                this.doUpload(requestBody, MAX_RETRIES);
+            }
         } catch (IOException e) {
             Log.e(TAG, "Encountered IOException in upload", e);
         }
