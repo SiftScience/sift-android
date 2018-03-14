@@ -143,7 +143,7 @@ public class Sift {
         }
         openCount--;
         if (openCount < 0) {
-            Log.w(TAG, "Sift.close() is not paired with Sift.open()");
+            Log.d(TAG, "Sift.close() is not paired with Sift.open()");
         }
         if (openCount <= 0) {
             if (instance != null) {

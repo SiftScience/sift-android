@@ -52,12 +52,11 @@ public class BetterUploader {
     }
 
     public void upload(List<MobileEventJson> batch) {
-        Log.d(TAG, String.format("Upload batch of size %d", batch.size()));
-
         // Kick-off the first upload
         try {
             byte[] requestBody = buildRequest(batch);
             if (requestBody != null) {
+                Log.d(TAG, String.format("Uploading batch of size %d", batch.size()));
                 this.doUpload(requestBody, MAX_RETRIES);
             }
         } catch (IOException e) {
@@ -96,7 +95,7 @@ public class BetterUploader {
             return null;
         }
 
-        Log.d(TAG, String.format("Built HTTP request for batch of size=%d: %s", batch.size(), batch.toString()));
+        Log.d(TAG, String.format("Built HTTP request for batch of size %d: %s", batch.size(), batch.toString()));
         return makeRequestBody(batch);
     }
 

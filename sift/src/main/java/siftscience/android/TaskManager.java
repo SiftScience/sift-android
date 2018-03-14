@@ -22,8 +22,6 @@ class TaskManager {
     }
 
     void submit(Runnable task) {
-        Log.d(TAG, String.format("%s submitted", task.getClass().getSimpleName()));
-
         try {
             this.executor.submit(task);
         } catch (RejectedExecutionException e) {
@@ -32,8 +30,6 @@ class TaskManager {
     }
 
     void schedule(Runnable task, long delay, TimeUnit unit) {
-        Log.d(TAG, String.format("%s submitted", task.getClass().getSimpleName()));
-
         try {
             this.executor.schedule(task, delay, unit);
         } catch (RejectedExecutionException e) {
@@ -42,12 +38,10 @@ class TaskManager {
     }
 
     void shutdown() {
-        Log.d(TAG, "Shutting down");
-
         this.executor.shutdown();
         try {
             if (!this.executor.awaitTermination(1, TimeUnit.SECONDS)) {
-                Log.w(TAG, "Some tasks are not terminated yet before timeout");
+                Log.d(TAG, "Some tasks are not terminated yet before timeout");
             }
         } catch (InterruptedException e) {
             Log.e(TAG, "Interrupted when awaiting executor termination", e);
