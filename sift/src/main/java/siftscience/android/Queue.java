@@ -182,7 +182,7 @@ public class Queue {
     }
 
     List<MobileEventJson> flush() {
-        List<MobileEventJson> events = state.queue == null ? new ArrayList<MobileEventJson>() : state.queue;
+        List<MobileEventJson> events = state.queue;
         state.queue = new ArrayList<>();
         return events;
     }

@@ -271,14 +271,14 @@ public class Sift {
      *
      * @param config
      */
-    public synchronized void setConfig(Config config) {
-        this.config = config;
+    public void setConfig(Config config) {
+        this.taskManager.submit(new SetConfigTask(this, config));
     }
 
     /**
      * @return the user ID for the Sift instance
      */
-    public synchronized String getUserId() {
+    public String getUserId() {
         return this.userId;
     }
 
@@ -287,14 +287,14 @@ public class Sift {
      *
      * @param userId
      */
-    public synchronized void setUserId(String userId) {
-        this.userId = userId;
+    public void setUserId(String userId) {
+        this.taskManager.submit(new SetUserIdTask(this, userId));
     }
 
     /**
      * Unsets the user ID for the Sift instance.
      */
-    public synchronized void unsetUserId() {
+    public void unsetUserId() {
         this.userId = null;
     }
 
@@ -321,14 +321,14 @@ public class Sift {
 
     public void appendAppStateEvent(MobileEventJson event) {
         this.taskManager.submit(new AppendTask(
-                this.getQueue(APP_STATE_QUEUE_IDENTIFIER),
+                APP_STATE_QUEUE_IDENTIFIER,
                 event
         ));
     }
 
     public void appendDevicePropertiesEvent(MobileEventJson event) {
         this.taskManager.submit(new AppendTask(
-                this.getQueue(DEVICE_PROPERTIES_QUEUE_IDENTIFIER),
+                DEVICE_PROPERTIES_QUEUE_IDENTIFIER,
                 event
         ));
     }
@@ -423,21 +423,51 @@ public class Sift {
         }
     }
 
+    private class SetUserIdTask implements Runnable {
+        private Sift sift;
+        private String userId;
+
+        SetUserIdTask(Sift sift, String userId) {
+            this.sift = sift;
+            this.userId = userId;
+        }
+
+        @Override
+        public void run() {
+            this.sift.userId = this.userId;
+        }
+    }
+
+    private class SetConfigTask implements Runnable {
+        private Sift sift;
+        private Sift.Config config;
+
+        SetConfigTask(Sift sift, Config config) {
+            this.sift = sift;
+            this.config = config;
+        }
+
+        @Override
+        public void run() {
+            this.sift.config = this.config;
+        }
+    }
+
     /**
      * Appends an event to the specified queue.
      */
     private class AppendTask implements Runnable {
-        private Queue queue;
+        private String queueIdentifier;
         private MobileEventJson event;
 
-        AppendTask(Queue queue, MobileEventJson event) {
-            this.queue = queue;
+        AppendTask(String queueIdentifier, MobileEventJson event) {
+            this.queueIdentifier = queueIdentifier;
             this.event = event;
         }
 
         @Override
         public void run() {
-            this.queue.append(this.event);
+            getQueue(this.queueIdentifier).append(this.event);
         }
     }
 
