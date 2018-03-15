@@ -271,73 +271,74 @@ public class SiftTest {
                 .build());
     }
 
-//    @Test
-//    public void testSave() throws Exception {
-//        MemorySharedPreferences preferences = new MemorySharedPreferences();
-//
-//        Sift.open(mockContext(preferences));
-//
-//        Sift sift1 =
-//                new Sift(mockContext(preferences), null,
-//                        mockTaskManager());
-//        assertTrue(preferences.fields.isEmpty());
-//
-//        sift1.getQueue(Sift.DEVICE_PROPERTIES_QUEUE_IDENTIFIER)
-//                .append(MobileEventJson.newBuilder().build());
-//        sift1.save();
-//        assertEquals(
-//                new HashSet<>(Arrays.asList(
-//                        "config",
-//                        "queue/siftscience.android.app",
-//                        "queue/siftscience.android.device",
-//                        "user_id"
-//                )),
-//                preferences.fields.keySet()
-//        );
-//
-//        // Load saved Sift instance state
-//        Sift sift2 =
-//                new Sift(mockContext(preferences), null,
-//                        mockTaskManager());
-//        assertEquals(sift1.getConfig(), sift2.getConfig());
-//        assertNull(sift2.getUserId());
-//
-//        sift2.setConfig(new Sift.Config.Builder()
-//                .withAccountId("account-id")
-//                .withBeaconKey("beacon-key")
-//                .build());
-//        sift2.setUserId("user-id");
-//        sift2.createQueue("some-queue", new Queue.Config.Builder()
-//                .withAcceptSameEventAfter(1)
-//                .withUploadWhenMoreThan(2)
-//                .withAcceptSameEventAfter(3)
-//                .build());
-//        Queue q2 = sift2.getQueue("some-queue");
-//        assertNotNull(q2);
-//
-//        sift2.save();
-//        assertEquals(
-//                new HashSet<>(Arrays.asList(
-//                        "config",
-//                        "queue/siftscience.android.app",
-//                        "queue/siftscience.android.device",
-//                        "queue/some-queue",
-//                        "user_id"
-//                )),
-//                preferences.fields.keySet()
-//        );
-//
-//        // Load saved Sift instance state again
-//        Sift sift3 =
-//                new Sift(mockContext(preferences), null,
-//                        mockTaskManager());
-//        assertNotEquals(sift1.getConfig(), sift3.getConfig());
-//        assertEquals(sift2.getConfig(), sift3.getConfig());
-//        assertEquals("user-id", sift3.getUserId());
-//        Queue q3 = sift3.getQueue("some-queue");
-//        assertNotNull(q3);
-//        assertEquals(q2.getConfig(), q3.getConfig());
-//    }
+    @Test
+    public void testSave() throws Exception {
+        MemorySharedPreferences preferences = new MemorySharedPreferences();
+
+        Sift.open(mockContext(preferences),
+                new Sift.Config.Builder().withDisallowLocationCollection(true).build());
+
+        Sift sift1 =
+                new Sift(mockContext(preferences), null,
+                        mockTaskManager());
+        assertTrue(preferences.fields.isEmpty());
+
+        sift1.getQueue(Sift.DEVICE_PROPERTIES_QUEUE_IDENTIFIER)
+                .append(MobileEventJson.newBuilder().build());
+        sift1.save();
+        assertEquals(
+                new HashSet<>(Arrays.asList(
+                        "config",
+                        "queue/siftscience.android.app",
+                        "queue/siftscience.android.device",
+                        "user_id"
+                )),
+                preferences.fields.keySet()
+        );
+
+        // Load saved Sift instance state
+        Sift sift2 =
+                new Sift(mockContext(preferences), null,
+                        mockTaskManager());
+        assertEquals(sift1.getConfig(), sift2.getConfig());
+        assertNull(sift2.getUserId());
+
+        sift2.setConfig(new Sift.Config.Builder()
+                .withAccountId("account-id")
+                .withBeaconKey("beacon-key")
+                .build());
+        sift2.setUserId("user-id");
+        sift2.createQueue("some-queue", new Queue.Config.Builder()
+                .withAcceptSameEventAfter(1)
+                .withUploadWhenMoreThan(2)
+                .withAcceptSameEventAfter(3)
+                .build());
+        Queue q2 = sift2.getQueue("some-queue");
+        assertNotNull(q2);
+
+        sift2.save();
+        assertEquals(
+                new HashSet<>(Arrays.asList(
+                        "config",
+                        "queue/siftscience.android.app",
+                        "queue/siftscience.android.device",
+                        "queue/some-queue",
+                        "user_id"
+                )),
+                preferences.fields.keySet()
+        );
+
+        // Load saved Sift instance state again
+        Sift sift3 =
+                new Sift(mockContext(preferences), null,
+                        mockTaskManager());
+        assertNotEquals(sift1.getConfig(), sift3.getConfig());
+        assertEquals(sift2.getConfig(), sift3.getConfig());
+        assertEquals("user-id", sift3.getUserId());
+        Queue q3 = sift3.getQueue("some-queue");
+        assertNotNull(q3);
+        assertEquals(q2.getConfig(), q3.getConfig());
+    }
 
     @Test
     public void testUnsetUserId() throws Exception {

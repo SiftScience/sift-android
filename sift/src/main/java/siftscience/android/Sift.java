@@ -278,7 +278,7 @@ public class Sift {
     /**
      * @return the user ID for the Sift instance
      */
-    public String getUserId() {
+    public synchronized String getUserId() {
         return this.userId;
     }
 
@@ -295,7 +295,7 @@ public class Sift {
      * Unsets the user ID for the Sift instance.
      */
     public void unsetUserId() {
-        this.userId = null;
+        this.taskManager.submit(new SetUserIdTask(this, null));
     }
 
     /**
