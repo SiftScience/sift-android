@@ -85,15 +85,21 @@ public class AppStateCollector implements LocationListener,
                 this.googleApiClient.connect();
             } catch (Exception e) {
                 Log.e(TAG, e.toString());
+                this.sift.appendAppStateEvent(
+                        MobileEventJson.newBuilder()
+                                .withAndroidAppState(this.get())
+                                .withInstallationId(installationId)
+                                .withTime(Time.now())
+                                .build());
             }
+        } else {
+            this.sift.appendAppStateEvent(
+                    MobileEventJson.newBuilder()
+                            .withAndroidAppState(this.get())
+                            .withInstallationId(installationId)
+                            .withTime(Time.now())
+                            .build());
         }
-
-        this.sift.appendAppStateEvent(
-                MobileEventJson.newBuilder()
-                        .withAndroidAppState(this.get())
-                        .withInstallationId(installationId)
-                        .withTime(Time.now())
-                        .build());
     }
 
     public void disconnectLocationServices() {
@@ -231,6 +237,8 @@ public class AppStateCollector implements LocationListener,
         this.acquiredNewLocation = true;
         this.location = location;
 
+        this.collect();
+
         try {
             if (!this.sift.getConfig().disallowLocationCollection &&
                     this.googleApiClient.isConnected()) {
@@ -251,6 +259,8 @@ public class AppStateCollector implements LocationListener,
                 ContextCompat.checkSelfPermission(this.context, Manifest.permission
                         .ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             this.requestLocation();
+        } else {
+            this.collect();
         }
     }
 
