@@ -19,7 +19,9 @@ import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
 
@@ -46,6 +48,52 @@ public class Uploader {
         Sift.Config getConfig();
     }
 
+    static class Request {
+        private String method;
+        private URL url;
+        private Map<String, String> headers;
+        private byte[] body;
+
+        Request(String method, URL url, Map headers, byte[] body) {
+            this.method = method;
+            this.url = url;
+            this.headers = headers;
+            this.body = body;
+        }
+
+        static class Builder {
+            private String method;
+            private URL url;
+            private Map<String, String> headers;
+            private byte[] body;
+
+            Request.Builder withMethod(String method) {
+                this.method = method;
+                return this;
+            }
+
+
+            Request.Builder withUrl(URL url) {
+                this.url = url;
+                return this;
+            }
+
+            Request.Builder withHeaders(Map headers) {
+                this.headers = headers;
+                return this;
+            }
+
+            Request.Builder withBody(byte[] body) {
+                this.body = body;
+                return this;
+            }
+
+            public Request build() {
+                return new Request(method, url, headers, body);
+            }
+        }
+    }
+
     Uploader(TaskManager taskManager, ConfigProvider configProvider) {
         this.taskManager = taskManager;
         this.configProvider = configProvider;
@@ -54,31 +102,31 @@ public class Uploader {
     public void upload(List<MobileEventJson> batch) {
         // Kick-off the first upload
         try {
-            byte[] requestBody = buildRequest(batch);
-            if (requestBody != null) {
+            Request request = makeRequest(batch);
+            if (request != null) {
                 Log.d(TAG, String.format("Uploading batch of size %d", batch.size()));
-                this.doUpload(requestBody, MAX_RETRIES);
+                this.doUpload(request, MAX_RETRIES);
             }
         } catch (IOException e) {
             Log.e(TAG, "Encountered IOException in upload", e);
         }
     }
 
-    private void doUpload(byte[] requestBody, int retriesRemaining) {
+    private void doUpload(Request request, int retriesRemaining) {
         if (retriesRemaining == 0) {
             return;
         }
 
         this.taskManager.schedule(
-                new UploadTask(this, requestBody, retriesRemaining),
+                new UploadTask(this, request, retriesRemaining),
                 (long) (Math.pow(MAX_RETRIES - retriesRemaining, BACKOFF_EXPONENT) * BACKOFF_MULTIPLIER),
                 BACKOFF_UNIT
         );
     }
 
-    /** Builds an HTTP request for the specified event batch */
+    /** Builds a Request for the specified event batch */
     @Nullable
-    private byte[] buildRequest(List<MobileEventJson> batch) throws IOException {
+    private Request makeRequest(List<MobileEventJson> batch) throws IOException {
         if (batch.isEmpty()) {
             return null;
         }
@@ -95,15 +143,25 @@ public class Uploader {
             return null;
         }
 
-        Log.d(TAG, String.format("Built HTTP request for batch of size %d: %s", batch.size(), batch.toString()));
-        return makeRequestBody(batch);
-    }
-
-    @Nullable
-    private byte[] makeRequestBody(List<MobileEventJson> batch) throws IOException {
         if (batch == null || batch.isEmpty()) {
+            Log.d(TAG, "Batch is null or empty");
             return null;
         }
+
+        URL url = new URL(String.format(config.serverUrlFormat, config.accountId));
+
+        final String encodedBeaconKey = Base64.encodeToString(
+                config.beaconKey.getBytes(US_ASCII), Base64.NO_WRAP);
+
+        Map<String, String> headers = new HashMap<String, String>()
+        {
+            {
+                put("Authorization", "Basic " + encodedBeaconKey);
+                put("Accept", "application/json");
+                put("Content-Encoding", "gzip");
+                put("Content-Type", "application/json");
+            }
+        };
 
         ListRequestJson<MobileEventJson> request = ListRequestJson.<MobileEventJson>newBuilder()
                 .withData(batch)
@@ -115,7 +173,14 @@ public class Uploader {
         Sift.GSON.toJson(request, writer);
         writer.close();
 
-        return os.toByteArray();
+        Log.d(TAG, String.format("Built HTTP request for batch of size %d", batch.size()));
+
+        return new Request.Builder()
+                .withMethod("PUT")
+                .withUrl(url)
+                .withHeaders(headers)
+                .withBody(os.toByteArray())
+                .build();
     }
 
     private String readInputStreamAsString(InputStream in, int maxBytes) throws IOException {
@@ -133,12 +198,12 @@ public class Uploader {
 
     private class UploadTask implements Runnable {
         private Uploader uploader;
-        private final byte[] requestBody;
+        private final Request request;
         private int retriesRemaining;
 
-        UploadTask(Uploader uploader, byte[] requestBody, int retriesRemaining) {
+        UploadTask(Uploader uploader, Request request, int retriesRemaining) {
             this.uploader = uploader;
-            this.requestBody = requestBody;
+            this.request = request;
             this.retriesRemaining = retriesRemaining;
         }
 
@@ -146,19 +211,12 @@ public class Uploader {
         public void run() {
             Log.d(TAG, "Sending HTTP request");
             try {
-                Sift.Config config = configProvider.getConfig();
-                URL url = new URL(String.format(config.serverUrlFormat, config.accountId));
-
-                String encodedBeaconKey = Base64.encodeToString(
-                        config.beaconKey.getBytes(US_ASCII), Base64.NO_WRAP);
-
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("PUT");
-                connection.setRequestProperty("Authorization", "Basic " + encodedBeaconKey);
-                connection.setRequestProperty("Accept", "application/json");
-                connection.setRequestProperty("Content-Encoding", "gzip");
-                connection.setRequestProperty("Content-Type", "application/json");
-                connection.setFixedLengthStreamingMode(this.requestBody.length);
+                HttpURLConnection connection = (HttpURLConnection) this.request.url.openConnection();
+                connection.setRequestMethod(this.request.method);
+                for (Map.Entry<String, String> header : this.request.headers.entrySet()) {
+                    connection.setRequestProperty(header.getKey(), header.getValue());
+                }
+                connection.setFixedLengthStreamingMode(this.request.body.length);
                 connection.setDoOutput(true);
                 connection.setDoInput(true);
 
@@ -168,7 +226,7 @@ public class Uploader {
                     OutputStream out = connection.getOutputStream();
 
                     try {
-                        out.write(this.requestBody);
+                        out.write(this.request.body);
                     } finally {
                         out.close();
                     }
@@ -193,14 +251,13 @@ public class Uploader {
 
                     if (code == 200) {
                         Log.d(TAG,"HTTP 200");
-                        return;
                     } else if (code == 400) {
                         Log.d(TAG, String.format(
                                 "HTTP error: status=%d response=%s", code, body));
                     } else {
                         Log.d(TAG, String.format(
                                 "HTTP error: status=%d response=%s", code, body));
-                        this.uploader.doUpload(requestBody, this.retriesRemaining - 1);
+                        this.uploader.doUpload(request, this.retriesRemaining - 1);
                     }
                 } finally {
                     connection.disconnect();
