@@ -74,8 +74,8 @@ public class QueueTest {
 
         List<MobileEventJson> expect = new LinkedList<>(Arrays.asList(event0, event1, event2));
 
-        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester);
-        queue.setConfig(new Queue.Config.Builder().withUploadWhenMoreThan(10).build());
+        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester,
+                new Queue.Config.Builder().withUploadWhenMoreThan(10).build());
 
         for (MobileEventJson event : expect) {
             queue.append(event);
@@ -88,7 +88,8 @@ public class QueueTest {
         assertEquals(expect, queue.flush());
 
         // Test un-archived events
-        Queue another = new Queue(archive, USER_ID_PROVIDER, uploadRequester);
+        Queue another = new Queue(archive, USER_ID_PROVIDER, uploadRequester,
+                new Queue.Config.Builder().withUploadWhenMoreThan(10).build());
         assertEquals(expect, another.flush());
     }
 
@@ -96,8 +97,9 @@ public class QueueTest {
     public void testAcceptSameEventAfter() throws IOException {
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
-        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester);
-        queue.setConfig(new Queue.Config.Builder().withAcceptSameEventAfter(60000).build());
+        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester,
+                new Queue.Config.Builder().withAcceptSameEventAfter(60000)
+                        .withUploadWhenMoreThan(10).build());
 
         MobileEventJson event0, event1;
 
@@ -170,8 +172,8 @@ public class QueueTest {
 
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
-        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester);
-        queue.setConfig(new Queue.Config.Builder().withUploadWhenMoreThan(1).build());
+        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester,
+                new Queue.Config.Builder().withUploadWhenMoreThan(1).build());
 
         MobileEventJson event = MobileEventJson.newBuilder()
                 .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
@@ -198,8 +200,8 @@ public class QueueTest {
     public void testUploadWhenOlderThan() throws IOException {
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
-        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester);
-        queue.setConfig(new Queue.Config.Builder().withUploadWhenOlderThan(1).build());
+        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester,
+                new Queue.Config.Builder().withUploadWhenOlderThan(1).build());
 
         Time.currentTime = 1000;
 
@@ -222,9 +224,9 @@ public class QueueTest {
     public void testUploadFirstEvent() throws IOException {
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
-        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester);
-        queue.setConfig(new Queue.Config.Builder().withUploadWhenMoreThan(5)
-                .withUploadWhenOlderThan(10000).build());
+        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester,
+                new Queue.Config.Builder().withUploadWhenMoreThan(5)
+                        .withUploadWhenOlderThan(10000).build());
 
         MobileEventJson event = MobileEventJson.newBuilder()
                 .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
@@ -246,10 +248,10 @@ public class QueueTest {
     public void testUploadEventAfterWait() throws IOException, InterruptedException {
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
-        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester);
         // note that this TTL is 1 second
-        queue.setConfig(new Queue.Config.Builder().withUploadWhenMoreThan(5)
-                .withUploadWhenOlderThan(1000).build());
+        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester,
+                new Queue.Config.Builder().withUploadWhenMoreThan(5)
+                        .withUploadWhenOlderThan(1000).build());
 
         MobileEventJson event = MobileEventJson.newBuilder()
                 .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
@@ -279,9 +281,9 @@ public class QueueTest {
     public void testUploadEventWithoutWait() throws IOException {
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
-        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester);
-        queue.setConfig(new Queue.Config.Builder().withUploadWhenMoreThan(5)
-                .withUploadWhenOlderThan(10000).build());
+        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester,
+                new Queue.Config.Builder().withUploadWhenMoreThan(5)
+                        .withUploadWhenOlderThan(10000).build());
 
         MobileEventJson event = MobileEventJson.newBuilder()
                 .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
@@ -317,7 +319,7 @@ public class QueueTest {
                 "\"last_upload_timestamp\":1513206386326}";
 
         // First, test that we can construct a State from the archive
-        Object q = new Queue(queueState, USER_ID_PROVIDER, uploadRequester)
+        Object q = new Queue(queueState, USER_ID_PROVIDER, uploadRequester, null)
                 .unarchive(queueState);
 
         Field field = q.getClass().getDeclaredField("config");
@@ -353,7 +355,7 @@ public class QueueTest {
         );
 
         // Next, test that we can archive back to the expected string
-        String archive = new Queue(queueState, USER_ID_PROVIDER, uploadRequester).archive();
+        String archive = new Queue(queueState, USER_ID_PROVIDER, uploadRequester, config).archive();
         assertEquals(archive, queueState);
     }
 
@@ -370,7 +372,7 @@ public class QueueTest {
                 "\"network_addresses\":[\"10.0.2.15\",\"fe80::5054:ff:fe12:3456\"]}}," +
                 "\"lastUploadTimestamp\":1513206386326}";
 
-        Object o = new Queue(null, USER_ID_PROVIDER, uploadRequester)
+        Object o = new Queue(null, USER_ID_PROVIDER, uploadRequester, null)
                 .unarchive(legacyQueueState);
 
         Field field = o.getClass().getDeclaredField("config");

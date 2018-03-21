@@ -340,8 +340,7 @@ public class Sift {
             throw new IllegalStateException(String.format("Queue exists: \"%s\"", identifier));
         }
 
-        Queue queue = new Queue(null, userIdProvider, uploadRequester);
-        queue.setConfig(config);
+        Queue queue = new Queue(null, userIdProvider, uploadRequester, config);
         queues.put(identifier, queue);
         Log.i(TAG, String.format("Created new \"%s\" queue", identifier));
         return queue;
@@ -402,11 +401,22 @@ public class Sift {
             // Unarchive Queues
             for (Map.Entry<String, ?> entry : archives.getAll().entrySet()) {
                 String identifier = ArchiveKey.getQueueIdentifier(entry.getKey());
+                archive = (String) entry.getValue();
+
                 if (identifier != null) {
-                    archive = (String) entry.getValue();
-                    Queue queue = new Queue(archive, userIdProvider, uploadRequester);
-                    Log.d(TAG, String.format("Unarchived \"%s\" Queue", identifier));
-                    queues.put(identifier, queue);
+                    if (identifier.equals(DEVICE_PROPERTIES_QUEUE_IDENTIFIER)) {
+                        Queue queue = new Queue(archive, userIdProvider, uploadRequester,
+                                DEVICE_PROPERTIES_QUEUE_CONFIG);
+                        Log.d(TAG, "Unarchived Device Properties Queue");
+                        queues.put(identifier, queue);
+                    }
+
+                    if (identifier.equals(APP_STATE_QUEUE_IDENTIFIER)) {
+                        Queue queue = new Queue(archive, userIdProvider, uploadRequester,
+                                APP_STATE_QUEUE_CONFIG);
+                        Log.d(TAG, "Unarchived App State Queue");
+                        queues.put(identifier, queue);
+                    }
                 }
             }
 

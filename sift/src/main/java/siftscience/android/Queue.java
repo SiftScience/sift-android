@@ -44,10 +44,6 @@ public class Queue {
         @SerializedName(value="upload_when_older_than", alternate={"uploadWhenOlderThan"})
         private final long uploadWhenOlderThan;
 
-        Config() {
-            this(0, -1, 0);
-        }
-
         private Config(long acceptSameEventAfter,
                        int uploadWhenMoreThan,
                        long uploadWhenOlderThan) {
@@ -74,7 +70,7 @@ public class Queue {
                 return this;
             }
 
-            private int uploadWhenMoreThan = -1;
+            private int uploadWhenMoreThan = 0;
             Builder withUploadWhenMoreThan(int uploadWhenMoreThan) {
                 this.uploadWhenMoreThan = uploadWhenMoreThan;
                 return this;
@@ -111,7 +107,6 @@ public class Queue {
         long lastUploadTimestamp;
 
         State() {
-            config = new Config();
             queue = new ArrayList<>();
             lastEvent = null;
             lastUploadTimestamp = 0;
@@ -119,12 +114,15 @@ public class Queue {
     }
 
     private final State state;
+    private final Config config;
 
     Queue(String archive,
           UserIdProvider userIdProvider,
-          UploadRequester uploadRequester) {
+          UploadRequester uploadRequester,
+          Queue.Config config) {
         state = unarchive(archive);
 
+        this.config = config;
         this.userIdProvider = userIdProvider;
         this.uploadRequester = uploadRequester;
     }
@@ -147,11 +145,7 @@ public class Queue {
     }
 
     Config getConfig() {
-        return state.config;
-    }
-
-    void setConfig(Config config) {
-        state.config = config;
+        return this.config;
     }
 
     void append(@NonNull MobileEventJson event) {
@@ -163,9 +157,9 @@ public class Queue {
                     .build();
         }
 
-        if (state.config.acceptSameEventAfter > 0 &&
+        if (this.config.acceptSameEventAfter > 0 &&
                 state.lastEvent != null &&
-                now < state.lastEvent.time + state.config.acceptSameEventAfter &&
+                now < state.lastEvent.time + this.config.acceptSameEventAfter &&
                 Utils.eventsAreBasicallyEqual(state.lastEvent, event)) {
             Log.d(TAG, String.format("Drop duplicate event \"%s\"", event.toString()));
             return;
@@ -188,10 +182,10 @@ public class Queue {
     }
 
     boolean isReadyForUpload(long now) {
-        return (state.config.uploadWhenMoreThan >= 0 &&
-                state.queue.size() > state.config.uploadWhenMoreThan) ||
-               (state.config.uploadWhenOlderThan > 0 &&
+        return (this.config.uploadWhenMoreThan >= 0 &&
+                state.queue.size() > this.config.uploadWhenMoreThan) ||
+               (this.config.uploadWhenOlderThan > 0 &&
                 !state.queue.isEmpty() &&
-                now > state.lastUploadTimestamp + state.config.uploadWhenOlderThan);
+                now > state.lastUploadTimestamp + this.config.uploadWhenOlderThan);
     }
 }
