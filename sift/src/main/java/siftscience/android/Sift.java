@@ -17,7 +17,6 @@ import java.util.concurrent.TimeUnit;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonParseException;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
 import com.sift.api.representations.MobileEventJson;
