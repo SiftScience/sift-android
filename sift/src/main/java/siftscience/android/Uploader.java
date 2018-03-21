@@ -143,7 +143,7 @@ public class Uploader {
             return null;
         }
 
-        if (batch == null || batch.isEmpty()) {
+        if (batch.isEmpty()) {
             Log.d(TAG, "Batch is null or empty");
             return null;
         }

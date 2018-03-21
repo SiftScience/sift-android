@@ -272,7 +272,7 @@ public class Sift {
      * @param config
      */
     public void setConfig(Config config) {
-        this.taskManager.submit(new SetConfigTask(this, config));
+        this.taskManager.submit(new SetConfigTask(config));
     }
 
     /**
@@ -288,14 +288,14 @@ public class Sift {
      * @param userId
      */
     public void setUserId(String userId) {
-        this.taskManager.submit(new SetUserIdTask(this, userId));
+        this.taskManager.submit(new SetUserIdTask(userId));
     }
 
     /**
      * Unsets the user ID for the Sift instance.
      */
     public void unsetUserId() {
-        this.taskManager.submit(new SetUserIdTask(this, null));
+        this.taskManager.submit(new SetUserIdTask(null));
     }
 
     /**
@@ -424,32 +424,32 @@ public class Sift {
     }
 
     private class SetUserIdTask implements Runnable {
-        private Sift sift;
         private String userId;
 
-        SetUserIdTask(Sift sift, String userId) {
-            this.sift = sift;
+        SetUserIdTask(String userId) {
             this.userId = userId;
         }
 
         @Override
         public void run() {
-            this.sift.userId = this.userId;
+            synchronized (Sift.this) {
+                Sift.this.userId = this.userId;
+            }
         }
     }
 
     private class SetConfigTask implements Runnable {
-        private Sift sift;
         private Sift.Config config;
 
-        SetConfigTask(Sift sift, Config config) {
-            this.sift = sift;
+        SetConfigTask(Config config) {
             this.config = config;
         }
 
         @Override
         public void run() {
-            this.sift.config = this.config;
+            synchronized (Sift.this) {
+                Sift.this.config = this.config;
+            }
         }
     }
 
@@ -467,7 +467,10 @@ public class Sift {
 
         @Override
         public void run() {
-            getQueue(this.queueIdentifier).append(this.event);
+            Queue queue = getQueue(this.queueIdentifier);
+            if (queue != null) {
+                queue.append(this.event);
+            }
         }
     }
 
