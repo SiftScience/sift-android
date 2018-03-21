@@ -308,12 +308,7 @@ public class SiftTest {
                 .withBeaconKey("beacon-key")
                 .build());
         sift2.setUserId("user-id");
-        sift2.createQueue("some-queue", new Queue.Config.Builder()
-                .withAcceptSameEventAfter(1)
-                .withUploadWhenMoreThan(2)
-                .withAcceptSameEventAfter(3)
-                .build());
-        Queue q2 = sift2.getQueue("some-queue");
+        Queue q2 = sift2.getQueue(Sift.DEVICE_PROPERTIES_QUEUE_IDENTIFIER);
         assertNotNull(q2);
 
         sift2.save();
@@ -322,7 +317,6 @@ public class SiftTest {
                         "config",
                         "queue/siftscience.android.app",
                         "queue/siftscience.android.device",
-                        "queue/some-queue",
                         "user_id"
                 )),
                 preferences.fields.keySet()
@@ -335,7 +329,7 @@ public class SiftTest {
         assertNotEquals(sift1.getConfig(), sift3.getConfig());
         assertEquals(sift2.getConfig(), sift3.getConfig());
         assertEquals("user-id", sift3.getUserId());
-        Queue q3 = sift3.getQueue("some-queue");
+        Queue q3 = sift3.getQueue(Sift.DEVICE_PROPERTIES_QUEUE_IDENTIFIER);
         assertNotNull(q3);
         assertEquals(q2.getConfig(), q3.getConfig());
     }
