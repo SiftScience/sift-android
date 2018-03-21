@@ -577,9 +577,6 @@ public class Sift {
     //================================================================================
 
     /**
-     * Requests an upload.  If `force` is true, it will disregard the
-     * queue's batching policy.
-     *
      * This is now a no-op, since we do not want to allow arbitrary
      * uploads to be triggered.
      */
