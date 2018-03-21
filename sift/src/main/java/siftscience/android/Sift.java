@@ -200,7 +200,6 @@ public class Sift {
     private enum ArchiveKey {
         CONFIG("config"),
         USER_ID("user_id"),
-        UPLOADER("uploader"),
         QUEUE("queue");
 
         public final String key;
@@ -378,9 +377,8 @@ public class Sift {
                     Log.d(TAG, String.format("Archived \"%s\" Queue", identifier));
                     editor.putString(identifier, entry.getValue().archive());
                 }
+            } finally {
                 editor.apply();
-            } catch (JsonParseException e) {
-                Log.e(TAG, "Encountered JsonProcessingException in save", e);
             }
         }
     }
