@@ -245,7 +245,7 @@ public class AppStateCollector implements LocationListener,
                         .removeLocationUpdates(this.googleApiClient, this);
             }
         } catch (Exception e) {
-            Log.e(TAG, "Encountered Exception in onLocationChanged", e);
+            Log.e(TAG, "Encountered exception in onLocationChanged", e);
         }
     }
 

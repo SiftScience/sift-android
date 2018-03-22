@@ -236,7 +236,7 @@ public class Sift {
         try {
             return Sift.GSON.fromJson(archive, Config.class);
         } catch (JsonSyntaxException e) {
-            Log.d(TAG, "Encountered exception in Sift config unarchive", e);
+            Log.d(TAG, "Encountered exception in Sift.Config unarchive", e);
             return config == null ? new Config() : config;
         }
     }
@@ -337,12 +337,12 @@ public class Sift {
 
     Queue createQueue(@NonNull String identifier, Queue.Config config) {
         if (getQueue(identifier) != null) {
-            throw new IllegalStateException(String.format("Queue exists: \"%s\"", identifier));
+            throw new IllegalStateException(String.format("Queue exists: %s", identifier));
         }
 
         Queue queue = new Queue(null, userIdProvider, uploadRequester, config);
         queues.put(identifier, queue);
-        Log.i(TAG, String.format("Created new \"%s\" queue", identifier));
+        Log.i(TAG, String.format("Created new %s queue", identifier));
         return queue;
     }
 
@@ -367,12 +367,12 @@ public class Sift {
             editor.clear();
             try {
                 editor.putString(ArchiveKey.CONFIG.key, archiveConfig());
-                Log.d(TAG, String.format("Archived Sift config: \"%s\"", archiveConfig()));
+                Log.d(TAG, String.format("Archived Sift.Config: %s", archiveConfig()));
                 editor.putString(ArchiveKey.USER_ID.key, getUserId());
-                Log.d(TAG, String.format("Archived User ID: \"%s\"", getUserId()));
+                Log.d(TAG, String.format("Archived User ID: %s", getUserId()));
                 for (Map.Entry<String, Queue> entry : queues.entrySet()) {
                     String identifier = ArchiveKey.getKeyForQueueIdentifier(entry.getKey());
-                    Log.d(TAG, String.format("Archived \"%s\" Queue", identifier));
+                    Log.d(TAG, String.format("Archived %s Queue", identifier));
                     editor.putString(identifier, entry.getValue().archive());
                 }
             } finally {
@@ -392,13 +392,18 @@ public class Sift {
             // Unarchive Sift config
             archive = archives.getString(ArchiveKey.CONFIG.key, null);
             config = unarchiveConfig(archive);
-            Log.d(TAG, String.format("Unarchived Sift config: \"%s\"", archive));
+            Log.d(TAG, String.format("Unarchived Sift.Config: %s", archive));
 
             // Unarchive User ID
             userId = archives.getString(ArchiveKey.USER_ID.key, null);
-            Log.d(TAG, String.format("Unarchived User ID: \"%s\"", userId));
+            Log.d(TAG, String.format("Unarchived User ID: %s", userId));
 
             // Unarchive Queues
+
+
+
+
+
             for (Map.Entry<String, ?> entry : archives.getAll().entrySet()) {
                 String identifier = ArchiveKey.getQueueIdentifier(entry.getKey());
                 archive = (String) entry.getValue();

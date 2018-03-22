@@ -202,7 +202,7 @@ public class SiftTest {
             sift.createQueue("some-queue", new Queue.Config.Builder().build());
             fail();
         } catch (IllegalStateException e) {
-            assertEquals("Queue exists: \"some-queue\"", e.getMessage());
+            assertEquals("Queue exists: some-queue", e.getMessage());
         }
 
         assertTrue(preferences.fields.isEmpty());

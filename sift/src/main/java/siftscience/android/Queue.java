@@ -139,7 +139,7 @@ public class Queue {
         try {
             return Sift.GSON.fromJson(archive, State.class);
         } catch (JsonSyntaxException e) {
-            Log.d(TAG, "Encountered exception in Queue state unarchive", e);
+            Log.d(TAG, "Encountered exception in Queue.State unarchive", e);
             return new State();
         }
     }
@@ -161,11 +161,11 @@ public class Queue {
                 state.lastEvent != null &&
                 now < state.lastEvent.time + this.config.acceptSameEventAfter &&
                 Utils.eventsAreBasicallyEqual(state.lastEvent, event)) {
-            Log.d(TAG, String.format("Drop duplicate event \"%s\"", event.toString()));
+            Log.d(TAG, String.format("Drop duplicate event: %s", event.toString()));
             return;
         }
 
-        Log.d(TAG, String.format("Append event \"%s\"", event.toString()));
+        Log.d(TAG, String.format("Append event: %s", event.toString()));
         state.queue.add(event);
         state.lastEvent = event;
 
