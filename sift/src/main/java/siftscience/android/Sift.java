@@ -28,11 +28,11 @@ public class Sift {
     // Static members
     //================================================================================
 
-    public static final String SDK_VERSION = BuildConfig.VERSION_NAME;
-    public static final String DEVICE_PROPERTIES_QUEUE_IDENTIFIER = "siftscience.android.device";
-    public static final String APP_STATE_QUEUE_IDENTIFIER = "siftscience.android.app";
+    static final String SDK_VERSION = BuildConfig.VERSION_NAME;
+    static final String DEVICE_PROPERTIES_QUEUE_IDENTIFIER = "siftscience.android.device";
+    static final String APP_STATE_QUEUE_IDENTIFIER = "siftscience.android.app";
 
-    public static final Gson GSON = new GsonBuilder()
+    static final Gson GSON = new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .create();
 
