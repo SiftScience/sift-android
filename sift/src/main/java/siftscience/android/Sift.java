@@ -399,11 +399,6 @@ public class Sift {
             Log.d(TAG, String.format("Unarchived User ID: %s", userId));
 
             // Unarchive Queues
-
-
-
-
-
             for (Map.Entry<String, ?> entry : archives.getAll().entrySet()) {
                 String identifier = ArchiveKey.getQueueIdentifier(entry.getKey());
                 archive = (String) entry.getValue();

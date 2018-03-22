@@ -29,7 +29,7 @@ public class Queue {
          * Time after which an event that is basically the same as the most
          * recently appended event can be appended again.
          */
-        @SerializedName(value = "accept_same_event_after", alternate = {"acceptSameEventAfter"})
+        @SerializedName(value="accept_same_event_after", alternate={"acceptSameEventAfter"})
         private final long acceptSameEventAfter;
 
         /**
