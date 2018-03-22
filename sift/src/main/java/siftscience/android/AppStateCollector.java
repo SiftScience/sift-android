@@ -65,7 +65,6 @@ public class AppStateCollector implements LocationListener,
                         .addConnectionCallbacks(this)
                         .addOnConnectionFailedListener(this)
                         .build();
-                this.googleApiClient.connect();
             } catch (Exception e) {
                 Log.e(TAG, e.toString());
             }
