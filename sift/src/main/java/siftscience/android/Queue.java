@@ -182,10 +182,8 @@ public class Queue {
     }
 
     boolean isReadyForUpload(long now) {
-        return (this.config.uploadWhenMoreThan >= 0 &&
-                state.queue.size() > this.config.uploadWhenMoreThan) ||
-               (this.config.uploadWhenOlderThan > 0 &&
-                !state.queue.isEmpty() &&
+        return (state.queue.size() > this.config.uploadWhenMoreThan) ||
+               (!state.queue.isEmpty() &&
                 now > state.lastUploadTimestamp + this.config.uploadWhenOlderThan);
     }
 }
