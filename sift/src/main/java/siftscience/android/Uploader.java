@@ -153,15 +153,11 @@ public class Uploader {
         final String encodedBeaconKey = Base64.encodeToString(
                 config.beaconKey.getBytes(US_ASCII), Base64.NO_WRAP);
 
-        Map<String, String> headers = new HashMap<String, String>()
-        {
-            {
-                put("Authorization", "Basic " + encodedBeaconKey);
-                put("Accept", "application/json");
-                put("Content-Encoding", "gzip");
-                put("Content-Type", "application/json");
-            }
-        };
+        Map<String, String> headers = new HashMap<String, String>();
+        headers.put("Authorization", "Basic " + encodedBeaconKey);
+        headers.put("Accept", "application/json");
+        headers.put("Content-Encoding", "gzip");
+        headers.put("Content-Type", "application/json");
 
         ListRequestJson<MobileEventJson> request = ListRequestJson.<MobileEventJson>newBuilder()
                 .withData(batch)

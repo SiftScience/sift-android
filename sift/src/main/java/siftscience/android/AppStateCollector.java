@@ -76,28 +76,15 @@ public class AppStateCollector implements LocationListener,
     }
 
     public void collect() {
-        String installationId = Settings.Secure.getString(this.context.getContentResolver(),
-                Settings.Secure.ANDROID_ID);
-
         if (!sift.getConfig().disallowLocationCollection && !this.googleApiClient.isConnected()) {
             try {
                 this.googleApiClient.connect();
             } catch (Exception e) {
                 Log.e(TAG, e.toString());
-                this.sift.appendAppStateEvent(
-                        MobileEventJson.newBuilder()
-                                .withAndroidAppState(this.get())
-                                .withInstallationId(installationId)
-                                .withTime(Time.now())
-                                .build());
+                this.doCollect();
             }
         } else {
-            this.sift.appendAppStateEvent(
-                    MobileEventJson.newBuilder()
-                            .withAndroidAppState(this.get())
-                            .withInstallationId(installationId)
-                            .withTime(Time.now())
-                            .build());
+            this.doCollect();
         }
     }
 
@@ -125,6 +112,17 @@ public class AppStateCollector implements LocationListener,
         } catch (Exception e) {
             Log.e(TAG, e.toString());
         }
+    }
+
+    private void doCollect() {
+        String installationId = Settings.Secure.getString(this.context.getContentResolver(),
+                Settings.Secure.ANDROID_ID);
+        this.sift.appendAppStateEvent(
+                MobileEventJson.newBuilder()
+                        .withAndroidAppState(this.get())
+                        .withInstallationId(installationId)
+                        .withTime(Time.now())
+                        .build());
     }
 
     private AndroidAppStateJson get() {
@@ -236,7 +234,7 @@ public class AppStateCollector implements LocationListener,
         this.acquiredNewLocation = true;
         this.location = location;
 
-        this.collect();
+        this.doCollect();
 
         try {
             if (!this.sift.getConfig().disallowLocationCollection &&
@@ -259,7 +257,7 @@ public class AppStateCollector implements LocationListener,
                         .ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             this.requestLocation();
         } else {
-            this.collect();
+            this.doCollect();
         }
     }
 
