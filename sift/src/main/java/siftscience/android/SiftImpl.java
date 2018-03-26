@@ -16,9 +16,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by gary on 3/26/18.
+ * Implementation for Sift instance.
  */
-
 class SiftImpl {
     private static final String TAG = SiftImpl.class.getName();
     private static final String ARCHIVE_NAME = "siftscience";
@@ -36,6 +35,8 @@ class SiftImpl {
             .withUploadWhenMoreThan(8)
             .withUploadWhenOlderThan(TimeUnit.MINUTES.toMillis(1))
             .build();
+
+
 
     //================================================================================
     // Instance members
