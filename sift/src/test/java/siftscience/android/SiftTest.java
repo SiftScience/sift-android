@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Sift Science. All rights reserved.
+// Copyright (c) 2018 Sift Science. All rights reserved.
 
 package siftscience.android;
 
@@ -11,6 +11,8 @@ import com.sift.api.representations.MobileEventJson;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -29,8 +31,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -178,7 +182,7 @@ public class SiftTest {
         MemorySharedPreferences preferences = new MemorySharedPreferences();
 
         Sift sift = new Sift(
-                mockContext(preferences), null, executor);
+                mockContext(preferences), null, mockTaskManager());
 
         assertNotNull(sift.getConfig());
         // Verify default values
@@ -198,7 +202,7 @@ public class SiftTest {
             sift.createQueue("some-queue", new Queue.Config.Builder().build());
             fail();
         } catch (IllegalStateException e) {
-            assertEquals("queue exists: some-queue", e.getMessage());
+            assertEquals("Queue exists: some-queue", e.getMessage());
         }
 
         assertTrue(preferences.fields.isEmpty());
@@ -206,11 +210,6 @@ public class SiftTest {
 
     @Test
     public void testUnarchiveUnknownProperty() throws IOException {
-        MemorySharedPreferences preferences = new MemorySharedPreferences();
-
-        Sift sift = new Sift(
-                mockContext(preferences), null, executor);
-
         String jsonAsString =
                 "{\"accountId\":\"foo\"," +
                 "\"beaconKey\":\"bar\"," +
@@ -218,7 +217,7 @@ public class SiftTest {
                 "\"unknown\":\"property\"," +
                 "\"disallowLocationCollection\":true}";
 
-        Sift.Config c = sift.GSON.fromJson(jsonAsString, Sift.Config.class);
+        Sift.Config c = Sift.GSON.fromJson(jsonAsString, Sift.Config.class);
 
         // Unknown properties should be dropped
         assertEquals(c, new Sift.Config.Builder()
@@ -242,7 +241,7 @@ public class SiftTest {
                 .build();
 
         Sift sift = new Sift(
-                mockContext(preferences), c, executor);
+                mockContext(preferences), c, mockTaskManager());
 
         String configString = sift.archiveConfig();
 
@@ -252,22 +251,17 @@ public class SiftTest {
                         "\"server_url_format\":\"s\"," +
                         "\"disallow_location_collection\":false}");
 
-        assertEquals(sift.GSON.fromJson(configString, Sift.Config.class), c);
+        assertEquals(Sift.GSON.fromJson(configString, Sift.Config.class), c);
     }
 
     @Test
     public void testUnarchiveLegacyConfig() throws IOException {
-        MemorySharedPreferences preferences = new MemorySharedPreferences();
-
-        Sift sift = new Sift(
-                mockContext(preferences), null, executor);
-
         String legacyConfig = "{\"accountId\":\"a\"," +
                 "\"beaconKey\":\"b\"," +
                 "\"disallowLocationCollection\":false," +
                 "\"serverUrlFormat\":\"s\"}";
 
-        Sift.Config c = sift.GSON.fromJson(legacyConfig, Sift.Config.class);
+        Sift.Config c = Sift.GSON.fromJson(legacyConfig, Sift.Config.class);
 
         assertEquals(c, new Sift.Config.Builder()
                 .withAccountId("a")
@@ -281,11 +275,12 @@ public class SiftTest {
     public void testSave() throws Exception {
         MemorySharedPreferences preferences = new MemorySharedPreferences();
 
-        Sift.open(mockContext(preferences));
+        Sift.open(mockContext(preferences),
+                new Sift.Config.Builder().withDisallowLocationCollection(true).build());
 
         Sift sift1 =
                 new Sift(mockContext(preferences), null,
-                        executor);
+                        mockTaskManager());
         assertTrue(preferences.fields.isEmpty());
 
         sift1.getQueue(Sift.DEVICE_PROPERTIES_QUEUE_IDENTIFIER)
@@ -296,7 +291,6 @@ public class SiftTest {
                         "config",
                         "queue/siftscience.android.app",
                         "queue/siftscience.android.device",
-                        "uploader",
                         "user_id"
                 )),
                 preferences.fields.keySet()
@@ -305,7 +299,7 @@ public class SiftTest {
         // Load saved Sift instance state
         Sift sift2 =
                 new Sift(mockContext(preferences), null,
-                        executor);
+                        mockTaskManager());
         assertEquals(sift1.getConfig(), sift2.getConfig());
         assertNull(sift2.getUserId());
 
@@ -314,12 +308,7 @@ public class SiftTest {
                 .withBeaconKey("beacon-key")
                 .build());
         sift2.setUserId("user-id");
-        sift2.createQueue("some-queue", new Queue.Config.Builder()
-                .withAcceptSameEventAfter(1)
-                .withUploadWhenMoreThan(2)
-                .withAcceptSameEventAfter(3)
-                .build());
-        Queue q2 = sift2.getQueue("some-queue");
+        Queue q2 = sift2.getQueue(Sift.DEVICE_PROPERTIES_QUEUE_IDENTIFIER);
         assertNotNull(q2);
 
         sift2.save();
@@ -328,8 +317,6 @@ public class SiftTest {
                         "config",
                         "queue/siftscience.android.app",
                         "queue/siftscience.android.device",
-                        "queue/some-queue",
-                        "uploader",
                         "user_id"
                 )),
                 preferences.fields.keySet()
@@ -338,11 +325,11 @@ public class SiftTest {
         // Load saved Sift instance state again
         Sift sift3 =
                 new Sift(mockContext(preferences), null,
-                        executor);
+                        mockTaskManager());
         assertNotEquals(sift1.getConfig(), sift3.getConfig());
         assertEquals(sift2.getConfig(), sift3.getConfig());
         assertEquals("user-id", sift3.getUserId());
-        Queue q3 = sift3.getQueue("some-queue");
+        Queue q3 = sift3.getQueue(Sift.DEVICE_PROPERTIES_QUEUE_IDENTIFIER);
         assertNotNull(q3);
         assertEquals(q2.getConfig(), q3.getConfig());
     }
@@ -352,20 +339,20 @@ public class SiftTest {
         MemorySharedPreferences preferences = new MemorySharedPreferences();
 
         Sift sift = new Sift(mockContext(preferences), null,
-                executor);
+                mockTaskManager());
 
         sift.setUserId("gary");
 
         sift.getQueue(Sift.APP_STATE_QUEUE_IDENTIFIER).append(MobileEventJson.newBuilder().build());
         // Append twice because the first one gets uploaded and flushed
         sift.getQueue(Sift.APP_STATE_QUEUE_IDENTIFIER).append(MobileEventJson.newBuilder().build());
-        MobileEventJson event = sift.getQueue(Sift.APP_STATE_QUEUE_IDENTIFIER).transfer().get(0);
+        MobileEventJson event = sift.getQueue(Sift.APP_STATE_QUEUE_IDENTIFIER).flush().get(0);
         assertEquals(event.userId, "gary");
 
         sift.unsetUserId();
 
         sift.getQueue(Sift.APP_STATE_QUEUE_IDENTIFIER).append(MobileEventJson.newBuilder().build());
-        event = sift.getQueue(Sift.APP_STATE_QUEUE_IDENTIFIER).transfer().get(0);
+        event = sift.getQueue(Sift.APP_STATE_QUEUE_IDENTIFIER).flush().get(0);
         assertNull(event.userId);
     }
 
@@ -374,5 +361,19 @@ public class SiftTest {
         when(ctx.getSharedPreferences(anyString(), anyInt())).thenReturn(preferences);
         when(ctx.getApplicationContext()).thenReturn(ctx);
         return ctx;
+    }
+
+    private TaskManager mockTaskManager() {
+        TaskManager tm = mock(TaskManager.class);
+        doAnswer(new Answer() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                ((Runnable) args[0]).run();
+                return null;
+            }
+        }).when(tm).submit(any(Runnable.class));
+
+        return tm;
     }
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Sift Science. All rights reserved.
+// Copyright (c) 2018 Sift Science. All rights reserved.
 
 package siftscience.android;
 
@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -29,14 +30,12 @@ public class QueueTest {
     private static final Queue.UserIdProvider USER_ID_PROVIDER = new Queue.UserIdProvider() {
         @Override
         public String getUserId() {
-            return "user-id";
+            return null;
         }
     };
 
     @Test
     public void testAppend() throws IOException {
-        long now = 1001;
-
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
         MobileEventJson event0 = MobileEventJson.newBuilder()
@@ -72,32 +71,40 @@ public class QueueTest {
                 .withUserId("gary")
                 .build();
 
-        List<MobileEventJson> expect = new LinkedList<>(Arrays.asList(event0, event1, event2));
+        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester,
+                new Queue.Config.Builder()
+                        .withUploadWhenMoreThan(10)
+                        .withUploadWhenOlderThan(TimeUnit.MINUTES.toMillis(1))
+                        .build());
 
-        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester);
-        queue.setConfig(new Queue.Config.Builder().withUploadWhenMoreThan(10).build());
+        queue.append(event0);
+        verify(uploadRequester).requestUpload(Arrays.asList(event0));
 
-        for (MobileEventJson event : expect) {
-            queue.append(event);
-        }
-        assertFalse(queue.isEventsReadyForUpload(now));
+        queue.append(event1);
+        queue.append(event2);
+
         verifyZeroInteractions(uploadRequester);
-
         String archive = queue.archive();
-
-        assertEquals(expect, queue.transfer());
+        assertEquals(Arrays.asList(event1, event2), queue.flush());
 
         // Test un-archived events
-        Queue another = new Queue(archive, USER_ID_PROVIDER, uploadRequester);
-        assertEquals(expect, another.transfer());
+        Queue another = new Queue(archive, USER_ID_PROVIDER, uploadRequester,
+                new Queue.Config.Builder()
+                        .withUploadWhenMoreThan(10)
+                        .build());
+        assertEquals(Arrays.asList(event1, event2), another.flush());
     }
 
     @Test
     public void testAcceptSameEventAfter() throws IOException {
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
-        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester);
-        queue.setConfig(new Queue.Config.Builder().withAcceptSameEventAfter(60000).build());
+        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester,
+                new Queue.Config.Builder()
+                        .withAcceptSameEventAfter(60000)
+                        .withUploadWhenOlderThan(TimeUnit.HOURS.toMillis(1))
+                        .withUploadWhenMoreThan(10)
+                        .build());
 
         MobileEventJson event0, event1;
 
@@ -144,7 +151,7 @@ public class QueueTest {
 
         verifyZeroInteractions(uploadRequester);
 
-        assertEquals(Collections.singletonList(event0), queue.transfer());
+        assertEquals(Collections.singletonList(event0), queue.flush());
 
         Time.currentTime = 1000 + 60000;
         event1 = MobileEventJson.newBuilder()
@@ -161,17 +168,18 @@ public class QueueTest {
         queue.append(event1);
 
         verifyZeroInteractions(uploadRequester);
-        assertEquals(Collections.singletonList(event1), queue.transfer());
+        assertEquals(Collections.singletonList(event1), queue.flush());
     }
 
     @Test
     public void testUploadWhenMoreThan() throws IOException {
-        long now = 1001;
-
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
-        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester);
-        queue.setConfig(new Queue.Config.Builder().withUploadWhenMoreThan(1).build());
+        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester,
+                new Queue.Config.Builder()
+                        .withUploadWhenMoreThan(1)
+                        .withUploadWhenOlderThan(TimeUnit.HOURS.toMillis(1))
+                        .build());
 
         MobileEventJson event = MobileEventJson.newBuilder()
                 .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
@@ -180,27 +188,29 @@ public class QueueTest {
                         .withDeviceModel("baz0")
                         .build()
                 )
-                .withTime(System.currentTimeMillis())
+                .withTime(1000L)
                 .build();
 
-        assertFalse(queue.isEventsReadyForUpload(now));
         verifyZeroInteractions(uploadRequester);
 
+        // Always upload the first event
         queue.append(event);
-        assertFalse(queue.isEventsReadyForUpload(now));
-        verifyZeroInteractions(uploadRequester);
+        verify(uploadRequester).requestUpload(Arrays.asList(event));
 
+        // After the first event, respect the TTL batching policy
         queue.append(event);
-        assertTrue(queue.isEventsReadyForUpload(now));
-        verify(uploadRequester).requestUpload();
+        queue.append(event);
+        verify(uploadRequester).requestUpload(Arrays.asList(event, event));
     }
 
     @Test
     public void testUploadWhenOlderThan() throws IOException {
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
-        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester);
-        queue.setConfig(new Queue.Config.Builder().withUploadWhenOlderThan(1).build());
+        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester,
+                new Queue.Config.Builder()
+                        .withUploadWhenOlderThan(1)
+                        .build());
 
         Time.currentTime = 1000;
 
@@ -215,9 +225,7 @@ public class QueueTest {
                 .build();
 
         queue.append(event);
-        assertFalse(queue.isEventsReadyForUpload(Time.currentTime));
-        Time.currentTime += 2;
-        assertTrue(queue.isEventsReadyForUpload(Time.currentTime));
+        verify(uploadRequester).requestUpload(Collections.singletonList(event));
     }
 
     // Ensures that the first event appended will get uploaded
@@ -225,9 +233,11 @@ public class QueueTest {
     public void testUploadFirstEvent() throws IOException {
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
-        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester);
-        queue.setConfig(new Queue.Config.Builder().withUploadWhenMoreThan(5)
-                .withUploadWhenOlderThan(10000).build());
+        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester,
+                new Queue.Config.Builder()
+                        .withUploadWhenMoreThan(5)
+                        .withUploadWhenOlderThan(10000)
+                        .build());
 
         MobileEventJson event = MobileEventJson.newBuilder()
                 .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
@@ -241,7 +251,7 @@ public class QueueTest {
 
         // Should have uploaded
         queue.append(event);
-        verify(uploadRequester).requestUpload();
+        verify(uploadRequester).requestUpload(Collections.singletonList(event));
     }
 
     // Checks that appending after waiting will request an upload
@@ -249,10 +259,12 @@ public class QueueTest {
     public void testUploadEventAfterWait() throws IOException, InterruptedException {
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
-        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester);
         // note that this TTL is 1 second
-        queue.setConfig(new Queue.Config.Builder().withUploadWhenMoreThan(5)
-                .withUploadWhenOlderThan(1000).build());
+        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester,
+                new Queue.Config.Builder()
+                        .withUploadWhenMoreThan(5)
+                        .withUploadWhenOlderThan(1000)
+                        .build());
 
         MobileEventJson event = MobileEventJson.newBuilder()
                 .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
@@ -266,7 +278,7 @@ public class QueueTest {
 
         // Should have uploaded the first event
         queue.append(event);
-        verify(uploadRequester).requestUpload();
+        verify(uploadRequester).requestUpload(Collections.singletonList(event));
         reset(uploadRequester);
 
         // Sleep for 2 seconds (in excess of TTL)
@@ -274,7 +286,7 @@ public class QueueTest {
 
         // Should have uploaded the second event (sufficiently stale)
         queue.append(event);
-        verify(uploadRequester).requestUpload();
+        verify(uploadRequester).requestUpload(Collections.singletonList(event));
     }
 
     // Checks that appending without waiting will not request an upload
@@ -282,9 +294,11 @@ public class QueueTest {
     public void testUploadEventWithoutWait() throws IOException {
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
-        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester);
-        queue.setConfig(new Queue.Config.Builder().withUploadWhenMoreThan(5)
-                .withUploadWhenOlderThan(10000).build());
+        Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester,
+                new Queue.Config.Builder()
+                        .withUploadWhenMoreThan(5)
+                        .withUploadWhenOlderThan(10000)
+                        .build());
 
         MobileEventJson event = MobileEventJson.newBuilder()
                 .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
@@ -298,12 +312,12 @@ public class QueueTest {
 
         // Should have uploaded the first event
         queue.append(event);
-        verify(uploadRequester).requestUpload();
+        verify(uploadRequester).requestUpload(Collections.singletonList(event));
         reset(uploadRequester);
 
         // Should not have uploaded the second event (not stale enough)
         queue.append(event);
-        verify(uploadRequester, never()).requestUpload();
+        verifyZeroInteractions(uploadRequester);
     }
 
     @Test
@@ -320,7 +334,7 @@ public class QueueTest {
                 "\"last_upload_timestamp\":1513206386326}";
 
         // First, test that we can construct a State from the archive
-        Object q = new Queue(queueState, USER_ID_PROVIDER, uploadRequester)
+        Object q = new Queue(queueState, USER_ID_PROVIDER, uploadRequester, null)
                 .unarchive(queueState);
 
         Field field = q.getClass().getDeclaredField("config");
@@ -356,7 +370,7 @@ public class QueueTest {
         );
 
         // Next, test that we can archive back to the expected string
-        String archive = new Queue(queueState, USER_ID_PROVIDER, uploadRequester).archive();
+        String archive = new Queue(queueState, USER_ID_PROVIDER, uploadRequester, config).archive();
         assertEquals(archive, queueState);
     }
 
@@ -373,7 +387,7 @@ public class QueueTest {
                 "\"network_addresses\":[\"10.0.2.15\",\"fe80::5054:ff:fe12:3456\"]}}," +
                 "\"lastUploadTimestamp\":1513206386326}";
 
-        Object o = new Queue(null, USER_ID_PROVIDER, uploadRequester)
+        Object o = new Queue(null, USER_ID_PROVIDER, uploadRequester, null)
                 .unarchive(legacyQueueState);
 
         Field field = o.getClass().getDeclaredField("config");

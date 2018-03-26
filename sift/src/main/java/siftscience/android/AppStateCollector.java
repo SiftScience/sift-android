@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Sift Science. All rights reserved.
+// Copyright (c) 2018 Sift Science. All rights reserved.
 
 package siftscience.android;
 
@@ -33,12 +33,10 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Collects AndroidAppState.
+ * Collects App State events.
  */
 public class AppStateCollector implements LocationListener,
         GoogleApiClient.ConnectionCallbacks,
@@ -46,10 +44,8 @@ public class AppStateCollector implements LocationListener,
     private static final String TAG = AppStateCollector.class.getSimpleName();
     private final Sift sift;
     private final Context context;
-    private final String activityClassName;
-    private final ScheduledExecutorService executor;
 
-    private long timestamp;
+    private String activityClassName;
     private boolean acquiredNewLocation;
     private GoogleApiClient googleApiClient;
     private LocationRequest locationRequest;
@@ -57,16 +53,11 @@ public class AppStateCollector implements LocationListener,
     private Location location;
     private Location lastLocation;
 
-    public AppStateCollector(Sift sift, Context context, String activityClassName,
-                             ScheduledExecutorService executor) {
+    public AppStateCollector(Sift sift, Context context) {
         this.sift = sift;
         this.context = context.getApplicationContext();
-        this.activityClassName = activityClassName;
-        this.executor = executor;
 
-        this.timestamp = Time.now();
         this.acquiredNewLocation = false;
-
         if (!sift.getConfig().disallowLocationCollection) {
             try {
                 this.googleApiClient = new GoogleApiClient.Builder(this.context)
@@ -74,25 +65,27 @@ public class AppStateCollector implements LocationListener,
                         .addConnectionCallbacks(this)
                         .addOnConnectionFailedListener(this)
                         .build();
-                this.googleApiClient.connect();
             } catch (Exception e) {
                 Log.e(TAG, e.toString());
             }
-        } else {
-            // Collect without location if disallowed on Sift config
-            this.collect();
         }
     }
 
+    public void setActivityName(String activityName) {
+        this.activityClassName = activityName;
+    }
+
     public void collect() {
-        String installationId = Settings.Secure.getString(this.context.getContentResolver(),
-                Settings.Secure.ANDROID_ID);
-        this.sift.getQueue(Sift.APP_STATE_QUEUE_IDENTIFIER).append(
-                MobileEventJson.newBuilder()
-                        .withAndroidAppState(this.get())
-                        .withInstallationId(installationId)
-                        .withTime(this.timestamp)
-                        .build());
+        if (!sift.getConfig().disallowLocationCollection && !this.googleApiClient.isConnected()) {
+            try {
+                this.googleApiClient.connect();
+            } catch (Exception e) {
+                Log.e(TAG, e.toString());
+                this.doCollect();
+            }
+        } else {
+            this.doCollect();
+        }
     }
 
     public void disconnectLocationServices() {
@@ -112,12 +105,24 @@ public class AppStateCollector implements LocationListener,
         Log.d(TAG, "Reconnect location services");
 
         try {
-            if (!this.sift.getConfig().disallowLocationCollection) {
+            if (!this.sift.getConfig().disallowLocationCollection &&
+                    !this.googleApiClient.isConnected()) {
                 this.googleApiClient.connect();
             }
         } catch (Exception e) {
             Log.e(TAG, e.toString());
         }
+    }
+
+    private void doCollect() {
+        String installationId = Settings.Secure.getString(this.context.getContentResolver(),
+                Settings.Secure.ANDROID_ID);
+        this.sift.appendAppStateEvent(
+                MobileEventJson.newBuilder()
+                        .withAndroidAppState(this.get())
+                        .withInstallationId(installationId)
+                        .withTime(Time.now())
+                        .build());
     }
 
     private AndroidAppStateJson get() {
@@ -160,10 +165,10 @@ public class AppStateCollector implements LocationListener,
         List<String> addresses = new ArrayList<>();
         try {
             for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces();
-                    en.hasMoreElements();) {
+                 en.hasMoreElements(); ) {
                 NetworkInterface intf = en.nextElement();
                 for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses();
-                     enumIpAddr.hasMoreElements();) {
+                     enumIpAddr.hasMoreElements(); ) {
                     InetAddress inetAddress = enumIpAddr.nextElement();
                     if (!inetAddress.isLoopbackAddress()) {
                         String address = inetAddress.getHostAddress().toLowerCase(Locale.US);
@@ -201,15 +206,21 @@ public class AppStateCollector implements LocationListener,
     private void requestLocation() {
         Log.d(TAG, "Requested location");
 
-        this.locationRequest = LocationRequest.create()
-                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setInterval(TimeUnit.MINUTES.toMillis(1))
-                .setFastestInterval(TimeUnit.SECONDS.toMillis(10));
-
         if (ContextCompat.checkSelfPermission(this.context,
                 Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
                 ContextCompat.checkSelfPermission(this.context, Manifest.permission
                         .ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            Location lastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                    this.googleApiClient);
+            if (lastLocation != null) {
+                this.lastLocation = lastLocation;
+            }
+
+            this.locationRequest = LocationRequest.create()
+                    .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                    .setInterval(TimeUnit.MINUTES.toMillis(1))
+                    .setFastestInterval(TimeUnit.SECONDS.toMillis(10));
+
             LocationServices.FusedLocationApi.requestLocationUpdates(this.googleApiClient,
                     this.locationRequest, this);
 
@@ -223,6 +234,8 @@ public class AppStateCollector implements LocationListener,
         this.acquiredNewLocation = true;
         this.location = location;
 
+        this.doCollect();
+
         try {
             if (!this.sift.getConfig().disallowLocationCollection &&
                     this.googleApiClient.isConnected()) {
@@ -230,7 +243,7 @@ public class AppStateCollector implements LocationListener,
                         .removeLocationUpdates(this.googleApiClient, this);
             }
         } catch (Exception e) {
-            Log.e(TAG, "Encountered Exception in onLocationChanged", e);
+            Log.e(TAG, "Encountered exception in onLocationChanged", e);
         }
     }
 
@@ -242,25 +255,9 @@ public class AppStateCollector implements LocationListener,
                 Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
                 ContextCompat.checkSelfPermission(this.context, Manifest.permission
                         .ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            Location lastLocation = LocationServices.FusedLocationApi.getLastLocation(
-                    this.googleApiClient);
-            if (lastLocation != null) {
-                this.lastLocation = lastLocation;
-            }
             this.requestLocation();
-            try {
-                executor.schedule(new Runnable() {
-                    @Override
-                    public void run() {
-                        AppStateCollector.this.collect();
-                    }
-                }, 3, TimeUnit.SECONDS);
-            } catch (RejectedExecutionException e) {
-                Log.d(TAG, "Dropped AppState collection due to RejectedExecutionException");
-            }
         } else {
-            // Collect without location if disallowed on application or client level
-            this.collect();
+            this.doCollect();
         }
     }
 

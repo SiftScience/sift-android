@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Sift Science. All rights reserved.
+// Copyright (c) 2018 Sift Science. All rights reserved.
 
 package siftscience.android;
 
@@ -27,14 +27,12 @@ import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 /**
- * Collects AndroidDeviceProperties.
+ * Collects Device Properties events.
  */
 public class DevicePropertiesCollector {
     private static final String TAG = DevicePropertiesCollector.class.getName();
     private final Sift sift;
     private final Context context;
-
-    private long timestamp;
 
     // Constants used to determine whether a device is rooted
     private static final String[] SU_PATHS = {
@@ -85,16 +83,15 @@ public class DevicePropertiesCollector {
     public DevicePropertiesCollector(Sift sift, Context context) {
         this.sift = sift;
         this.context = context.getApplicationContext();
-        this.timestamp = Time.now();
     }
 
     public void collect() {
         AndroidDevicePropertiesJson deviceProperties = this.get();
-        this.sift.getQueue(Sift.DEVICE_PROPERTIES_QUEUE_IDENTIFIER).append(
+        this.sift.appendDevicePropertiesEvent(
                 MobileEventJson.newBuilder()
                         .withAndroidDeviceProperties(deviceProperties)
                         .withInstallationId(deviceProperties.androidId)
-                        .withTime(this.timestamp)
+                        .withTime(Time.now())
                         .build());
     }
 
