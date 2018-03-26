@@ -10,9 +10,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by gary on 3/1/18.
+ * Wrapper around executor that abstracts exception handling and shutdown logic
  */
-
 class TaskManager {
     private static final String TAG = TaskManager.class.getName();
     private final ScheduledExecutorService executor;

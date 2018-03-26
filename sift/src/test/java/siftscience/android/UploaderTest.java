@@ -30,10 +30,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-/**
- * Created by gary on 3/8/18.
- */
-
 public class UploaderTest {
     private static final String ACCOUNT_ID = "foo";
     private static final String BEACON_KEY = "bar";

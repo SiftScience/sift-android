@@ -45,6 +45,7 @@ public class Sift {
     private static final Queue.Config DEVICE_PROPERTIES_QUEUE_CONFIG = new Queue.Config.Builder()
             .withAcceptSameEventAfter(TimeUnit.HOURS.toMillis(1))
             .withUploadWhenMoreThan(0)
+            .withUploadWhenOlderThan(TimeUnit.MINUTES.toMillis(1))
             .build();
 
     private static final Queue.Config APP_STATE_QUEUE_CONFIG = new Queue.Config.Builder()
