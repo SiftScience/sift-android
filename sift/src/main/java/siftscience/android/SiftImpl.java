@@ -94,7 +94,7 @@ class SiftImpl {
         }
     }
 
-    SiftImpl(Context context, Sift.Config config) throws IOException {
+    SiftImpl(Context context, Sift.Config config) {
         this(context, config, new TaskManager());
     }
 
@@ -121,8 +121,7 @@ class SiftImpl {
     // Instance API
     //================================================================================
 
-    SiftImpl(Context context, Sift.Config conf, TaskManager taskManager)
-            throws IOException {
+    SiftImpl(Context context, Sift.Config conf, TaskManager taskManager) {
         this.archives = context.getSharedPreferences(ARCHIVE_NAME, Context.MODE_PRIVATE);
         this.taskManager = taskManager;
         this.config = conf;
