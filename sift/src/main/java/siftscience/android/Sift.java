@@ -4,10 +4,7 @@ package siftscience.android;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Log;
-
-import java.io.IOException;
 
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
@@ -17,7 +14,7 @@ import com.google.gson.annotations.SerializedName;
 /**
  * The public API of the Sift client library.
  */
-public class Sift {
+public final class Sift {
 
     //================================================================================
     // Static members
@@ -31,11 +28,10 @@ public class Sift {
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .create();
 
-    private static SiftImpl instance;
-    private static int openCount;
-    private static DevicePropertiesCollector devicePropertiesCollector;
-    private static AppStateCollector appStateCollector;
-
+    private static volatile SiftImpl instance;
+    private static volatile DevicePropertiesCollector devicePropertiesCollector;
+    private static volatile AppStateCollector appStateCollector;
+    private static int openCount = 0;
 
 
     //================================================================================
@@ -61,34 +57,34 @@ public class Sift {
      * @param config the Sift.Config object
      * @param activityName the Activity
      */
-    public static synchronized void open(@NonNull Context context,
-                                         Config config,
-                                         String activityName) {
-        if (instance == null) {
-            try {
+    public static void open(@NonNull Context context,
+                            Config config,
+                            String activityName) {
+        synchronized (Sift.class) {
+            if (instance == null) {
                 Context c = context.getApplicationContext();
                 instance = new SiftImpl(c, config);
                 devicePropertiesCollector = new DevicePropertiesCollector(instance, c);
                 appStateCollector = new AppStateCollector(instance, c);
-            } catch (IOException e) {
-                Log.e(TAG, "Encountered IOException in open", e);
             }
+
+            openCount++;
         }
 
         appStateCollector.setActivityName(activityName == null ?
                 context.getClass().getSimpleName() : activityName);
-        openCount++;
+
     }
 
-    public static synchronized void open(@NonNull Context context, String activityName) {
+    public static void open(@NonNull Context context, String activityName) {
         open(context, null, activityName);
     }
 
-    public static synchronized void open(@NonNull Context context, Config config) {
+    public static void open(@NonNull Context context, Config config) {
         open(context, config, null);
     }
 
-    public static synchronized void open(@NonNull Context context) {
+    public static void open(@NonNull Context context) {
         open(context, null, null);
     }
 
@@ -108,8 +104,9 @@ public class Sift {
      * Persists instance state to disk and disconnects location services.
      */
     public static void pause() {
-        if (instance != null) {
-            instance.save();
+        SiftImpl localInstance = instance;
+        if (localInstance != null) {
+            localInstance.save();
         }
         appStateCollector.disconnectLocationServices();
     }
@@ -127,20 +124,18 @@ public class Sift {
      * executor.
      */
     public static void close() {
-        if (instance != null) {
-            instance.save();
-        }
-        openCount--;
-        if (openCount < 0) {
-            Log.d(TAG, "Sift.close() is not paired with Sift.open()");
-        }
-        if (openCount <= 0) {
-            if (instance != null) {
-                instance.stop();
+        synchronized (Sift.class) {
+            if (openCount == 0) {
+                Log.d(TAG, "Sift.close() is not paired with Sift.open()");
+            } else {
+                instance.save();
+                if (--openCount == 0) {
+                    instance.stop();
+                    instance = null;
+                }
             }
-            instance = null;
-            openCount = 0;
         }
+
         appStateCollector.disconnectLocationServices();
     }
 
@@ -151,17 +146,6 @@ public class Sift {
     public static void unsetUserId() {
         instance.setUserId(null);
     }
-
-    /**
-     * @return the Sift singleton instance
-     */
-    @Deprecated
-    @Nullable
-    static synchronized SiftImpl get() {
-        return instance;
-    }
-
-
 
     //================================================================================
     // Instance config
@@ -258,5 +242,9 @@ public class Sift {
                         disallowLocationCollection);
             }
         }
+    }
+
+    private Sift() {
+
     }
 }
