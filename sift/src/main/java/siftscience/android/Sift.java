@@ -108,12 +108,19 @@ public final class Sift {
         if (localInstance != null) {
             localInstance.save();
         }
-        appStateCollector.disconnectLocationServices();
+
+        AppStateCollector localAppStateCollector = appStateCollector;
+        if (localAppStateCollector != null) {
+            appStateCollector.disconnectLocationServices();
+        }
     }
 
     public static void resume(@NonNull Context context) {
-        appStateCollector.reconnectLocationServices();
-        open(context);
+        AppStateCollector localAppStateCollector = appStateCollector;
+        if (localAppStateCollector != null) {
+            localAppStateCollector.reconnectLocationServices();
+            localAppStateCollector.setActivityName(context.getClass().getSimpleName());
+        }
     }
 
     /**
@@ -129,14 +136,15 @@ public final class Sift {
                 Log.d(TAG, "Sift.close() is not paired with Sift.open()");
             } else {
                 instance.save();
+                appStateCollector.disconnectLocationServices();
                 if (--openCount == 0) {
                     instance.stop();
                     instance = null;
+                    appStateCollector = null;
+                    devicePropertiesCollector = null;
                 }
             }
         }
-
-        appStateCollector.disconnectLocationServices();
     }
 
     public static void setUserId(String userId) {
