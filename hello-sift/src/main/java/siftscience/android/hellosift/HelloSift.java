@@ -3,6 +3,7 @@
 package siftscience.android.hellosift;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -18,34 +19,38 @@ public class HelloSift extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_hello_sift);
 
         Log.d(TAG, "onCreate");
-
-        setContentView(R.layout.activity_hello_sift);
 
         // Clear shared prefs
         SharedPreferences preferences = getSharedPreferences("siftscience", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
         editor.clear();
-        editor.commit();
+        editor.apply();
 
         Sift.open(this, new Sift.Config.Builder()
                 .withAccountId("YOUR_ACCOUNT_ID")
                 .withBeaconKey("YOUR_BEACON_KEY")
                 .build());
 
-        Sift.get().setUserId("USER_ID");
+        Sift.setUserId("USER_ID");
 
         Sift.collect();
 
-        Button buttonUpload = (Button) findViewById(R.id.buttonUpload);
-        buttonUpload.setOnClickListener(new Button.OnClickListener() {
+        Button buttonOther = (Button) findViewById(R.id.buttonOther);
+        buttonOther.setOnClickListener(new Button.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.d(TAG, "Force upload");
-                Sift.get().upload(true);
+                goToOtherActivity();
             }
         });
+    }
+
+    public void goToOtherActivity() {
+        Log.d(TAG, "Force upload");
+        Intent intent = new Intent(this, OtherActivity.class);
+        startActivity(intent);
     }
 
     @Override
@@ -57,12 +62,12 @@ public class HelloSift extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         Log.d(TAG, "onPause");
-        Sift.get().save();
+        Sift.pause();
     }
 
     protected void onResume() {
         super.onResume();
-        Sift.get().resume();
+        Sift.resume(this);
     }
 
     @Override

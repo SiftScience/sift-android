@@ -181,7 +181,7 @@ public class SiftTest {
     public void testSift() throws Exception {
         MemorySharedPreferences preferences = new MemorySharedPreferences();
 
-        Sift sift = new Sift(
+        SiftImpl sift = new SiftImpl(
                 mockContext(preferences), null, mockTaskManager());
 
         assertNotNull(sift.getConfig());
@@ -194,7 +194,7 @@ public class SiftTest {
         assertNull(sift.getUserId());
 
         // There is always a default queue
-        assertNotNull(sift.getQueue(Sift.DEVICE_PROPERTIES_QUEUE_IDENTIFIER));
+        assertNotNull(sift.getQueue(SiftImpl.DEVICE_PROPERTIES_QUEUE_IDENTIFIER));
 
         assertNull(sift.getQueue("some-queue"));
         assertNotNull(sift.createQueue("some-queue", new Queue.Config.Builder().build()));
@@ -240,7 +240,7 @@ public class SiftTest {
                 .withDisallowLocationCollection(false)
                 .build();
 
-        Sift sift = new Sift(
+        SiftImpl sift = new SiftImpl(
                 mockContext(preferences), c, mockTaskManager());
 
         String configString = sift.archiveConfig();
@@ -278,12 +278,12 @@ public class SiftTest {
         Sift.open(mockContext(preferences),
                 new Sift.Config.Builder().withDisallowLocationCollection(true).build());
 
-        Sift sift1 =
-                new Sift(mockContext(preferences), null,
+        SiftImpl sift1 =
+                new SiftImpl(mockContext(preferences), null,
                         mockTaskManager());
         assertTrue(preferences.fields.isEmpty());
 
-        sift1.getQueue(Sift.DEVICE_PROPERTIES_QUEUE_IDENTIFIER)
+        sift1.getQueue(SiftImpl.DEVICE_PROPERTIES_QUEUE_IDENTIFIER)
                 .append(MobileEventJson.newBuilder().build());
         sift1.save();
         assertEquals(
@@ -297,8 +297,8 @@ public class SiftTest {
         );
 
         // Load saved Sift instance state
-        Sift sift2 =
-                new Sift(mockContext(preferences), null,
+        SiftImpl sift2 =
+                new SiftImpl(mockContext(preferences), null,
                         mockTaskManager());
         assertEquals(sift1.getConfig(), sift2.getConfig());
         assertNull(sift2.getUserId());
@@ -308,7 +308,7 @@ public class SiftTest {
                 .withBeaconKey("beacon-key")
                 .build());
         sift2.setUserId("user-id");
-        Queue q2 = sift2.getQueue(Sift.DEVICE_PROPERTIES_QUEUE_IDENTIFIER);
+        Queue q2 = sift2.getQueue(SiftImpl.DEVICE_PROPERTIES_QUEUE_IDENTIFIER);
         assertNotNull(q2);
 
         sift2.save();
@@ -323,13 +323,13 @@ public class SiftTest {
         );
 
         // Load saved Sift instance state again
-        Sift sift3 =
-                new Sift(mockContext(preferences), null,
+        SiftImpl sift3 =
+                new SiftImpl(mockContext(preferences), null,
                         mockTaskManager());
         assertNotEquals(sift1.getConfig(), sift3.getConfig());
         assertEquals(sift2.getConfig(), sift3.getConfig());
         assertEquals("user-id", sift3.getUserId());
-        Queue q3 = sift3.getQueue(Sift.DEVICE_PROPERTIES_QUEUE_IDENTIFIER);
+        Queue q3 = sift3.getQueue(SiftImpl.DEVICE_PROPERTIES_QUEUE_IDENTIFIER);
         assertNotNull(q3);
         assertEquals(q2.getConfig(), q3.getConfig());
     }
@@ -338,21 +338,21 @@ public class SiftTest {
     public void testUnsetUserId() throws Exception {
         MemorySharedPreferences preferences = new MemorySharedPreferences();
 
-        Sift sift = new Sift(mockContext(preferences), null,
+        SiftImpl sift = new SiftImpl(mockContext(preferences), null,
                 mockTaskManager());
 
         sift.setUserId("gary");
 
-        sift.getQueue(Sift.APP_STATE_QUEUE_IDENTIFIER).append(MobileEventJson.newBuilder().build());
+        sift.getQueue(SiftImpl.APP_STATE_QUEUE_IDENTIFIER).append(MobileEventJson.newBuilder().build());
         // Append twice because the first one gets uploaded and flushed
-        sift.getQueue(Sift.APP_STATE_QUEUE_IDENTIFIER).append(MobileEventJson.newBuilder().build());
-        MobileEventJson event = sift.getQueue(Sift.APP_STATE_QUEUE_IDENTIFIER).flush().get(0);
-        assertEquals(event.userId, "gary");
+        sift.getQueue(SiftImpl.APP_STATE_QUEUE_IDENTIFIER).append(MobileEventJson.newBuilder().build());
+        MobileEventJson event = sift.getQueue(SiftImpl.APP_STATE_QUEUE_IDENTIFIER).flush().get(0);
+        assertEquals("gary", event.userId);
 
         sift.unsetUserId();
 
-        sift.getQueue(Sift.APP_STATE_QUEUE_IDENTIFIER).append(MobileEventJson.newBuilder().build());
-        event = sift.getQueue(Sift.APP_STATE_QUEUE_IDENTIFIER).flush().get(0);
+        sift.getQueue(SiftImpl.APP_STATE_QUEUE_IDENTIFIER).append(MobileEventJson.newBuilder().build());
+        event = sift.getQueue(SiftImpl.APP_STATE_QUEUE_IDENTIFIER).flush().get(0);
         assertNull(event.userId);
     }
 
