@@ -111,7 +111,7 @@ Sift.unsetUserId();
 ### Custom Integration
 #### Initialize Sift in your main Activity
 
-Configure the Sift object in the `onCreate` method of your application's main Activity (the one that begins the application). If the user id is known at this point, you can set it here. Otherwise, you should set it as soon as it is known. In the main Activity, also override `onDestroy` and `onPause` as shown:
+Configure the Sift object in the `onCreate` method of your application's main Activity (the one that begins the application). If the user id is known at this point, you can set it here. Otherwise, you should set it as soon as it is known. In the main Activity, also override `onPause`, `onResume`, and `onStop` as shown:
 
 ```
 import siftscience.android.Sift;
@@ -149,7 +149,7 @@ public class MainActivity extends AppCompatActivity {
 
 #### Add Sift to your application flow
 
-For each Activity or Fragment that represents a unique page in your application flow, override `onStart`, `onPause`, and `onStop`:
+For each Activity or Fragment that represents a unique page in your application flow, override `onStart`, `onPause`, `onResume`, and `onStop`:
 
 ```
 public class OtherActivity extends AppCompatActivity {
