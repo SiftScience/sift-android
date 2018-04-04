@@ -22,7 +22,7 @@ android {
         minSdkVersion 16  // Jelly Bean 4.1.x (basically Java 6)
         targetSdkVersion 25
         versionCode 13
-        versionName '0.9.13'
+        versionName '0.10.0'
 
         consumerProguardFiles 'proguard-rules.pro'
     }
