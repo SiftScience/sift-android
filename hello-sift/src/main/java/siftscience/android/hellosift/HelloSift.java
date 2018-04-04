@@ -47,33 +47,26 @@ public class HelloSift extends AppCompatActivity {
         });
     }
 
-    public void goToOtherActivity() {
-        Log.d(TAG, "Force upload");
-        Intent intent = new Intent(this, OtherActivity.class);
-        startActivity(intent);
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-    }
-
     @Override
     protected void onPause() {
         super.onPause();
-        Log.d(TAG, "onPause");
         Sift.pause();
     }
 
+    @Override
     protected void onResume() {
         super.onResume();
         Sift.resume(this);
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG, "onDestroy");
+    protected void onStop() {
+        super.onStop();
         Sift.close();
+    }
+
+    public void goToOtherActivity() {
+        Intent intent = new Intent(this, OtherActivity.class);
+        startActivity(intent);
     }
 }
