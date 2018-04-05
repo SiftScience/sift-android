@@ -3,6 +3,7 @@
 package siftscience.android;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -203,6 +204,7 @@ public class AppStateCollector implements LocationListener,
                 .build();
     }
 
+    @SuppressLint("MissingPermission")
     private void requestLocation() {
         Log.d(TAG, "Requested location");
 

@@ -9,7 +9,6 @@ import android.util.Log;
 import com.google.gson.JsonSyntaxException;
 import com.sift.api.representations.MobileEventJson;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -134,7 +133,11 @@ class SiftImpl {
      * @return the configuration for the Sift instance
      */
     synchronized Sift.Config getConfig() {
-        return config;
+        if (config != null) {
+            return config;
+        } else {
+            return unarchiveConfig(archives.getString(ArchiveKey.CONFIG.key, null));
+        }
     }
 
     /**
