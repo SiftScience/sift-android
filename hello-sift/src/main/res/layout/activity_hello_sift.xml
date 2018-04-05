@@ -11,10 +11,10 @@
     tools:context="siftscience.android.hellosift.HelloSift">
 
     <Button
-        android:text="Upload"
+        android:id="@+id/buttonOther"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
         android:layout_marginTop="36dp"
-        android:id="@+id/buttonUpload"
-        android:layout_centerHorizontal="true" />
+        android:text="Other" />
 </RelativeLayout>

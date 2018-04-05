@@ -7,10 +7,15 @@
 
     <!--
         The following permissions are configurable.
-        The SDK will not request permissions that are not granted by the user
+        Make sure to add them to your application's AndroidManifest.xml if
+        you want Sift to collect location data.
+
+        Sift will not request permissions that are not granted by the user
         from your application.
     -->
+    <!--
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    -->
     <application />
 </manifest>

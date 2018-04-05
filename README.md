@@ -19,7 +19,7 @@ Add Sift to your application’s build.gradle file:
 ```
 dependencies {
   ...
-  compile 'com.siftscience:sift-android:0.9.13'
+  compile 'com.siftscience:sift-android:0.10.0-beta'
   ...
 }
 ```
@@ -81,9 +81,12 @@ public class App extends Application {
             Sift.collect();
         }
         public void onActivityPaused(Activity activity) {
-            Sift.get().save();
+            Sift.pause();
         }
-        public void onActivityDestroyed(Activity activity) {
+        public void onActivityResumed(Activity activity) {
+            Sift.resume(activity);
+        }
+        public void onActivityStopped(Activity activity) {
             Sift.close();
         }
     }
@@ -95,20 +98,20 @@ public class App extends Application {
 As soon as your application is aware of the user id, set it on the Sift instance using the code below. All subsequent events will include the user id.
 
 ```
-Sift.get().setUserId("SOME_USER_ID");
+Sift.setUserId("SOME_USER_ID");
 ```
 
 If the user logs out of your application, you should unset the user id:
 
 ```
-Sift.get().unsetUserId();
+Sift.unsetUserId();
 ```
 
 <a name="custom"></a>
 ### Custom Integration
 #### Initialize Sift in your main Activity
 
-Configure the Sift object in the `onCreate` method of your application's main Activity (the one that begins the application). If the user id is known at this point, you can set it here. Otherwise, you should set it as soon as it is known. In the main Activity, also override `onDestroy` and `onPause` as shown:
+Configure the Sift object in the `onCreate` method of your application's main Activity (the one that begins the application). If the user id is known at this point, you can set it here. Otherwise, you should set it as soon as it is known. In the main Activity, also override `onPause`, `onResume`, and `onStop` as shown:
 
 ```
 import siftscience.android.Sift;
@@ -129,11 +132,16 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        Sift.get().save();
+        Sift.pause();
     }
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    protected void onResume() {
+        super.onResume();
+        Sift.resume(this);
+    }
+    @Override
+    protected void onStop() {
+        super.onStop();
         Sift.close();
     }
 }
@@ -141,7 +149,7 @@ public class MainActivity extends AppCompatActivity {
 
 #### Add Sift to your application flow
 
-For each Activity or Fragment that represents a unique page in your application flow, override `onStart`, `onPause`, and `onStop`:
+For each Activity or Fragment that represents a unique page in your application flow, override `onStart`, `onPause`, `onResume`, and `onStop`:
 
 ```
 public class OtherActivity extends AppCompatActivity {
@@ -155,7 +163,12 @@ public class OtherActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        Sift.get().save();
+        Sift.save();
+    }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Sift.resume(this);
     }
     @Override
     protected void onStop() {
@@ -170,11 +183,11 @@ public class OtherActivity extends AppCompatActivity {
 As soon as your application is aware of the user id, set it on the Sift instance using the code below. All subsequent events will include the user id.
 
 ```
-Sift.get().setUserId("SOME_USER_ID");
+Sift.setUserId("SOME_USER_ID");
 ```
 
 If the user logs out of your application, you should unset the user id:
 
 ```
-Sift.get().unsetUserId();
+Sift.unsetUserId();
 ```

@@ -3,6 +3,7 @@
 package siftscience.android;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -42,7 +43,7 @@ public class AppStateCollector implements LocationListener,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
     private static final String TAG = AppStateCollector.class.getSimpleName();
-    private final Sift sift;
+    private final SiftImpl sift;
     private final Context context;
 
     private String activityClassName;
@@ -53,7 +54,7 @@ public class AppStateCollector implements LocationListener,
     private Location location;
     private Location lastLocation;
 
-    public AppStateCollector(Sift sift, Context context) {
+    public AppStateCollector(SiftImpl sift, Context context) {
         this.sift = sift;
         this.context = context.getApplicationContext();
 
@@ -203,6 +204,7 @@ public class AppStateCollector implements LocationListener,
                 .build();
     }
 
+    @SuppressLint("MissingPermission")
     private void requestLocation() {
         Log.d(TAG, "Requested location");
 

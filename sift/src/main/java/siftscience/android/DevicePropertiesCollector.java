@@ -31,7 +31,7 @@ import java.util.Scanner;
  */
 public class DevicePropertiesCollector {
     private static final String TAG = DevicePropertiesCollector.class.getName();
-    private final Sift sift;
+    private final SiftImpl sift;
     private final Context context;
 
     // Constants used to determine whether a device is rooted
@@ -80,7 +80,7 @@ public class DevicePropertiesCollector {
     }};
 
 
-    public DevicePropertiesCollector(Sift sift, Context context) {
+    public DevicePropertiesCollector(SiftImpl sift, Context context) {
         this.sift = sift;
         this.context = context.getApplicationContext();
     }
