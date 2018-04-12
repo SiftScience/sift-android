@@ -3,6 +3,7 @@
 package siftscience.android;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -88,8 +89,13 @@ public final class Sift {
      * Collect SDK events for Device Properties and Application State.
      */
     public static void collect() {
-        devicePropertiesCollector.collect();
-        appStateCollector.collect();
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                devicePropertiesCollector.collect();
+                appStateCollector.collect();
+            }
+        });
     }
 
     /**
