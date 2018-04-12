@@ -21,8 +21,6 @@ public class HelloSift extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_hello_sift);
 
-        Log.d(TAG, "onCreate");
-
         // Clear shared prefs
         SharedPreferences preferences = getSharedPreferences("siftscience", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
@@ -60,8 +58,8 @@ public class HelloSift extends AppCompatActivity {
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
+    protected void onDestroy() {
+        super.onDestroy();
         Sift.close();
     }
 

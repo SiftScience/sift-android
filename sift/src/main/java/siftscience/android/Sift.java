@@ -61,13 +61,7 @@ public final class Sift {
                             Config config,
                             String activityName) {
         synchronized (Sift.class) {
-            if (instance == null) {
-                Context c = context.getApplicationContext();
-                instance = new SiftImpl(c, config);
-                devicePropertiesCollector = new DevicePropertiesCollector(instance, c);
-                appStateCollector = new AppStateCollector(instance, c);
-            }
-
+            init(context, config);
             openCount++;
         }
 
@@ -111,15 +105,19 @@ public final class Sift {
 
         AppStateCollector localAppStateCollector = appStateCollector;
         if (localAppStateCollector != null) {
-            appStateCollector.disconnectLocationServices();
+            localAppStateCollector.disconnectLocationServices();
         }
     }
 
     public static void resume(@NonNull Context context) {
+        // Defensively bring back instance in case it was lost
+        synchronized (Sift.class) {
+            init(context);
+        }
+
         AppStateCollector localAppStateCollector = appStateCollector;
         if (localAppStateCollector != null) {
             localAppStateCollector.reconnectLocationServices();
-            localAppStateCollector.setActivityName(context.getClass().getSimpleName());
         }
     }
 
@@ -153,6 +151,19 @@ public final class Sift {
 
     public static void unsetUserId() {
         instance.setUserId(null);
+    }
+
+    private static void init(@NonNull Context context) {
+        init(context, null);
+    }
+
+    private static void init(@NonNull Context context, Config config) {
+        if (instance == null) {
+            Context c = context.getApplicationContext();
+            instance = new SiftImpl(c, config);
+            devicePropertiesCollector = new DevicePropertiesCollector(instance, c);
+            appStateCollector = new AppStateCollector(instance, c);
+        }
     }
 
     //================================================================================
