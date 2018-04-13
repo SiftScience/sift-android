@@ -356,6 +356,18 @@ public class SiftTest {
         assertNull(event.userId);
     }
 
+    @Test
+    public void testLifecycle() {
+        MemorySharedPreferences preferences = new MemorySharedPreferences();
+
+        Sift.open(mockContext(preferences),
+                new Sift.Config.Builder().withDisallowLocationCollection(true).build());
+        Sift.pause();
+        Sift.close();
+        Sift.resume(mockContext(preferences));
+        Sift.setUserId("gary");
+    }
+
     private Context mockContext(SharedPreferences preferences) {
         Context ctx = mock(Context.class);
         when(ctx.getSharedPreferences(anyString(), anyInt())).thenReturn(preferences);

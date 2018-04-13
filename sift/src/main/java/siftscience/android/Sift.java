@@ -62,8 +62,12 @@ public final class Sift {
                             Config config,
                             String activityName) {
         synchronized (Sift.class) {
-            init(context, config);
-            openCount++;
+            if (instance == null) {
+                Context c = context.getApplicationContext();
+                instance = new SiftImpl(c, config);
+                devicePropertiesCollector = new DevicePropertiesCollector(instance, c);
+                appStateCollector = new AppStateCollector(instance, c);
+            }
         }
 
         appStateCollector.setActivityName(activityName == null ?
@@ -116,14 +120,15 @@ public final class Sift {
     }
 
     public static void resume(@NonNull Context context) {
-        // Defensively bring back instance in case it was lost
-        synchronized (Sift.class) {
-            init(context);
-        }
+        resume(context, null);
+    }
 
+    public static void resume(@NonNull Context context, String activityName) {
         AppStateCollector localAppStateCollector = appStateCollector;
         if (localAppStateCollector != null) {
             localAppStateCollector.reconnectLocationServices();
+            localAppStateCollector.setActivityName(activityName == null ?
+                    context.getClass().getSimpleName() : activityName);
         }
     }
 
@@ -131,24 +136,8 @@ public final class Sift {
      * Call Sift.close() in the onDestroy() callback of each Activity.
      *
      * Persists instance state to disk and disconnects location services.
-     * In the last calling Activity, releases the Sift singleton and its
-     * executor.
      */
     public static void close() {
-        synchronized (Sift.class) {
-            if (openCount == 0) {
-                Log.d(TAG, "Sift.close() is not paired with Sift.open()");
-            } else {
-                instance.save();
-                appStateCollector.disconnectLocationServices();
-                if (--openCount == 0) {
-                    instance.stop();
-                    instance = null;
-                    appStateCollector = null;
-                    devicePropertiesCollector = null;
-                }
-            }
-        }
     }
 
     public static void setUserId(String userId) {
@@ -157,19 +146,6 @@ public final class Sift {
 
     public static void unsetUserId() {
         instance.setUserId(null);
-    }
-
-    private static void init(@NonNull Context context) {
-        init(context, null);
-    }
-
-    private static void init(@NonNull Context context, Config config) {
-        if (instance == null) {
-            Context c = context.getApplicationContext();
-            instance = new SiftImpl(c, config);
-            devicePropertiesCollector = new DevicePropertiesCollector(instance, c);
-            appStateCollector = new AppStateCollector(instance, c);
-        }
     }
 
     //================================================================================
