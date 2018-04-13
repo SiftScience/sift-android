@@ -21,8 +21,8 @@ android {
     defaultConfig {
         minSdkVersion 16  // Jelly Bean 4.1.x (basically Java 6)
         targetSdkVersion 25
-        versionCode 14
-        versionName '0.10.0-beta'
+        versionCode 15
+        versionName '0.10.1-beta'
 
         consumerProguardFiles 'proguard-rules.pro'
     }
