@@ -152,9 +152,7 @@ public class Queue {
         long now = Time.now();
 
         if (event.userId == null) {
-            event = MobileEventJson.newBuilder(event)
-                    .withUserId(userIdProvider.getUserId())
-                    .build();
+            event.userId = userIdProvider.getUserId();
         }
 
         if (this.config.acceptSameEventAfter > 0 &&

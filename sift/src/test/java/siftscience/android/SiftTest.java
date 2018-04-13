@@ -322,7 +322,7 @@ public class SiftTest {
         assertTrue(preferences.fields.isEmpty());
 
         sift1.getQueue(SiftImpl.DEVICE_PROPERTIES_QUEUE_IDENTIFIER)
-                .append(MobileEventJson.newBuilder().build());
+                .append(new MobileEventJson());
         sift1.save();
         assertEquals(
                 new HashSet<>(Arrays.asList(
@@ -381,15 +381,15 @@ public class SiftTest {
 
         sift.setUserId("gary");
 
-        sift.getQueue(SiftImpl.APP_STATE_QUEUE_IDENTIFIER).append(MobileEventJson.newBuilder().build());
+        sift.getQueue(SiftImpl.APP_STATE_QUEUE_IDENTIFIER).append(new MobileEventJson());
         // Append twice because the first one gets uploaded and flushed
-        sift.getQueue(SiftImpl.APP_STATE_QUEUE_IDENTIFIER).append(MobileEventJson.newBuilder().build());
+        sift.getQueue(SiftImpl.APP_STATE_QUEUE_IDENTIFIER).append(new MobileEventJson());
         MobileEventJson event = sift.getQueue(SiftImpl.APP_STATE_QUEUE_IDENTIFIER).flush().get(0);
         assertEquals("gary", event.userId);
 
         sift.unsetUserId();
 
-        sift.getQueue(SiftImpl.APP_STATE_QUEUE_IDENTIFIER).append(MobileEventJson.newBuilder().build());
+        sift.getQueue(SiftImpl.APP_STATE_QUEUE_IDENTIFIER).append(new MobileEventJson());
         event = sift.getQueue(SiftImpl.APP_STATE_QUEUE_IDENTIFIER).flush().get(0);
         assertNull(event.userId);
     }

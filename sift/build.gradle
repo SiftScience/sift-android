@@ -4,13 +4,10 @@ apply from: 'maven-push.gradle'
 
 buildscript {
     repositories {
-        flatDir {
-            dirs '../lib/jsonschema2pojo/lib'
-        }
+        mavenCentral()
     }
     dependencies {
-        classpath 'org.jsonschema2pojo:jsonschema2pojo-gradle-plugin:0.4.11-SNAPSHOT'
-        classpath fileTree(dir: '../lib/jsonschema2pojo/lib', include: '*.jar')
+        classpath 'org.jsonschema2pojo:jsonschema2pojo-gradle-plugin:1.0.0-alpha2'
     }
 }
 
@@ -58,9 +55,6 @@ android {
 dependencies {
     compile 'com.google.code.gson:gson:2.8.2'
 
-    compile 'javax.annotation:javax.annotation-api:1.2'
-    compile 'org.apache.commons:commons-lang3:3.5'
-
     compile 'com.google.android.gms:play-services-location:9.8.0'
 
     testCompile 'junit:junit:4.12'
@@ -77,12 +71,10 @@ dependencies {
 }
 
 jsonSchema2Pojo {
+    sourceType = 'yamlschema'
     annotationStyle = 'gson'
-    usePublicFields = true
-    generateBuilderClasses = true
-    immutable = false
-    useCommonsLang3 = true
-    includeJsr303Annotations = false
+    includeAccessors = false
+    generateBuilders = true
     useLongIntegers = true
     propertyWordDelimiters = ['_'] as char[]
 

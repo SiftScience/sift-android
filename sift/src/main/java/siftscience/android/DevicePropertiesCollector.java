@@ -13,8 +13,6 @@ import android.util.Log;
 import com.sift.api.representations.AndroidDevicePropertiesJson;
 import com.sift.api.representations.MobileEventJson;
 
-import org.apache.commons.lang3.ArrayUtils;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -88,11 +86,10 @@ public class DevicePropertiesCollector {
     public void collect() {
         AndroidDevicePropertiesJson deviceProperties = this.get();
         this.sift.appendDevicePropertiesEvent(
-                MobileEventJson.newBuilder()
+                new MobileEventJson()
                         .withAndroidDeviceProperties(deviceProperties)
                         .withInstallationId(deviceProperties.androidId)
-                        .withTime(Time.now())
-                        .build());
+                        .withTime(Time.now()));
     }
 
     private AndroidDevicePropertiesJson get() {
@@ -134,7 +131,7 @@ public class DevicePropertiesCollector {
         List<String> evidenceProperties = existingDangerousProperties();
         List<String> evidenceRWPaths = existingRWPaths();
 
-        return AndroidDevicePropertiesJson.newBuilder()
+        return new AndroidDevicePropertiesJson()
                 .withAppName(appName)
                 .withAppVersion(appVersion)
                 .withSdkVersion(Sift.SDK_VERSION)
@@ -153,8 +150,7 @@ public class DevicePropertiesCollector {
                 .withEvidenceFilesPresent(evidenceFiles)
                 .withEvidencePackagesPresent(evidencePackages)
                 .withEvidenceProperties(evidenceProperties)
-                .withEvidenceDirectoriesWritable(evidenceRWPaths)
-                .build();
+                .withEvidenceDirectoriesWritable(evidenceRWPaths);
     }
 
     /**
@@ -259,7 +255,7 @@ public class DevicePropertiesCollector {
             Log.e(TAG, "Error reading properties", e);
         }
         if (inputstream == null) {
-            return ArrayUtils.EMPTY_STRING_ARRAY;
+            return new String[0];
         }
 
         String allProperties = "";
@@ -283,7 +279,7 @@ public class DevicePropertiesCollector {
             Log.e(TAG, "Error reading mount", e);
         }
         if (inputstream == null) {
-            return ArrayUtils.EMPTY_STRING_ARRAY;
+            return new String[0];
         }
 
         String allPaths = "";

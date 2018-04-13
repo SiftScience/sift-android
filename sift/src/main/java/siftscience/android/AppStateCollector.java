@@ -123,11 +123,10 @@ public class AppStateCollector implements LocationListener,
         String installationId = Settings.Secure.getString(this.context.getContentResolver(),
                 Settings.Secure.ANDROID_ID);
         this.sift.appendAppStateEvent(
-                MobileEventJson.newBuilder()
+                new MobileEventJson()
                         .withAndroidAppState(this.get())
                         .withInstallationId(installationId)
-                        .withTime(Time.now())
-                        .build());
+                        .withTime(Time.now()));
     }
 
     private AndroidAppStateJson get() {
@@ -150,7 +149,7 @@ public class AppStateCollector implements LocationListener,
 
         List<String> ipAddresses = getIpAddresses();
 
-        AndroidAppStateJson.Builder builder = AndroidAppStateJson.newBuilder()
+        AndroidAppStateJson androidAppStateJson = new AndroidAppStateJson()
                 .withActivityClassName(this.activityClassName)
                 .withBatteryLevel(batteryLevel)
                 .withBatteryState((long) status)
@@ -160,10 +159,10 @@ public class AppStateCollector implements LocationListener,
                 .withSdkVersion(Sift.SDK_VERSION);
 
         if (this.hasLocation()) {
-            return builder.withLocation(this.getLocation()).build();
+            androidAppStateJson.withLocation(this.getLocation());
         }
 
-        return builder.build();
+        return androidAppStateJson;
     }
 
     private List<String> getIpAddresses() {
@@ -200,12 +199,11 @@ public class AppStateCollector implements LocationListener,
 
         Location location = this.acquiredNewLocation ? this.location : this.lastLocation;
 
-        return AndroidDeviceLocationJson.newBuilder()
+        return new AndroidDeviceLocationJson()
                 .withTime(location.getTime())
                 .withLatitude(location.getLatitude())
                 .withLongitude(location.getLongitude())
-                .withAccuracy(new BigDecimal(location.getAccuracy()).doubleValue())
-                .build();
+                .withAccuracy(new BigDecimal(location.getAccuracy()).doubleValue());
     }
 
     @SuppressLint("MissingPermission")

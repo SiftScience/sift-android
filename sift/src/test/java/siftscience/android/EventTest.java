@@ -17,40 +17,34 @@ public class EventTest {
     public void testEventEssentiallyEquals() {
         long now = System.currentTimeMillis();
 
-        MobileEventJson event0 = MobileEventJson.newBuilder()
-                .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
+        MobileEventJson event0 = new MobileEventJson()
+                .withAndroidDeviceProperties(new AndroidDevicePropertiesJson()
                         .withAndroidId("foo")
                         .withDeviceManufacturer("bar")
                         .withDeviceModel("baz")
-                        .build()
                 )
-                .withTime(now)
-                .build();
+                .withTime(now);
 
-        MobileEventJson event1 = MobileEventJson.newBuilder()
-                .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
+        MobileEventJson event1 = new MobileEventJson()
+                .withAndroidDeviceProperties(new AndroidDevicePropertiesJson()
                         .withAndroidId("foo")
                         .withDeviceManufacturer("bar")
                         .withDeviceModel("baz")
-                        .build()
                 )
-                .withTime(now)
-                .build();
+                .withTime(now);
 
         assertTrue(Utils.eventsAreBasicallyEqual(event0, event1));
     }
 
     @Test
     public void testEventToJson() throws IOException {
-        MobileEventJson event = MobileEventJson.newBuilder()
-                .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
+        MobileEventJson event = new MobileEventJson()
+                .withAndroidDeviceProperties(new AndroidDevicePropertiesJson()
                         .withAndroidId("foo")
                         .withDeviceManufacturer("bar")
                         .withDeviceModel("baz")
-                        .build()
                 )
-                .withTime(System.currentTimeMillis())
-                .build();
+                .withTime(System.currentTimeMillis());
 
         MobileEventJson actual = Sift.GSON.fromJson(Sift.GSON.toJson(event), MobileEventJson.class);
 
