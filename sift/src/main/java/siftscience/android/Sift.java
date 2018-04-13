@@ -3,6 +3,7 @@
 package siftscience.android;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -31,7 +32,6 @@ public final class Sift {
     private static volatile SiftImpl instance;
     private static volatile DevicePropertiesCollector devicePropertiesCollector;
     private static volatile AppStateCollector appStateCollector;
-    private static int openCount = 0;
 
 
     //================================================================================
@@ -67,8 +67,6 @@ public final class Sift {
                 devicePropertiesCollector = new DevicePropertiesCollector(instance, c);
                 appStateCollector = new AppStateCollector(instance, c);
             }
-
-            openCount++;
         }
 
         appStateCollector.setActivityName(activityName == null ?
@@ -94,8 +92,13 @@ public final class Sift {
      * Collect SDK events for Device Properties and Application State.
      */
     public static void collect() {
-        devicePropertiesCollector.collect();
-        appStateCollector.collect();
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                devicePropertiesCollector.collect();
+                appStateCollector.collect();
+            }
+        });
     }
 
     /**
@@ -111,15 +114,20 @@ public final class Sift {
 
         AppStateCollector localAppStateCollector = appStateCollector;
         if (localAppStateCollector != null) {
-            appStateCollector.disconnectLocationServices();
+            localAppStateCollector.disconnectLocationServices();
         }
     }
 
     public static void resume(@NonNull Context context) {
+        resume(context, null);
+    }
+
+    public static void resume(@NonNull Context context, String activityName) {
         AppStateCollector localAppStateCollector = appStateCollector;
         if (localAppStateCollector != null) {
             localAppStateCollector.reconnectLocationServices();
-            localAppStateCollector.setActivityName(context.getClass().getSimpleName());
+            localAppStateCollector.setActivityName(activityName == null ?
+                    context.getClass().getSimpleName() : activityName);
         }
     }
 
@@ -127,24 +135,8 @@ public final class Sift {
      * Call Sift.close() in the onDestroy() callback of each Activity.
      *
      * Persists instance state to disk and disconnects location services.
-     * In the last calling Activity, releases the Sift singleton and its
-     * executor.
      */
     public static void close() {
-        synchronized (Sift.class) {
-            if (openCount == 0) {
-                Log.d(TAG, "Sift.close() is not paired with Sift.open()");
-            } else {
-                instance.save();
-                appStateCollector.disconnectLocationServices();
-                if (--openCount == 0) {
-                    instance.stop();
-                    instance = null;
-                    appStateCollector = null;
-                    devicePropertiesCollector = null;
-                }
-            }
-        }
     }
 
     public static void setUserId(String userId) {
