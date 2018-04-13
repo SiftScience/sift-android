@@ -32,7 +32,6 @@ public final class Sift {
     private static volatile SiftImpl instance;
     private static volatile DevicePropertiesCollector devicePropertiesCollector;
     private static volatile AppStateCollector appStateCollector;
-    private static int openCount = 0;
 
 
     //================================================================================
