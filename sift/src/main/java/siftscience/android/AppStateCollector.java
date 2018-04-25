@@ -77,7 +77,9 @@ public class AppStateCollector implements LocationListener,
     }
 
     public void collect() {
-        if (!sift.getConfig().disallowLocationCollection && !this.googleApiClient.isConnected()) {
+        if (!sift.getConfig().disallowLocationCollection &&
+                this.googleApiClient != null &&
+                !this.googleApiClient.isConnected()) {
             try {
                 this.googleApiClient.connect();
             } catch (Exception e) {
@@ -94,6 +96,7 @@ public class AppStateCollector implements LocationListener,
 
         try {
             if (!this.sift.getConfig().disallowLocationCollection &&
+                    this.googleApiClient != null &&
                     this.googleApiClient.isConnected()) {
                 this.googleApiClient.disconnect();
             }
@@ -107,6 +110,7 @@ public class AppStateCollector implements LocationListener,
 
         try {
             if (!this.sift.getConfig().disallowLocationCollection &&
+                    this.googleApiClient != null &&
                     !this.googleApiClient.isConnected()) {
                 this.googleApiClient.connect();
             }
