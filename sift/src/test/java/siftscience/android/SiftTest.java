@@ -15,6 +15,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -182,7 +183,7 @@ public class SiftTest {
         MemorySharedPreferences preferences = new MemorySharedPreferences();
 
         SiftImpl sift = new SiftImpl(
-                mockContext(preferences), null, mockTaskManager());
+                mockContext(preferences), null, "", false, mockTaskManager());
 
         assertNotNull(sift.getConfig());
         // Verify default values
@@ -241,7 +242,7 @@ public class SiftTest {
                 .build();
 
         SiftImpl sift = new SiftImpl(
-                mockContext(preferences), c, mockTaskManager());
+                mockContext(preferences), c, "", false, mockTaskManager());
 
         String configString = sift.archiveConfig();
 
@@ -279,7 +280,7 @@ public class SiftTest {
                 new Sift.Config.Builder().withDisallowLocationCollection(true).build());
 
         SiftImpl sift1 =
-                new SiftImpl(mockContext(preferences), null,
+                new SiftImpl(mockContext(preferences), null, "", false,
                         mockTaskManager());
         assertTrue(preferences.fields.isEmpty());
 
@@ -298,7 +299,7 @@ public class SiftTest {
 
         // Load saved Sift instance state
         SiftImpl sift2 =
-                new SiftImpl(mockContext(preferences), null,
+                new SiftImpl(mockContext(preferences), null, "", false,
                         mockTaskManager());
         assertEquals(sift1.getConfig(), sift2.getConfig());
         assertNull(sift2.getUserId());
@@ -324,7 +325,7 @@ public class SiftTest {
 
         // Load saved Sift instance state again
         SiftImpl sift3 =
-                new SiftImpl(mockContext(preferences), null,
+                new SiftImpl(mockContext(preferences), null, "", false,
                         mockTaskManager());
         assertNotEquals(sift1.getConfig(), sift3.getConfig());
         assertEquals(sift2.getConfig(), sift3.getConfig());
@@ -338,7 +339,7 @@ public class SiftTest {
     public void testUnsetUserId() throws Exception {
         MemorySharedPreferences preferences = new MemorySharedPreferences();
 
-        SiftImpl sift = new SiftImpl(mockContext(preferences), null,
+        SiftImpl sift = new SiftImpl(mockContext(preferences), null, "", false,
                 mockTaskManager());
 
         sift.setUserId("gary");
@@ -366,6 +367,46 @@ public class SiftTest {
         Sift.close();
         Sift.resume(mockContext(preferences));
         Sift.setUserId("gary");
+    }
+
+    @Test
+    public void testUnboundSetUserId() throws NoSuchFieldException, IllegalAccessException,
+            InterruptedException {
+        MemorySharedPreferences preferences = new MemorySharedPreferences();
+
+        Sift.setUserId("gary");
+        Sift.open(mockContext(preferences),
+                new Sift.Config.Builder().withDisallowLocationCollection(true).build());
+
+        Thread.sleep(100);
+
+        Field field = Sift.class.getDeclaredField("instance");
+        field.setAccessible(true);
+        SiftImpl sift = (SiftImpl) field.get(Sift.class);
+
+        assertEquals("gary", sift.getUserId());
+    }
+
+    @Test
+    public void testUnboundUnsetUserId() throws NoSuchFieldException, IllegalAccessException,
+            InterruptedException {
+        MemorySharedPreferences preferences = new MemorySharedPreferences();
+
+        MemorySharedPreferences.Editor editor = preferences.edit();
+        editor.putString("user_id", "gary");
+        editor.apply();
+
+        Sift.unsetUserId();
+        Sift.open(mockContext(preferences),
+                new Sift.Config.Builder().withDisallowLocationCollection(true).build());
+
+        Thread.sleep(100);
+
+        Field field = Sift.class.getDeclaredField("instance");
+        field.setAccessible(true);
+        SiftImpl sift = (SiftImpl) field.get(Sift.class);
+
+        assertEquals(null, sift.getUserId());
     }
 
     private Context mockContext(SharedPreferences preferences) {
