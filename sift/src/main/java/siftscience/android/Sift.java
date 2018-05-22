@@ -73,6 +73,7 @@ public final class Sift {
             }
         }
 
+        instance.setConfig(config);
         appStateCollector.setActivityName(activityName == null ?
                 context.getClass().getSimpleName() : activityName);
 
