@@ -425,7 +425,7 @@ public class SiftTest {
 
         Sift.open(mockContext(preferences), c2);
 
-        Thread.sleep(100);
+        Thread.sleep(1000);
 
         Field field = Sift.class.getDeclaredField("instance");
         field.setAccessible(true);
@@ -451,7 +451,7 @@ public class SiftTest {
 
         Sift.open(mockContext(preferences));
 
-        Thread.sleep(100);
+        Thread.sleep(1000);
 
         Field field = Sift.class.getDeclaredField("instance");
         field.setAccessible(true);
@@ -475,7 +475,7 @@ public class SiftTest {
 
         Sift.open(mockContext(preferences), c2);
 
-        Thread.sleep(100);
+        Thread.sleep(1000);
 
         Field field = Sift.class.getDeclaredField("instance");
         field.setAccessible(true);
@@ -498,7 +498,7 @@ public class SiftTest {
 
         Sift.open(mockContext(preferences));
 
-        Thread.sleep(100);
+        Thread.sleep(1000);
 
         Field field = Sift.class.getDeclaredField("instance");
         field.setAccessible(true);
@@ -522,7 +522,7 @@ public class SiftTest {
 
         Sift.open(mockContext(preferences), c1);
 
-        Thread.sleep(100);
+        Thread.sleep(1000);
 
         Field field = Sift.class.getDeclaredField("instance");
         field.setAccessible(true);
@@ -532,7 +532,7 @@ public class SiftTest {
 
         Sift.setConfig(c2);
 
-        Thread.sleep(100);
+        Thread.sleep(1000);
 
         assertEquals(c2.accountId, sift.getConfig().accountId);
     }
