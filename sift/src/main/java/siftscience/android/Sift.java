@@ -32,6 +32,8 @@ public final class Sift {
     private static volatile SiftImpl instance;
     private static volatile DevicePropertiesCollector devicePropertiesCollector;
     private static volatile AppStateCollector appStateCollector;
+    private static volatile Config unboundConfig;
+    private static volatile boolean hasUnboundConfig = false;
     private static volatile String unboundUserId;
     private static volatile boolean hasUnboundUserId = false;
 
@@ -65,9 +67,12 @@ public final class Sift {
         synchronized (Sift.class) {
             if (instance == null) {
                 Context c = context.getApplicationContext();
-                instance = new SiftImpl(c, config, unboundUserId, hasUnboundUserId);
+                instance = new SiftImpl(c, config, unboundConfig, hasUnboundConfig,
+                        unboundUserId, hasUnboundUserId);
                 devicePropertiesCollector = new DevicePropertiesCollector(instance, c);
                 appStateCollector = new AppStateCollector(instance, c);
+                unboundConfig = null;
+                hasUnboundConfig = false;
                 unboundUserId = null;
                 hasUnboundUserId = false;
             }
@@ -141,6 +146,15 @@ public final class Sift {
      * Persists instance state to disk and disconnects location services.
      */
     public static void close() {
+    }
+
+    public static synchronized void setConfig(Config c) {
+        if (instance != null) {
+            instance.setConfig(c);
+        } else {
+            unboundConfig = c;
+            hasUnboundConfig = true;
+        }
     }
 
     public static synchronized void setUserId(String userId) {

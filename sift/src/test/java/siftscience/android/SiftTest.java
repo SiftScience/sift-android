@@ -183,7 +183,7 @@ public class SiftTest {
         MemorySharedPreferences preferences = new MemorySharedPreferences();
 
         SiftImpl sift = new SiftImpl(
-                mockContext(preferences), null, "", false, mockTaskManager());
+                mockContext(preferences), null, null, false, null, false, mockTaskManager());
 
         assertNotNull(sift.getConfig());
         // Verify default values
@@ -242,7 +242,7 @@ public class SiftTest {
                 .build();
 
         SiftImpl sift = new SiftImpl(
-                mockContext(preferences), c, "", false, mockTaskManager());
+                mockContext(preferences), c, null, false, null, false, mockTaskManager());
 
         String configString = sift.archiveConfig();
 
@@ -280,8 +280,8 @@ public class SiftTest {
                 new Sift.Config.Builder().withDisallowLocationCollection(true).build());
 
         SiftImpl sift1 =
-                new SiftImpl(mockContext(preferences), null, "", false,
-                        mockTaskManager());
+                new SiftImpl(mockContext(preferences), null, null, false,
+                        null, false, mockTaskManager());
         assertTrue(preferences.fields.isEmpty());
 
         sift1.getQueue(SiftImpl.DEVICE_PROPERTIES_QUEUE_IDENTIFIER)
@@ -299,8 +299,8 @@ public class SiftTest {
 
         // Load saved Sift instance state
         SiftImpl sift2 =
-                new SiftImpl(mockContext(preferences), null, "", false,
-                        mockTaskManager());
+                new SiftImpl(mockContext(preferences), null, null, false,
+                        null, false, mockTaskManager());
         assertEquals(sift1.getConfig(), sift2.getConfig());
         assertNull(sift2.getUserId());
 
@@ -325,8 +325,8 @@ public class SiftTest {
 
         // Load saved Sift instance state again
         SiftImpl sift3 =
-                new SiftImpl(mockContext(preferences), null, "", false,
-                        mockTaskManager());
+                new SiftImpl(mockContext(preferences), null, null, false,
+                       null, false, mockTaskManager());
         assertNotEquals(sift1.getConfig(), sift3.getConfig());
         assertEquals(sift2.getConfig(), sift3.getConfig());
         assertEquals("user-id", sift3.getUserId());
@@ -339,8 +339,8 @@ public class SiftTest {
     public void testUnsetUserId() throws Exception {
         MemorySharedPreferences preferences = new MemorySharedPreferences();
 
-        SiftImpl sift = new SiftImpl(mockContext(preferences), null, "", false,
-                mockTaskManager());
+        SiftImpl sift = new SiftImpl(mockContext(preferences), null, null, false,
+                null, false, mockTaskManager());
 
         sift.setUserId("gary");
 
@@ -407,6 +407,134 @@ public class SiftTest {
         SiftImpl sift = (SiftImpl) field.get(Sift.class);
 
         assertEquals(null, sift.getUserId());
+    }
+
+    @Test
+    public void testOpenOverUnboundConfig() throws NoSuchFieldException, IllegalAccessException,
+            InterruptedException {
+        MemorySharedPreferences preferences = new MemorySharedPreferences();
+
+        Sift.Config c1 = new Sift.Config.Builder().withAccountId("foo").build();
+        Sift.Config c2 = new Sift.Config.Builder().withAccountId("bar").build();
+
+        MemorySharedPreferences.Editor editor = preferences.edit();
+        editor.putString("config", Sift.GSON.toJson(c1));
+        editor.apply();
+
+        Sift.setConfig(c1);
+
+        Sift.open(mockContext(preferences), c2);
+
+        Thread.sleep(1000);
+
+        Field field = Sift.class.getDeclaredField("instance");
+        field.setAccessible(true);
+        SiftImpl sift = (SiftImpl) field.get(Sift.class);
+
+        // If there's an opened user id, use opened over archived and unbound
+        assertEquals(c2.accountId, sift.getConfig().accountId);
+    }
+
+    @Test
+    public void testUnboundOverArchivedConfig() throws NoSuchFieldException, IllegalAccessException,
+            InterruptedException {
+        MemorySharedPreferences preferences = new MemorySharedPreferences();
+
+        Sift.Config c1 = new Sift.Config.Builder().withAccountId("foo").build();
+        Sift.Config c2 = new Sift.Config.Builder().withAccountId("bar").build();
+
+        MemorySharedPreferences.Editor editor = preferences.edit();
+        editor.putString("config", Sift.GSON.toJson(c1));
+        editor.apply();
+
+        Sift.setConfig(c2);
+
+        Sift.open(mockContext(preferences));
+
+        Thread.sleep(1000);
+
+        Field field = Sift.class.getDeclaredField("instance");
+        field.setAccessible(true);
+        SiftImpl sift = (SiftImpl) field.get(Sift.class);
+
+        // If there's an unbound user id and no opened, use unbound over archived
+        assertEquals(c2.accountId, sift.getConfig().accountId);
+    }
+
+    @Test
+    public void testOpenOverArchivedConfig() throws NoSuchFieldException, IllegalAccessException,
+            InterruptedException {
+        MemorySharedPreferences preferences = new MemorySharedPreferences();
+
+        Sift.Config c1 = new Sift.Config.Builder().withAccountId("foo").build();
+        Sift.Config c2 = new Sift.Config.Builder().withAccountId("bar").build();
+
+        MemorySharedPreferences.Editor editor = preferences.edit();
+        editor.putString("config", Sift.GSON.toJson(c1));
+        editor.apply();
+
+        Sift.open(mockContext(preferences), c2);
+
+        Thread.sleep(1000);
+
+        Field field = Sift.class.getDeclaredField("instance");
+        field.setAccessible(true);
+        SiftImpl sift = (SiftImpl) field.get(Sift.class);
+
+        // If there's an opened user id and no unbound, use opened over archived
+        assertEquals(c2.accountId, sift.getConfig().accountId);
+    }
+
+    @Test
+    public void testArchivedConfigFallback() throws NoSuchFieldException, IllegalAccessException,
+            InterruptedException {
+        MemorySharedPreferences preferences = new MemorySharedPreferences();
+
+        Sift.Config c1 = new Sift.Config.Builder().withAccountId("bar").build();
+
+        MemorySharedPreferences.Editor editor = preferences.edit();
+        editor.putString("config", Sift.GSON.toJson(c1));
+        editor.apply();
+
+        Sift.open(mockContext(preferences));
+
+        Thread.sleep(1000);
+
+        Field field = Sift.class.getDeclaredField("instance");
+        field.setAccessible(true);
+        SiftImpl sift = (SiftImpl) field.get(Sift.class);
+
+        // If there's no opened or unbound user id, use archived
+        assertEquals(c1.accountId, sift.getConfig().accountId);
+    }
+
+    @Test
+    public void testChangeConfig() throws NoSuchFieldException, IllegalAccessException,
+            InterruptedException {
+        MemorySharedPreferences preferences = new MemorySharedPreferences();
+
+        Sift.Config c1 = new Sift.Config.Builder().withAccountId("prod").build();
+        Sift.Config c2 = new Sift.Config.Builder().withAccountId("sandbox").build();
+
+        MemorySharedPreferences.Editor editor = preferences.edit();
+        editor.putString("config", Sift.GSON.toJson(c2));
+        editor.apply();
+
+        Sift.open(mockContext(preferences), c1);
+
+        Thread.sleep(1000);
+
+        Field field = Sift.class.getDeclaredField("instance");
+        field.setAccessible(true);
+        SiftImpl sift = (SiftImpl) field.get(Sift.class);
+
+        assertEquals(c1.accountId, sift.getConfig().accountId);
+
+        Sift.setConfig(c2);
+
+        Thread.sleep(1000);
+
+        assertEquals(c2.accountId, sift.getConfig().accountId);
     }
 
     private Context mockContext(SharedPreferences preferences) {
