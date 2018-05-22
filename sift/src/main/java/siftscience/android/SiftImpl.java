@@ -93,8 +93,11 @@ class SiftImpl {
         }
     }
 
-    SiftImpl(Context context, Sift.Config config, String unboundUserId, boolean hasUnboundUserId) {
-        this(context, config, unboundUserId, hasUnboundUserId, new TaskManager());
+    SiftImpl(Context context, Sift.Config config,
+             Sift.Config unboundConfig, boolean hasUnboundConfig,
+             String unboundUserId, boolean hasUnboundUserId) {
+        this(context, config, unboundConfig, hasUnboundConfig, unboundUserId, hasUnboundUserId,
+                new TaskManager());
     }
 
     String archiveConfig() {
@@ -120,18 +123,21 @@ class SiftImpl {
     // Instance API
     //================================================================================
 
-    SiftImpl(Context context, Sift.Config conf, String unboundUserId, boolean hasUnboundUserId,
-             TaskManager taskManager) {
+    SiftImpl(Context context, Sift.Config conf, Sift.Config unboundConfig, boolean hasUnboundConfig,
+             String unboundUserId, boolean hasUnboundUserId, TaskManager taskManager) {
         this.archives = context.getSharedPreferences(ARCHIVE_NAME, Context.MODE_PRIVATE);
         this.taskManager = taskManager;
         this.config = conf;
+        if (conf == null && hasUnboundConfig) {
+            this.config = unboundConfig;
+        }
         if (hasUnboundUserId) {
             this.userId = unboundUserId;
             Log.d(TAG, String.format("Using unbound User ID: %s", userId));
         }
         this.queues = new HashMap<>();
         this.uploader = new Uploader(taskManager, configProvider);
-        this.taskManager.submit(new UnarchiveTask(hasUnboundUserId));
+        this.taskManager.submit(new UnarchiveTask(hasUnboundUserId, hasUnboundConfig));
     }
 
     /**
@@ -261,9 +267,11 @@ class SiftImpl {
      * Restores all of the Sift instance state from disk.
      */
     private class UnarchiveTask implements Runnable {
+        private final boolean hasUnboundConfig;
         private final boolean hasUnboundUserId;
 
-        public UnarchiveTask(boolean hasUnboundUserId) {
+        public UnarchiveTask(boolean hasUnboundConfig, boolean hasUnboundUserId) {
+            this.hasUnboundConfig = hasUnboundConfig;
             this.hasUnboundUserId = hasUnboundUserId;
         }
 
@@ -271,18 +279,19 @@ class SiftImpl {
         public void run() {
             String archive;
 
-            // Unarchive Sift config
-            archive = archives.getString(ArchiveKey.CONFIG.key, null);
-            config = unarchiveConfig(archive);
-            Log.d(TAG, String.format("Unarchived Sift.Config: %s", archive));
+            // Unarchive Config only if we don't have one from open or unbound calls
+            if (config == null) {
+                // Unarchive Sift config
+                archive = archives.getString(ArchiveKey.CONFIG.key, null);
+                config = unarchiveConfig(archive);
+                Log.d(TAG, String.format("Unarchived Sift.Config: %s", archive));
+            }
 
             // Unarchive User ID if we didn't have an unbound one from the Sift class
             if (!this.hasUnboundUserId) {
                 userId = archives.getString(ArchiveKey.USER_ID.key, null);
                 Log.d(TAG, String.format("Unarchived User ID: %s", userId));
             }
-
-
 
             // Unarchive Queues
             for (Map.Entry<String, ?> entry : archives.getAll().entrySet()) {
