@@ -508,6 +508,35 @@ public class SiftTest {
         assertEquals(c1.accountId, sift.getConfig().accountId);
     }
 
+    @Test
+    public void testChangeConfig() throws NoSuchFieldException, IllegalAccessException,
+            InterruptedException {
+        MemorySharedPreferences preferences = new MemorySharedPreferences();
+
+        Sift.Config c1 = new Sift.Config.Builder().withAccountId("prod").build();
+        Sift.Config c2 = new Sift.Config.Builder().withAccountId("sandbox").build();
+
+        MemorySharedPreferences.Editor editor = preferences.edit();
+        editor.putString("config", Sift.GSON.toJson(c2));
+        editor.apply();
+
+        Sift.open(mockContext(preferences), c1);
+
+        Thread.sleep(100);
+
+        Field field = Sift.class.getDeclaredField("instance");
+        field.setAccessible(true);
+        SiftImpl sift = (SiftImpl) field.get(Sift.class);
+
+        assertEquals(c1.accountId, sift.getConfig().accountId);
+
+        Sift.setConfig(c2);
+
+        Thread.sleep(100);
+
+        assertEquals(c2.accountId, sift.getConfig().accountId);
+    }
+
     private Context mockContext(SharedPreferences preferences) {
         Context ctx = mock(Context.class);
         when(ctx.getSharedPreferences(anyString(), anyInt())).thenReturn(preferences);
