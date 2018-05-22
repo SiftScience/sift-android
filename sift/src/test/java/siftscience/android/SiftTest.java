@@ -231,6 +231,22 @@ public class SiftTest {
     }
 
     @Test
+    public void testConfigFallback() {
+        MemorySharedPreferences preferences = new MemorySharedPreferences();
+
+        Sift.Config c1 = new Sift.Config.Builder().withAccountId("sandbox").build();
+
+        MemorySharedPreferences.Editor editor = preferences.edit();
+        editor.putString("config", Sift.GSON.toJson(c1));
+        editor.apply();
+
+        SiftImpl sift = new SiftImpl(
+                mockContext(preferences), null, "", false, mockTaskManager());
+
+        assertEquals(c1.accountId, sift.getConfig().accountId);
+    }
+
+    @Test
     public void testUnarchiveUnknownProperty() throws IOException {
         String jsonAsString =
                 "{\"accountId\":\"foo\"," +
