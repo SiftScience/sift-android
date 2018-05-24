@@ -74,10 +74,11 @@ public final class Sift {
                 if (config != null) {
                     instance.setConfig(config);
                 }
-                appStateCollector.setActivityName(activityName == null ?
-                        context.getClass().getSimpleName() : activityName);
             }
         }
+
+        appStateCollector.setActivityName(activityName == null ?
+                context.getClass().getSimpleName() : activityName);
     }
 
     public static void open(@NonNull Context context, String activityName) {
