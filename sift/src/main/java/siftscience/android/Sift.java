@@ -70,15 +70,14 @@ public final class Sift {
                 appStateCollector = new AppStateCollector(instance, c);
                 unboundUserId = null;
                 hasUnboundUserId = false;
+            } else {
+                if (config != null) {
+                    instance.setConfig(config);
+                }
+                appStateCollector.setActivityName(activityName == null ?
+                        context.getClass().getSimpleName() : activityName);
             }
         }
-
-        if (config != null) {
-            instance.setConfig(config);
-        }
-        appStateCollector.setActivityName(activityName == null ?
-                context.getClass().getSimpleName() : activityName);
-
     }
 
     public static void open(@NonNull Context context, String activityName) {
