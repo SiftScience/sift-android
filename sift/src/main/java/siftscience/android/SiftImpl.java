@@ -271,18 +271,18 @@ class SiftImpl {
         public void run() {
             String archive;
 
-            // Unarchive Sift config
-            archive = archives.getString(ArchiveKey.CONFIG.key, null);
-            config = unarchiveConfig(archive);
-            Log.d(TAG, String.format("Unarchived Sift.Config: %s", archive));
+            // Unarchive Sift config if we don't have one
+            if (config == null) {
+                archive = archives.getString(ArchiveKey.CONFIG.key, null);
+                config = unarchiveConfig(archive);
+                Log.d(TAG, String.format("Unarchived Sift.Config: %s", archive));
+            }
 
             // Unarchive User ID if we didn't have an unbound one from the Sift class
             if (!this.hasUnboundUserId) {
                 userId = archives.getString(ArchiveKey.USER_ID.key, null);
                 Log.d(TAG, String.format("Unarchived User ID: %s", userId));
             }
-
-
 
             // Unarchive Queues
             for (Map.Entry<String, ?> entry : archives.getAll().entrySet()) {
