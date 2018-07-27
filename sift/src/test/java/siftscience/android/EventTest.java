@@ -31,7 +31,7 @@ public class EventTest {
                         .withDeviceManufacturer("bar")
                         .withDeviceModel("baz")
                 )
-                .withTime(now);
+                .withTime(now + 1);
 
         assertTrue(Utils.eventsAreBasicallyEqual(event0, event1));
     }

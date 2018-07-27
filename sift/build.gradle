@@ -85,13 +85,14 @@ jsonSchema2Pojo {
 task compileAndroid(dependsOn: 'generateJsonSchema2PojoForRelease') << {
     if (System.getenv("CI") == null) {
         def JAVA_DIR = '../code/java/sift-json/src/main/json/'
+        def EXCLUDE_FROM_DIFF = ['list_request.yaml']
         def androidDir = new File('sift/src/main/json')
         def diffFiles = []
 
         androidDir.eachFile {
             def cmd = "diff ${it.getAbsolutePath()} ${JAVA_DIR}${it.getName()}"
             int status = cmd.execute().waitFor()
-            if (status != 0) {
+            if (status != 0 && !(it.getName() in EXCLUDE_FROM_DIFF)) {
                 diffFiles << it.getName()
             }
         }
