@@ -23,9 +23,6 @@
 # ----------------------------------------
 # Other
 # ----------------------------------------
--keep class com.google.common.**
--dontwarn com.google.common.**
-
 -keep class okio.*
 -dontnote okhttp3.internal.platform.*
 -dontwarn okio.*
@@ -36,7 +33,3 @@
 -dontnote org.apache.commons.codec.**
 -dontnote org.apache.http.**
 -dontnote com.google.android.gms.internal.*
--dontnote com.google.common.**
-
--keep class org.apache.commons.lang3.** { <init>(...); *; }
--keep enum org.apache.commons.lang3.** { <init>(...); *; }
