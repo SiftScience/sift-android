@@ -43,16 +43,14 @@ public class UploaderTest {
             .dynamicPort()
             .dynamicHttpsPort());
 
-    private final MobileEventJson TEST_EVENT = MobileEventJson.newBuilder()
-            .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
+    private final MobileEventJson TEST_EVENT = new MobileEventJson()
+            .withAndroidDeviceProperties(new AndroidDevicePropertiesJson()
                     .withAndroidId("foo")
                     .withDeviceManufacturer("bar")
                     .withDeviceModel("baz")
-                    .build()
             )
             .withTime(System.currentTimeMillis())
-            .withUserId("gary")
-            .build();
+            .withUserId("gary");
 
     @Before
     public void setUp() {

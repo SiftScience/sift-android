@@ -10,10 +10,20 @@ import com.sift.api.representations.MobileEventJson;
 
 public class Utils {
     public static boolean eventsAreBasicallyEqual(MobileEventJson first,
-                                         MobileEventJson second) {
-        long currentTime = Time.now();
-        return MobileEventJson.newBuilder(first).withTime(currentTime).build()
-                .equals(MobileEventJson.newBuilder(second).withTime(currentTime).build());
+                                                  MobileEventJson second) {
+        if (first == null ^ second == null) {
+            return false;
+        } else if (first == second) {
+            return true;
+        }
+
+        // KLUDGE: jsonschema2pojo doesn't generate copy constructors, so back up one time,
+        // override it, then restore it.
+        Long firstTime = first.time;
+        first.time = second.time;
+        boolean result = first.equals(second);
+        first.time = firstTime;
+        return result;
     }
 
     public static boolean equals(Object a, Object b) {

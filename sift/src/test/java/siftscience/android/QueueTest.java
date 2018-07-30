@@ -13,12 +13,15 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 
 public class QueueTest {
 
@@ -38,38 +41,32 @@ public class QueueTest {
     public void testAppend() throws IOException {
         Queue.UploadRequester uploadRequester = mock(Queue.UploadRequester.class);
 
-        MobileEventJson event0 = MobileEventJson.newBuilder()
-                .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
+        MobileEventJson event0 = new MobileEventJson()
+                .withAndroidDeviceProperties(new AndroidDevicePropertiesJson()
                         .withAndroidId("foo0")
                         .withDeviceManufacturer("bar0")
                         .withDeviceModel("baz0")
-                        .build()
                 )
                 .withTime(System.currentTimeMillis())
-                .withUserId("gary")
-                .build();
+                .withUserId("gary");
 
-        MobileEventJson event1 = MobileEventJson.newBuilder()
-                .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
+        MobileEventJson event1 = new MobileEventJson()
+                .withAndroidDeviceProperties(new AndroidDevicePropertiesJson()
                         .withAndroidId("foo1")
                         .withDeviceManufacturer("bar1")
                         .withDeviceModel("baz1")
-                        .build()
                 )
                 .withTime(System.currentTimeMillis())
-                .withUserId("gary")
-                .build();
+                .withUserId("gary");
 
-        MobileEventJson event2 = MobileEventJson.newBuilder()
-                .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
+        MobileEventJson event2 = new MobileEventJson()
+                .withAndroidDeviceProperties(new AndroidDevicePropertiesJson()
                         .withAndroidId("foo2")
                         .withDeviceManufacturer("bar2")
                         .withDeviceModel("baz2")
-                        .build()
                 )
                 .withTime(System.currentTimeMillis())
-                .withUserId("gary")
-                .build();
+                .withUserId("gary");
 
         Queue queue = new Queue(null, USER_ID_PROVIDER, uploadRequester,
                 new Queue.Config.Builder()
@@ -109,43 +106,37 @@ public class QueueTest {
         MobileEventJson event0, event1;
 
         Time.currentTime = 1000;
-        event0 = MobileEventJson.newBuilder()
-                .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
+        event0 = new MobileEventJson()
+                .withAndroidDeviceProperties(new AndroidDevicePropertiesJson()
                         .withAndroidId("foo0")
                         .withDeviceManufacturer("bar0")
                         .withDeviceModel("baz0")
-                        .build()
                 )
                 .withTime(Time.currentTime)
-                .withUserId("gary")
-                .build();
+                .withUserId("gary");
         queue.append(event0);
 
         Time.currentTime++;
-        event1 = MobileEventJson.newBuilder()
-                .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
+        event1 = new MobileEventJson()
+                .withAndroidDeviceProperties(new AndroidDevicePropertiesJson()
                         .withAndroidId("foo0")
                         .withDeviceManufacturer("bar0")
                         .withDeviceModel("baz0")
-                        .build()
                 )
                 .withTime(Time.currentTime)
-                .withUserId("gary")
-                .build();
+                .withUserId("gary");
         assertTrue(Time.currentTime == event1.time);
         queue.append(event1);
 
         Time.currentTime++;
-        event1 = MobileEventJson.newBuilder()
-                .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
+        event1 = new MobileEventJson()
+                .withAndroidDeviceProperties(new AndroidDevicePropertiesJson()
                         .withAndroidId("foo0")
                         .withDeviceManufacturer("bar0")
                         .withDeviceModel("baz0")
-                        .build()
                 )
                 .withTime(Time.currentTime)
-                .withUserId("gary")
-                .build();
+                .withUserId("gary");
         assertTrue(Time.currentTime == event1.time);
         queue.append(event1);
 
@@ -154,16 +145,14 @@ public class QueueTest {
         assertEquals(Collections.singletonList(event0), queue.flush());
 
         Time.currentTime = 1000 + 60000;
-        event1 = MobileEventJson.newBuilder()
-                .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
+        event1 = new MobileEventJson()
+                .withAndroidDeviceProperties(new AndroidDevicePropertiesJson()
                         .withAndroidId("foo0")
                         .withDeviceManufacturer("bar0")
                         .withDeviceModel("baz0")
-                        .build()
                 )
                 .withTime(Time.currentTime)
-                .withUserId("gary")
-                .build();
+                .withUserId("gary");
         assertTrue(Time.currentTime == event1.time);
         queue.append(event1);
 
@@ -181,15 +170,13 @@ public class QueueTest {
                         .withUploadWhenOlderThan(TimeUnit.HOURS.toMillis(1))
                         .build());
 
-        MobileEventJson event = MobileEventJson.newBuilder()
-                .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
+        MobileEventJson event = new MobileEventJson()
+                .withAndroidDeviceProperties(new AndroidDevicePropertiesJson()
                         .withAndroidId("foo0")
                         .withDeviceManufacturer("bar0")
                         .withDeviceModel("baz0")
-                        .build()
                 )
-                .withTime(1000L)
-                .build();
+                .withTime(1000L);
 
         verifyZeroInteractions(uploadRequester);
 
@@ -214,15 +201,13 @@ public class QueueTest {
 
         Time.currentTime = 1000;
 
-        MobileEventJson event = MobileEventJson.newBuilder()
-                .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
+        MobileEventJson event = new MobileEventJson()
+                .withAndroidDeviceProperties(new AndroidDevicePropertiesJson()
                         .withAndroidId("foo0")
                         .withDeviceManufacturer("bar0")
                         .withDeviceModel("baz0")
-                        .build()
                 )
-                .withTime(System.currentTimeMillis())
-                .build();
+                .withTime(System.currentTimeMillis());
 
         queue.append(event);
         verify(uploadRequester).requestUpload(Collections.singletonList(event));
@@ -239,15 +224,13 @@ public class QueueTest {
                         .withUploadWhenOlderThan(10000)
                         .build());
 
-        MobileEventJson event = MobileEventJson.newBuilder()
-                .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
+        MobileEventJson event = new MobileEventJson()
+                .withAndroidDeviceProperties(new AndroidDevicePropertiesJson()
                         .withAndroidId("foo0")
                         .withDeviceManufacturer("bar0")
                         .withDeviceModel("baz0")
-                        .build()
                 )
-                .withTime(System.currentTimeMillis())
-                .build();
+                .withTime(System.currentTimeMillis());
 
         // Should have uploaded
         queue.append(event);
@@ -266,15 +249,13 @@ public class QueueTest {
                         .withUploadWhenOlderThan(1000)
                         .build());
 
-        MobileEventJson event = MobileEventJson.newBuilder()
-                .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
+        MobileEventJson event = new MobileEventJson()
+                .withAndroidDeviceProperties(new AndroidDevicePropertiesJson()
                         .withAndroidId("foo0")
                         .withDeviceManufacturer("bar0")
                         .withDeviceModel("baz0")
-                        .build()
                 )
-                .withTime(System.currentTimeMillis())
-                .build();
+                .withTime(System.currentTimeMillis());
 
         // Should have uploaded the first event
         queue.append(event);
@@ -300,15 +281,13 @@ public class QueueTest {
                         .withUploadWhenOlderThan(10000)
                         .build());
 
-        MobileEventJson event = MobileEventJson.newBuilder()
-                .withAndroidDeviceProperties(AndroidDevicePropertiesJson.newBuilder()
+        MobileEventJson event = new MobileEventJson()
+                .withAndroidDeviceProperties(new AndroidDevicePropertiesJson()
                         .withAndroidId("foo0")
                         .withDeviceManufacturer("bar0")
                         .withDeviceModel("baz0")
-                        .build()
                 )
-                .withTime(System.currentTimeMillis())
-                .build();
+                .withTime(System.currentTimeMillis());
 
         // Should have uploaded the first event
         queue.append(event);
@@ -352,11 +331,11 @@ public class QueueTest {
         field.setAccessible(true);
         MobileEventJson lastEvent = (MobileEventJson) field.get(q);
 
-        assertEquals(lastEvent, MobileEventJson.newBuilder()
+        assertEquals(lastEvent, new MobileEventJson()
                 .withTime(1513206382563L)
                 .withUserId("USER_ID")
                 .withInstallationId("a4c7e6b6cae420e9")
-                .withAndroidAppState(AndroidAppStateJson.newBuilder()
+                .withAndroidAppState(new AndroidAppStateJson()
                         .withActivityClassName("HelloSift")
                         .withSdkVersion("0.9.7")
                         .withBatteryLevel(0.5)
@@ -364,9 +343,7 @@ public class QueueTest {
                         .withBatteryHealth(2L)
                         .withPlugState(1L)
                         .withNetworkAddresses(Arrays.asList("10.0.2.15", "fe80::5054:ff:fe12:3456"))
-                        .build()
                 )
-                .build()
         );
 
         // Next, test that we can archive back to the expected string
@@ -405,11 +382,11 @@ public class QueueTest {
         field.setAccessible(true);
         MobileEventJson lastEvent = (MobileEventJson) field.get(o);
 
-        assertEquals(lastEvent, MobileEventJson.newBuilder()
+        assertEquals(lastEvent, new MobileEventJson()
                 .withTime(1513206382563L)
                 .withUserId("USER_ID")
                 .withInstallationId("a4c7e6b6cae420e9")
-                .withAndroidAppState(AndroidAppStateJson.newBuilder()
+                .withAndroidAppState(new AndroidAppStateJson()
                         .withActivityClassName("HelloSift")
                         .withSdkVersion("0.9.7")
                         .withBatteryLevel(0.5)
@@ -417,9 +394,7 @@ public class QueueTest {
                         .withBatteryHealth(2L)
                         .withPlugState(1L)
                         .withNetworkAddresses(Arrays.asList("10.0.2.15", "fe80::5054:ff:fe12:3456"))
-                        .build()
                 )
-                .build()
         );
 
         field = o.getClass().getDeclaredField("lastUploadTimestamp");

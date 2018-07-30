@@ -19,6 +19,7 @@ import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -159,9 +160,8 @@ public class Uploader {
         headers.put("Content-Encoding", "gzip");
         headers.put("Content-Type", "application/json");
 
-        ListRequestJson<MobileEventJson> request = ListRequestJson.<MobileEventJson>newBuilder()
-                .withData(batch)
-                .build();
+        ListRequestJson request = new ListRequestJson()
+                .withData(Collections.<Object>unmodifiableList(batch));
 
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         OutputStream gzip = new GZIPOutputStream(os);

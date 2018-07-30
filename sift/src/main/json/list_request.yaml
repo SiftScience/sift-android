@@ -2,11 +2,15 @@
 title: ListRequest
 description: user submits a collection
 type: object
-javaType: com.sift.api.representations.ListRequestJson<T>
+
+# This should be ListRequestJson<T> and data should be T, but jsonschema2pojo doesn't capture the
+# generic type when generating code.
+javaType: com.sift.api.representations.ListRequestJson
+
 properties:
   data:
     type: array
     items:
       type: object
-      javaType: T
+      javaType: java.lang.Object
 additionalProperties: false
