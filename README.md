@@ -1,4 +1,4 @@
-# Sift Science Android SDK
+# Sift Android SDK
 
 - [Introduction](#introduction)
 - [Installation](#installation)
@@ -9,7 +9,7 @@
 <a name="introduction"></a>
 ## Introduction
 
-The Sift Android SDK collects and sends Android device information and application interaction events to Sift Science for use in improving fraud detection accuracy.
+The Sift Android SDK collects and sends Android device information and application interaction events to Sift for use in improving fraud detection accuracy.
 
 <a name="installation"></a>
 ## Installing Sift
