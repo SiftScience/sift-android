@@ -169,7 +169,7 @@ public class AppStateCollector implements LocationListener,
         List<String> addresses = new ArrayList<>();
         try {
             for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces();
-                 en.hasMoreElements(); ) {
+                 en != null && en.hasMoreElements(); ) {
                 NetworkInterface intf = en.nextElement();
                 for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses();
                      enumIpAddr.hasMoreElements(); ) {
