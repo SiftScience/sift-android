@@ -16,7 +16,7 @@ The Sift Android SDK collects and sends Android device information and applicati
 
 Add Sift to your application’s build.gradle file:
 
-```
+```gradle
 dependencies {
   ...
   compile 'com.siftscience:sift-android:0.10.5'
@@ -26,7 +26,7 @@ dependencies {
 
 You may also need to add the following `packagingOptions` to the main android block:
 
-```
+```gradle
 android {
   ...
   packagingOptions {
@@ -59,7 +59,7 @@ and Fragments, please refer to the the [Custom Integration](#custom) section.
 #### Add Sift to your Application file
 Create an Application file if you haven’t already. Create an internal class that implements the `ActivityLifecycleCallbacks` interface and register Sift as shown below:
 
-```
+```java
 import siftscience.android.Sift;
 
 public class App extends Application {
@@ -97,13 +97,13 @@ public class App extends Application {
 
 As soon as your application is aware of the user id, set it on the Sift instance using the code below. All subsequent events will include the user id.
 
-```
+```java
 Sift.setUserId("SOME_USER_ID");
 ```
 
 If the user logs out of your application, you should unset the user id:
 
-```
+```java
 Sift.unsetUserId();
 ```
 
@@ -113,7 +113,7 @@ Sift.unsetUserId();
 
 Configure the Sift object in the `onCreate` method of your application's main Activity (the one that begins the application). If the user id is known at this point, you can set it here. Otherwise, you should set it as soon as it is known. In the main Activity, also override `onPause`, `onResume`, and `onDestroy` as shown:
 
-```
+```java
 import siftscience.android.Sift;
 
 public class MainActivity extends AppCompatActivity {
@@ -151,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
 
 For each Activity or Fragment that represents a unique page in your application flow, override `onStart`, `onPause`, `onResume`, and `onDestroy`:
 
-```
+```java
 public class OtherActivity extends AppCompatActivity {
     @Override
     protected void onStart(Bundle savedInstanceState) {
@@ -182,12 +182,12 @@ public class OtherActivity extends AppCompatActivity {
 
 As soon as your application is aware of the user id, set it on the Sift instance using the code below. All subsequent events will include the user id.
 
-```
+```java
 Sift.setUserId("SOME_USER_ID");
 ```
 
 If the user logs out of your application, you should unset the user id:
 
-```
+```java
 Sift.unsetUserId();
 ```
