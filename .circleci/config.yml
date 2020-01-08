@@ -11,7 +11,6 @@ jobs:
   build:
     working_directory: ~/SiftScience/sift-android
     parallelism: 1
-    shell: /bin/bash --login
     # CircleCI 2.0 does not support environment variables that refer to each other the same way as 1.0 did.
     # If any of these refer to each other, rewrite them so that they don't or see https://circleci.com/docs/2.0/env-vars/#interpolating-environment-variables-to-set-other-environment-variables .
     environment:
@@ -36,7 +35,7 @@ jobs:
     # Prepare for artifact and test results  collection equivalent to how it was done on 1.0.
     # In many cases you can simplify this from what is generated here.
     # 'See docs on artifact collection here https://circleci.com/docs/2.0/artifacts/'
-    - run: cd sift-android; mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
+    - run: pwd; mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
     # Dependencies
     #   This would typically go in either a build or a build-and-test job when using workflows
     # Restore the dependency cache
