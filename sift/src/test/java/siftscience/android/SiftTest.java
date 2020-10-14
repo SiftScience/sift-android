@@ -4,7 +4,7 @@ package siftscience.android;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import com.sift.api.representations.MobileEventJson;
 
