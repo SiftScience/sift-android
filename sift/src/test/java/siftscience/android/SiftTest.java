@@ -4,8 +4,13 @@ package siftscience.android;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.location.Location;
+
 import androidx.annotation.Nullable;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.sift.api.representations.AndroidAppStateJson;
+import com.sift.api.representations.AndroidDeviceLocationJson;
 import com.sift.api.representations.MobileEventJson;
 
 import org.junit.After;
@@ -16,9 +21,11 @@ import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -445,6 +452,113 @@ public class SiftTest {
 
         assertEquals(null, sift.getUserId());
     }
+
+    @Test
+    public void testLocationClientWhenLocationCollectionFalse() throws NoSuchFieldException,
+            IllegalAccessException {
+        MemorySharedPreferences preferences = new MemorySharedPreferences();
+
+        Sift.Config config = new Sift.Config.Builder().withDisallowLocationCollection(false).build();
+
+        SiftImpl sift = new SiftImpl(mockContext(preferences), config, "",
+                false, mockTaskManager());
+        assertTrue(preferences.fields.isEmpty());
+
+        AppStateCollector appStateCollector = new AppStateCollector(sift, mockContext(preferences));
+
+        Field fusedLocationClientField = appStateCollector.getClass()
+                .getDeclaredField("mFusedLocationClient");
+        fusedLocationClientField.setAccessible(true);
+        FusedLocationProviderClient mFusedLocationClient =
+                (FusedLocationProviderClient) fusedLocationClientField.get(appStateCollector);
+
+        assertNotNull(mFusedLocationClient);
+    }
+
+    @Test
+    public void testLocationClientWhenLocationCollectionTrue() throws NoSuchFieldException,
+            IllegalAccessException {
+        MemorySharedPreferences preferences = new MemorySharedPreferences();
+
+        Sift.Config config = new Sift.Config.Builder().withDisallowLocationCollection(true).build();
+
+        SiftImpl sift = new SiftImpl(mockContext(preferences), config, "",
+                false, mockTaskManager());
+        assertTrue(preferences.fields.isEmpty());
+
+        AppStateCollector appStateCollector = new AppStateCollector(sift, mockContext(preferences));
+
+        Field fusedLocationClientField = appStateCollector.getClass()
+                .getDeclaredField("mFusedLocationClient");
+        fusedLocationClientField.setAccessible(true);
+        FusedLocationProviderClient mFusedLocationClient =
+                (FusedLocationProviderClient) fusedLocationClientField.get(appStateCollector);
+
+        assertNull(mFusedLocationClient);
+    }
+
+    @Test
+    public void testAppStateCollector() {
+        MemorySharedPreferences preferences = new MemorySharedPreferences();
+
+        Sift.Config config = new Sift.Config.Builder().withDisallowLocationCollection(true).build();
+
+        SiftImpl sift = new SiftImpl(mockContext(preferences), config, "",
+                false, mockTaskManager());
+        assertTrue(preferences.fields.isEmpty());
+
+        AppStateCollector appStateCollector = new AppStateCollector(sift, mockContext(preferences));
+        appStateCollector.collect();
+        // Collect twice because the first one gets uploaded and flushed
+        appStateCollector.collect();
+        sift.save();
+
+        List<MobileEventJson> eventList = sift.getQueue(SiftImpl.APP_STATE_QUEUE_IDENTIFIER).flush();
+        assertEquals(1, eventList.size());
+
+        MobileEventJson event = eventList.get(0);
+        assertEquals(Sift.SDK_VERSION, event.androidAppState.sdkVersion);
+    }
+
+    @Test
+    public void testAppStateCollectorWithMockLocation() {
+        MemorySharedPreferences preferences = new MemorySharedPreferences();
+
+        Sift.Config config = new Sift.Config.Builder().build();
+
+        SiftImpl sift = new SiftImpl(mockContext(preferences), config, "",
+                false, mockTaskManager());
+        AppStateCollector appStateCollector = new AppStateCollector(sift, mockContext(preferences));
+        // Trying to collect the location
+        appStateCollector.collect();
+        // Mocking the location
+        Location fakeLocation = new Location("gps");
+
+        AndroidDeviceLocationJson mockLocationJson = new AndroidDeviceLocationJson()
+                .withTime(fakeLocation.getTime())
+                .withLatitude(fakeLocation.getLatitude())
+                .withLongitude(fakeLocation.getLongitude())
+                .withAccuracy(BigDecimal.valueOf(fakeLocation.getAccuracy()).doubleValue());
+
+        AndroidAppStateJson androidAppStateJson = new AndroidAppStateJson()
+                .withLocation(mockLocationJson);
+
+        sift.getQueue(SiftImpl.APP_STATE_QUEUE_IDENTIFIER).append(new MobileEventJson()
+                .withAndroidAppState(androidAppStateJson));
+
+        // Append twice because the first one gets uploaded and flushed
+        sift.getQueue(SiftImpl.APP_STATE_QUEUE_IDENTIFIER).append(new MobileEventJson()
+                .withAndroidAppState(androidAppStateJson));
+
+        List<MobileEventJson> eventList = sift.getQueue(SiftImpl.APP_STATE_QUEUE_IDENTIFIER).flush();
+        assertEquals(1, eventList.size());
+
+        MobileEventJson event = eventList.get(0);
+        assertNotNull(event.androidAppState.location);
+
+        assertEquals(mockLocationJson, event.androidAppState.location);
+    }
+
 
     private Context mockContext(SharedPreferences preferences) {
         Context ctx = mock(Context.class);

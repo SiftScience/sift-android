@@ -3,13 +3,15 @@
 package siftscience.android;
 
 import android.content.Context;
-import android.os.AsyncTask;
 import androidx.annotation.NonNull;
 
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * The public API of the Sift client library.
@@ -98,13 +100,15 @@ public final class Sift {
      * Collect SDK events for Device Properties and Application State.
      */
     public static void collect() {
-        AsyncTask.execute(new Runnable() {
+        ExecutorService executors = Executors.newSingleThreadScheduledExecutor();
+        Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                devicePropertiesCollector.collect();
                 appStateCollector.collect();
+                devicePropertiesCollector.collect();
             }
-        });
+        };
+        executors.submit(runnable);
     }
 
     /**

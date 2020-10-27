@@ -178,19 +178,24 @@ public class AppStateCollector {
         Intent batteryStatus = context.registerReceiver(null,
                 new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
 
-        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        int level = batteryStatus != null ?
+                batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) : -1;
+        int scale = batteryStatus != null ?
+                batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1) : -1;
         double batteryLevel = -1;
         if (level != -1 && scale != -1) {
             batteryLevel = (double) level / scale;
         }
 
         // unknown=1, charging=2, discharging=3, not charging=4, full=5
-        int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+        int status = batteryStatus != null ?
+                batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1) : -1;
         // ac=1, usb=2, wireless=4
-        int plugState = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+        int plugState = batteryStatus != null ?
+                batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1) : -1;
         // unknown=1, good=2, overheat=3, dead=4, over voltage=5, unspecified failure=6, cold=7
-        int health = batteryStatus.getIntExtra(BatteryManager.EXTRA_HEALTH, -1);
+        int health = batteryStatus != null ?
+                batteryStatus.getIntExtra(BatteryManager.EXTRA_HEALTH, -1) : -1;
 
         List<String> ipAddresses = getIpAddresses();
 
