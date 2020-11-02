@@ -6,6 +6,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import android.util.Base64;
 import android.util.Log;
+import sun.rmi.runtime.Log;
 
 import com.sift.api.representations.ListRequestJson;
 import com.sift.api.representations.MobileEventJson;
@@ -19,9 +20,9 @@ import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
@@ -31,19 +32,18 @@ import java.util.zip.GZIPOutputStream;
  */
 public class Uploader {
     private static final String TAG = Uploader.class.getName();
-
-    @VisibleForTesting
-    static final int MAX_RETRIES = 3;
     private static final long BACKOFF_MULTIPLIER = TimeUnit.SECONDS.toSeconds(3);
     private static final long BACKOFF_EXPONENT = 2;
     private static final TimeUnit BACKOFF_UNIT = TimeUnit.SECONDS;
-    private TaskManager taskManager;
-    private ConfigProvider configProvider;
-
-    private static final Charset US_ASCII = Charset.forName("US-ASCII");
-    private static final Charset UTF8 = Charset.forName("UTF-8");
-
+    private static final Charset US_ASCII = StandardCharsets.US_ASCII;
+    private static final Charset UTF8 = StandardCharsets.UTF_8;
     private static final int MAX_BYTES = 4096;
+
+    @VisibleForTesting
+    static final int MAX_RETRIES = 3;
+
+    private final TaskManager taskManager;
+    private final ConfigProvider configProvider;
 
     interface ConfigProvider {
         Sift.Config getConfig();
@@ -128,7 +128,8 @@ public class Uploader {
     /** Builds a Request for the specified event batch */
     @Nullable
     private Request makeRequest(List<MobileEventJson> batch) throws IOException {
-        if (batch.isEmpty()) {
+        if (batch == null || batch.isEmpty()) {
+            Log.d(TAG, "Mobile events batch is empty");
             return null;
         }
 
@@ -139,13 +140,8 @@ public class Uploader {
             return null;
         }
 
-        if (config.accountId == null || config.beaconKey == null || config.serverUrlFormat == null) {
-            Log.d(TAG, "Missing account ID, beacon key, and/or server URL format");
-            return null;
-        }
-
-        if (batch.isEmpty()) {
-            Log.d(TAG, "Batch is null or empty");
+        if (!config.isValid()) {
+            Log.d(TAG, "Sift.Config is not valid");
             return null;
         }
 
