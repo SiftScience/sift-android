@@ -2,8 +2,6 @@
 
 package siftscience.android;
 
-import java.util.StringJoiner;
-
 import androidx.annotation.NonNull;
 import android.content.Context;
 import android.util.Log;
@@ -15,6 +13,7 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.StringJoiner;
 
 /**
  * The public API of the Sift client library.
@@ -226,7 +225,7 @@ public final class Sift {
 
             if (!valid) {
                 Log.d(TAG, "The following configuration properties are missing or empty: {}",
-                    configurationErrors);
+                    configurationErrors.toString());
             }
 
             return valid;
