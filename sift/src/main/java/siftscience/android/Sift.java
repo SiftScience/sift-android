@@ -4,8 +4,9 @@ package siftscience.android;
 
 import java.util.StringJoiner;
 
-import android.content.Context;
 import androidx.annotation.NonNull;
+import android.content.Context;
+import android.util.Log;
 
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
