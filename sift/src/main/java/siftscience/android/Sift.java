@@ -5,13 +5,16 @@ package siftscience.android;
 import java.util.StringJoiner;
 
 import android.content.Context;
+import android.os.Build;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
-import sun.rmi.runtime.Log;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -206,6 +209,7 @@ public final class Sift {
             this.disallowLocationCollection = disallowLocationCollection;
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.N)
         boolean isValid() {
 
             StringJoiner configurationErrors = new StringJoiner(", ");
@@ -225,8 +229,8 @@ public final class Sift {
             boolean valid = configurationErrors.length() == 0;
 
             if (!valid) {
-                Log.d(TAG, "The following configuration properties are missing or empty: {}",
-                    configurationErrors);
+                Log.d(TAG, "The following configuration properties are missing or empty: " +
+                        configurationErrors.toString());
             }
 
             return valid;

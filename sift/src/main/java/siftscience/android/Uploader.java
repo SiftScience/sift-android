@@ -3,10 +3,12 @@
 package siftscience.android;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
+
+import android.os.Build;
 import android.util.Base64;
 import android.util.Log;
-import sun.rmi.runtime.Log;
 
 import com.sift.api.representations.ListRequestJson;
 import com.sift.api.representations.MobileEventJson;
@@ -23,6 +25,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
@@ -30,6 +33,7 @@ import java.util.zip.GZIPOutputStream;
 /**
  * Stateless utility class for sending MobileEventJson batches to Sift backend
  */
+@RequiresApi(api = Build.VERSION_CODES.KITKAT)
 public class Uploader {
     private static final String TAG = Uploader.class.getName();
     private static final long BACKOFF_MULTIPLIER = TimeUnit.SECONDS.toSeconds(3);
@@ -100,6 +104,7 @@ public class Uploader {
         this.configProvider = configProvider;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public void upload(List<MobileEventJson> batch) {
         // Kick-off the first upload
         try {
@@ -126,6 +131,7 @@ public class Uploader {
     }
 
     /** Builds a Request for the specified event batch */
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Nullable
     private Request makeRequest(List<MobileEventJson> batch) throws IOException {
         if (batch == null || batch.isEmpty()) {
