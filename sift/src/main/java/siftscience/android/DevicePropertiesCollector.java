@@ -99,11 +99,12 @@ public class DevicePropertiesCollector {
         String appVersion = null;
 
         try {
-            ApplicationInfo applicationInfo =
-                    packageManager.getApplicationInfo(this.context.getPackageName(), 0);
-            appName = (String) packageManager.getApplicationLabel(applicationInfo);
-            appVersion = packageManager.getPackageInfo(this.context.getPackageName(), 0)
-                    .versionName;
+            ApplicationInfo applicationInfo = packageManager != null ?
+                    packageManager.getApplicationInfo(this.context.getPackageName(), 0) : null;
+            appName = packageManager != null ?
+                    (String) packageManager.getApplicationLabel(applicationInfo) : null;
+            appVersion = packageManager != null ?
+                    packageManager.getPackageInfo(this.context.getPackageName(), 0).versionName : null;
         } catch (final PackageManager.NameNotFoundException e) {
             Log.e(TAG, "Encountered NameNotFoundException in get", e);
         }
@@ -117,8 +118,8 @@ public class DevicePropertiesCollector {
         String mobileCarrierIsoCountryCode;
         String systemVersion;
 
-        mobileCarrierName = telephonyManager.getNetworkOperatorName();
-        mobileCarrierIsoCountryCode = telephonyManager.getSimCountryIso();
+        mobileCarrierName = telephonyManager != null ? telephonyManager.getNetworkOperatorName() : null;
+        mobileCarrierIsoCountryCode = telephonyManager != null ? telephonyManager.getSimCountryIso() : null;
         androidId = Settings.Secure.getString(this.context.getContentResolver(),
                 Settings.Secure.ANDROID_ID);
         systemVersion = Build.VERSION.RELEASE;
@@ -183,8 +184,10 @@ public class DevicePropertiesCollector {
         for (String packageName : packages) {
             try {
                 // Root app detected
-                pm.getPackageInfo(packageName, 0);
-                packagesFound.add(packageName);
+                if (pm != null) {
+                    pm.getPackageInfo(packageName, 0);
+                    packagesFound.add(packageName);
+                }
             } catch (PackageManager.NameNotFoundException e) {
                 // Exception thrown, package is not installed into the system
             }
