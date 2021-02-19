@@ -6,7 +6,9 @@
 ### Table of Contents
 
 **[1 Overview](#1-overview)**
+
 **[2 High Level Class Diagram](#2-high-level-class-diagram)**
+
 **[3 Data Models](#3-data-models)**
 * [3.1 AndroidDeviceLocation](#31-androidDeviceLocation)
 * [3.2 AndroidAppState](#32-androidAppState)
