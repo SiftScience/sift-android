@@ -6,25 +6,17 @@
 ### Table of Contents
 
 **[1 Overview](#1-overview)**
-
 **[2 High Level Class Diagram](#2-high-level-class-diagram)**
-
 **[3 Data Models](#3-data-models)**
-
 * [3.1 AndroidDeviceLocation](#31-androidDeviceLocation)
-
 * [3.2 AndroidAppState](#32-androidAppState)
-
 * [3.3 AndroidDeviceProperties](#33-androidDeviceProperties)
-
 * [3.4 MobileEvent](#34-mobileEvent)
 
 **[4 Modules](#4-modules)**
 
 * [4.1 SIFT](#41-sIFT)
-
 * [4.2 SIFT IMPL](#42-SIFT-IMPL)
-
 * [4.3 QUEUE](#43-qUEUE) 
 
 **[5 Flow Chart](#5-flow-chart)**
@@ -39,11 +31,7 @@ The Android-specific features used are: SharedPreferences, Executors, PackageMan
 
 A high-level block diagram is shown
 
-```mermaid
-graph LR
-    A( Sift Android App ) --1--> B(sift-android SDK)
-    B --2--> C(Sift Server)
-```
+**![{"theme":"neutral","source":"graph LR\n    A( Sift Android App ) --1--> B(sift-android SDK)\n    B --2--> C(Sift Server)"}](https://lh5.googleusercontent.com/0kAH3eri7YIXq590Ca2wWEQ_5PXNOKF6Vd_NQkiIWDEbC8-jJmaW5E6SYND3z6kO2hUwEyjlnZS3sgepXyGtxRAIQ5239l_UFTwsVYbqOqXjjdOQbZgPcsR1FtvEnMt4obUvTAuK "mermaid-graph")**
 
 
 1. Android app loads the SDK with the Sift configurations.
@@ -84,7 +72,7 @@ The AndroidAppState collects the following informations:
 - **activity\_class\_name** : {type: string, required: false}
   - The activity class name indicates the current activity/fragment class name from where the data are collected.
 - **location** : {type: AndroidDeviceLocation, required: false}
-  - The location consists of collective information of latitude, longitude, accuracy and the time at which data was collected as shown in the [section 3.1](#_4ccm7negbd38). (_Have data only if the sift configuration and permissions are enabled_)
+  - The location consists of collective information of latitude, longitude, accuracy and the time at which data was collected as shown in the [section 3.1](#31-androidDeviceLocation). (_Have data only if the sift configuration and permissions are enabled_)
 - **sdk\_version** : {type: string, required: false}
   - The sdk version indicates the current Sift SDK version which is used.
 - **battery\_level** : {type: number, required: false}
@@ -184,9 +172,9 @@ The MobileEvent mainly collects the following information:
 - **installation\_id** : {type: string, required: false}
   - The installation id indicates the 64-bit number (expressed as a hexadecimal string) unique to each device.
 - **android\_device\_properties** : {type: AndroidDeviceProperties, required: false}
-  - The android device property indicates the device related properties as mentioned in [section 3.3](#_h21r3yrqtjao)
+  - The android device property indicates the device related properties as mentioned in [section 3.3](#33-androidDeviceProperties)
 - **android\_app\_state** : {type: AndroidAppState, required: false}
-  - The android app state indicates the application related datas as mentioned in [section 3.2](#_yt9cwodjs624).
+  - The android app state indicates the application related datas as mentioned in [section 3.2](#32-androidAppState).
 
 Class diagram of MobileEvent
 **![{"theme":"neutral","source":"classDiagram\n\nclass MobileEvent {\n    +Long time\n    +String userId\n    +String installationId\n    +AndroidDeviceProperties androidDeviceProperties\n    +AndroidAppState androidAppState\n\n    +withTime(time)\n    +withUserId(userId)\n    +withInstallationId(installationId)\n    +withAndroidDeviceProperties(androidDeviceProperties)\n    +withAndroidAppState(androidAppState)\n    +toString() string\n    +hashCode() int\n    +equals() boolean\n}"}](https://lh3.googleusercontent.com/00WwpCRpX_qFQd4IRgppXxnxXS_AEfsqkut1H-hQoBDrNSmzj2X3HCyb1jZPCVocPTZ8AmyRkpJzBgf_RdHt5PDlkizP1qYqQhArIODu0yVvf99oMKMdpKal5Hhje-knn7YN0bx8 "mermaid-graph")**
