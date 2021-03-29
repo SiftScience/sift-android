@@ -521,6 +521,28 @@ public class SiftTest {
     }
 
     @Test
+    public void testDevicePropertyCollector() throws InterruptedException {
+        MemorySharedPreferences preferences = new MemorySharedPreferences();
+
+        Sift.Config config = new Sift.Config.Builder().build();
+
+        SiftImpl sift = new SiftImpl(mockContext(preferences), config, "",
+                false, mockTaskManager());
+        assertTrue(preferences.fields.isEmpty());
+
+        DevicePropertiesCollector devicePropertiesCollector = new DevicePropertiesCollector(sift, mockContext(preferences));
+        devicePropertiesCollector.collect();
+        // First one gets uploaded and flushed
+
+        devicePropertiesCollector.collect();
+        // Device property queue will drop duplicate event if collected within 1 hour
+
+        List<MobileEventJson> eventList = sift.getQueue(SiftImpl.DEVICE_PROPERTIES_QUEUE_IDENTIFIER).flush();
+        assertEquals(0, eventList.size());
+
+    }
+
+    @Test
     public void testAppStateCollectorWithMockLocation() {
         MemorySharedPreferences preferences = new MemorySharedPreferences();
 
