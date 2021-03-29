@@ -2,10 +2,14 @@
 
 package siftscience.android;
 
+import java.util.StringJoiner;
+
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
@@ -216,6 +220,33 @@ public final class Sift {
             this.beaconKey = beaconKey;
             this.serverUrlFormat = serverUrlFormat;
             this.disallowLocationCollection = disallowLocationCollection;
+        }
+
+        @RequiresApi(api = Build.VERSION_CODES.N)
+        boolean isValid() {
+
+            StringJoiner configurationErrors = new StringJoiner(", ");
+
+            if (accountId == null || accountId.isEmpty()) {
+                configurationErrors.add("accountId");
+            }
+
+            if (beaconKey == null || beaconKey.isEmpty()) {
+                configurationErrors.add("beacon key");
+            }
+
+            if (serverUrlFormat == null || serverUrlFormat.isEmpty()) {
+                configurationErrors.add("server URL format");
+            }
+
+            boolean valid = configurationErrors.length() == 0;
+
+            if (!valid) {
+                Log.d(TAG, "The following configuration properties are missing or empty: " +
+                        configurationErrors.toString());
+            }
+
+            return valid;
         }
 
         @Override
