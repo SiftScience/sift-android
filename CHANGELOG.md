@@ -1,5 +1,13 @@
 ﻿# Change Log
 
+## [1.0.0] - 2021-04-20
+
+### Added
+- Executor used for trigger collect method of DeviceProperties and AppState terminated on sift.cancel().
+- Images used in DESIGNDOC.md are added to the repo to avoid URL issues.
+- Created Changelog
+- Prevent SDK from sending empty configuration properties
+
 ## [0.11.1] - 2020-11-20
 
 ### Added
