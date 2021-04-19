@@ -163,7 +163,7 @@ public class OtherActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        Sift.save();
+        Sift.pause();
     }
     @Override
     protected void onResume() {

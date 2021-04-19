@@ -2,8 +2,14 @@
 
 package siftscience.android;
 
+import java.util.StringJoiner;
+
 import android.content.Context;
+import android.os.Build;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
@@ -12,6 +18,7 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The public API of the Sift client library.
@@ -35,7 +42,7 @@ public final class Sift {
     private static volatile AppStateCollector appStateCollector;
     private static volatile String unboundUserId;
     private static volatile boolean hasUnboundUserId = false;
-
+    private static volatile ExecutorService executors;
 
     //================================================================================
     // Static API
@@ -100,7 +107,9 @@ public final class Sift {
      * Collect SDK events for Device Properties and Application State.
      */
     public static void collect() {
-        ExecutorService executors = Executors.newSingleThreadScheduledExecutor();
+        if (executors == null || (executors != null && executors.isShutdown())) {
+            executors = Executors.newSingleThreadScheduledExecutor();
+        }
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
@@ -144,9 +153,19 @@ public final class Sift {
     /**
      * Call Sift.close() in the onDestroy() callback of each Activity.
      *
-     * Persists instance state to disk and disconnects location services.
+     * Terminate executor used for collecting Device Properties and Application State.
      */
     public static void close() {
+        if (executors != null && !executors.isShutdown()){
+            executors.shutdown();
+            try {
+                if (!executors.awaitTermination(1, TimeUnit.SECONDS)) {
+                    Log.d(TAG, "Some tasks are not terminated yet before timeout");
+                }
+            } catch (InterruptedException e) {
+                Log.e(TAG, "Interrupted when awaiting executor termination", e);
+            }
+        }
     }
 
     public static synchronized void setUserId(String userId) {
@@ -201,6 +220,33 @@ public final class Sift {
             this.beaconKey = beaconKey;
             this.serverUrlFormat = serverUrlFormat;
             this.disallowLocationCollection = disallowLocationCollection;
+        }
+
+        @RequiresApi(api = Build.VERSION_CODES.N)
+        boolean isValid() {
+
+            StringJoiner configurationErrors = new StringJoiner(", ");
+
+            if (accountId == null || accountId.isEmpty()) {
+                configurationErrors.add("accountId");
+            }
+
+            if (beaconKey == null || beaconKey.isEmpty()) {
+                configurationErrors.add("beacon key");
+            }
+
+            if (serverUrlFormat == null || serverUrlFormat.isEmpty()) {
+                configurationErrors.add("server URL format");
+            }
+
+            boolean valid = configurationErrors.length() == 0;
+
+            if (!valid) {
+                Log.d(TAG, "The following configuration properties are missing or empty: " +
+                        configurationErrors.toString());
+            }
+
+            return valid;
         }
 
         @Override
