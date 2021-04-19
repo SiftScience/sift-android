@@ -33,7 +33,7 @@ The Android-specific features used are: SharedPreferences, Executors, PackageMan
 
 A high-level block diagram is shown
 
-**![{"theme":"neutral","source":"graph LR\n    A( Sift Android App ) --1--> B(sift-android SDK)\n    B --2--> C(Sift Server)"}](/images/block-diagram.png)**
+**![{"theme":"neutral","source":"graph LR\n    A( Sift Android App ) --1--> B(sift-android SDK)\n    B --2--> C(Sift Server)"}](/images/block-diagram.png "mermaid-graph")**
 
 
 1. Android app loads the SDK with the Sift configurations.
@@ -494,5 +494,5 @@ This class provide three instance methods as follow:
 
 ## 5 Flow Chart
 
-**![{"theme":"neutral","source":"graph TD\n\n    A[Sift] --> B(App State Collector)\n    A --> C(Device Property Collector)\n\n    C & B -->|Collected Events| D[Task Manager]\n    \n    D -->|Add Event| E[[Device Property Queue ]] & F[[App State Queue]]\n\n    E & F -->|Request upload| G([Uploader])\n    \n\n    G -.->|Upload Event| H((Sift Server fa:fa-server))"}](/images/flow-chart.png "mermaid-graph")**
 
+**![{"theme":"neutral","source":"graph TD\n\n    A[Sift] --> B(App State Collector)\n    A --> C(Device Property Collector)\n\n    C & B -->|Collected Events| D[Task Manager]\n    \n    D -->|Add Event| E[[Device Property Queue ]] & F[[App State Queue]]\n\n    E & F -->|Request upload| G([Uploader])\n    \n\n    G -.->|Upload Event| H((Sift Server fa:fa-server))"}](/images/flow-chart.png  "mermaid-graph")**

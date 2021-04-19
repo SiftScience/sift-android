@@ -181,15 +181,15 @@ public class DevicePropertiesCollector {
         PackageManager pm = context.getPackageManager();
         List<String> packagesFound = new ArrayList<>();
 
-        for (String packageName : packages) {
-            try {
-                // Root app detected
-                if (pm != null) {
-                    pm.getPackageInfo(packageName, 0);
-                    packagesFound.add(packageName);
+        if (pm != null) {
+            for (String packageName : packages) {
+                try {
+                    // Root app detected
+                        pm.getPackageInfo(packageName, 0);
+                        packagesFound.add(packageName);
+                } catch (PackageManager.NameNotFoundException e) {
+                    // Exception thrown, package is not installed into the system
                 }
-            } catch (PackageManager.NameNotFoundException e) {
-                // Exception thrown, package is not installed into the system
             }
         }
         return packagesFound;
