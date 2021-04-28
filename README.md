@@ -5,6 +5,7 @@
 - [Integration](#integration)
   - [Application Integration](#application)
   - [Custom Integration](#custom)
+- [Submitting a PR or an Issue](#submitting_an_issue)
 
 <a name="introduction"></a>
 ## Introduction
@@ -190,4 +191,13 @@ If the user logs out of your application, you should unset the user id:
 
 ```java
 Sift.unsetUserId();
-```
+``` 
+
+<a name="submitting_an_issue"></a>
+## Submitting a PR or Issue
+
+If you find issues or want to improve the SDK please create a issue or PR. We ask you provide the following in your submission.  
+
+- Provide Context: Explain how you discovered this issue and code samples.
+
+Thanks for your help!
