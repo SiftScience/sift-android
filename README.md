@@ -196,7 +196,7 @@ Sift.unsetUserId();
 <a name="submitting_an_issue"></a>
 ## Submitting an issue
 
-If you find issues please create an issue. We ask you provide the following in your submission.  
+If you find problems or issues with the SDK please create an issue. We ask you provide the following in your submission. 
 
 - Context: Explain how you discovered this issue, include steps to reproduce, and code samples.
 
