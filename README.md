@@ -5,7 +5,7 @@
 - [Integration](#integration)
   - [Application Integration](#application)
   - [Custom Integration](#custom)
-- [Submitting an Issue](#submitting_an_issue)
+- [Submitting an issue](#submitting_an_issue)
 
 <a name="introduction"></a>
 ## Introduction
@@ -194,10 +194,10 @@ Sift.unsetUserId();
 ``` 
 
 <a name="submitting_an_issue"></a>
-## Submitting an Issue
+## Submitting an issue
 
 If you find issues please create an issue. We ask you provide the following in your submission.  
 
-- Context: Explain how you discovered this issue, include steps to reproduce. and code samples.
+- Context: Explain how you discovered this issue, include steps to reproduce, and code samples.
 
 Thanks for your help!
