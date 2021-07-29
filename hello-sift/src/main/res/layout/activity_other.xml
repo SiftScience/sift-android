@@ -4,4 +4,22 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="siftscience.android.hellosift.OtherActivity">
+
+    <Button
+        android:id="@+id/buttonCollect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="36dp"
+        android:text="Collect" />
+
+    <Button
+        android:id="@+id/buttonUpload"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/buttonCollect"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="36dp"
+        android:text="Upload" />
+
 </RelativeLayout>

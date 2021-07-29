@@ -173,6 +173,13 @@ public class Queue {
         }
     }
 
+    void forceUpload(){
+        if(!state.queue.isEmpty()) {
+            state.lastUploadTimestamp = Time.now();
+            this.uploadRequester.requestUpload(flush());
+        }
+    }
+
     List<MobileEventJson> flush() {
         List<MobileEventJson> events = state.queue;
         state.queue = new ArrayList<>();
