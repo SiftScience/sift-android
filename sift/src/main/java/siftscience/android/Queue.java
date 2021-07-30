@@ -173,8 +173,8 @@ public class Queue {
         }
     }
 
-    void forceUpload(){
-        if(!state.queue.isEmpty()) {
+    void forceUpload() {
+        if (!state.queue.isEmpty()) {
             state.lastUploadTimestamp = Time.now();
             this.uploadRequester.requestUpload(flush());
         }
