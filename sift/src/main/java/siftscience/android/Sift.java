@@ -121,6 +121,22 @@ public final class Sift {
     }
 
     /**
+     * Request an immediate upload for the collected events in the queue disregard the queue config.
+     *
+     * Sift.collect() will collect events for Device Properties and Application State
+     * in to their specified queue. When collecting events, Sift will comply with their
+     * queue config (so the some events might not be uploaded).
+     *
+     * If queue is nil, this method will do nothing.
+     */
+    public static void upload() {
+        if (instance != null) {
+            instance.forceUploadAppStateEvent();
+            instance.forceUploadDevicePropertiesEvent();
+        }
+    }
+
+    /**
      * Call Sift.pause() in the onPause() callback of each Activity.
      *
      * Persists instance state to disk and disconnects location services.

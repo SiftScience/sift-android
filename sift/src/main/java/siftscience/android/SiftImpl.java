@@ -207,6 +207,18 @@ class SiftImpl {
         ));
     }
 
+    void forceUploadAppStateEvent() {
+        this.taskManager.submit(new ForceUploadTask(
+                APP_STATE_QUEUE_IDENTIFIER
+        ));
+    }
+
+    void forceUploadDevicePropertiesEvent() {
+        this.taskManager.submit(new ForceUploadTask(
+                DEVICE_PROPERTIES_QUEUE_IDENTIFIER
+        ));
+    }
+
     void upload(List<MobileEventJson> events) {
         this.uploader.upload(events);
     }
@@ -363,6 +375,25 @@ class SiftImpl {
             Queue queue = getQueue(this.queueIdentifier);
             if (queue != null) {
                 queue.append(this.event);
+            }
+        }
+    }
+
+    /**
+     * Immediately upload the collected events if any, from the specified queue.
+     */
+    private class ForceUploadTask implements Runnable {
+        private String queueIdentifier;
+
+        ForceUploadTask(String queueIdentifier) {
+            this.queueIdentifier = queueIdentifier;
+        }
+
+        @Override
+        public void run() {
+            Queue queue = getQueue(this.queueIdentifier);
+            if (queue != null) {
+                queue.forceUpload();
             }
         }
     }

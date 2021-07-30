@@ -581,6 +581,54 @@ public class SiftTest {
         assertEquals(mockLocationJson, event.androidAppState.location);
     }
 
+    @Test
+    public void testAppStateForceUpload() {
+        MemorySharedPreferences preferences = new MemorySharedPreferences();
+
+        Sift.Config config = new Sift.Config.Builder().withDisallowLocationCollection(true).build();
+
+        SiftImpl sift = new SiftImpl(mockContext(preferences), config, "",
+                false, mockTaskManager());
+        assertTrue(preferences.fields.isEmpty());
+
+        AppStateCollector appStateCollector = new AppStateCollector(sift, mockContext(preferences));
+        appStateCollector.collect();
+        // Collect twice because the first one gets uploaded and flushed
+        appStateCollector.collect();
+        sift.save();
+
+        sift.forceUploadAppStateEvent();
+        // Force upload will upload the event and flush the queue
+
+        List<MobileEventJson> eventList = sift.getQueue(SiftImpl.APP_STATE_QUEUE_IDENTIFIER).flush();
+        assertEquals(0, eventList.size());
+
+    }
+
+    @Test
+    public void testDevicePropertyForceUpload() {
+        MemorySharedPreferences preferences = new MemorySharedPreferences();
+
+        Sift.Config config = new Sift.Config.Builder().build();
+
+        SiftImpl sift = new SiftImpl(mockContext(preferences), config, "",
+                false, mockTaskManager());
+        assertTrue(preferences.fields.isEmpty());
+
+        DevicePropertiesCollector devicePropertiesCollector = new DevicePropertiesCollector(sift, mockContext(preferences));
+        devicePropertiesCollector.collect();
+        // First one gets uploaded and flushed
+
+        devicePropertiesCollector.collect();
+        // Device property queue will drop duplicate event if collected within 1 hour
+
+        sift.forceUploadDevicePropertiesEvent();
+        // This method do nothing since queue is empty
+
+        List<MobileEventJson> eventList = sift.getQueue(SiftImpl.DEVICE_PROPERTIES_QUEUE_IDENTIFIER).flush();
+        assertEquals(0, eventList.size());
+
+    }
 
     private Context mockContext(SharedPreferences preferences) {
         Context ctx = mock(Context.class);
