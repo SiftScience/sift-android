@@ -1,5 +1,11 @@
 ﻿# Change Log
 
+## [1.1.0] - 2021-08-02
+
+### Added
+- Added a new public upload() function.
+- Updated README.md to include details about how to submit an issue.
+
 ## [1.0.0] - 2021-04-20
 
 ### Added
