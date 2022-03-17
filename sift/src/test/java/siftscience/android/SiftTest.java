@@ -557,10 +557,8 @@ public class SiftTest {
         Location fakeLocation = new Location("gps");
 
         AndroidDeviceLocationJson mockLocationJson = new AndroidDeviceLocationJson()
-                .withTime(fakeLocation.getTime())
                 .withLatitude(fakeLocation.getLatitude())
-                .withLongitude(fakeLocation.getLongitude())
-                .withAccuracy(BigDecimal.valueOf(fakeLocation.getAccuracy()).doubleValue());
+                .withLongitude(fakeLocation.getLongitude());
 
         AndroidAppStateJson androidAppStateJson = new AndroidAppStateJson()
                 .withLocation(mockLocationJson);

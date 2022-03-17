@@ -3,8 +3,6 @@ title: Android Device Location
 type: object
 javaType: com.sift.api.representations.AndroidDeviceLocationJson
 properties:
-  time: {type: integer, required: false}
   latitude: {type: number, required: false}
   longitude: {type: number, required: false}
-  accuracy: {type: number, required: false}
 additionalProperties: false

@@ -60,24 +60,6 @@ properties:
       evidence_properties: {type: array, items: {type: string}, required: false}
       evidence_directories_writable: {type: array, items: {type: string}, required: false}
 
-      build_brand: {type: string, required: false}
-      build_device: {type: string, required: false}
-      build_fingerprint: {type: string, required: false}
-      build_hardware: {type: string, required: false}
-      build_product: {type: string, required: false}
-
-      installed_apps:
-        type: array
-        required: false
-        items:
-          type: object
-          javaType: com.sift.api.representations.AndroidInstalledAppJson
-          required: false
-          additionalProperties: false
-          properties:
-            package_name: {type: string, required: false}
-            app_name: {type: string, required: false}
-
   android_app_state:
     scope: public
     type: object
