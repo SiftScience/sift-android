@@ -45,7 +45,53 @@ This document describes the data models,classes for handling events, and specifi
 
 ## 2 High Level Class Diagram
 
-**![{"theme":"neutral","source":"classDiagram\n\nclass AndroidDeviceLocation {\n    +Long time\n    +Double latitude\n    +Double longitude\n    +Double accuracy\n}\n\nclass AndroidAppState {\n    +String activityClassName\n    +AndroidDeviceLocation location\n    +String sdkVersion\n    +Double batteryLevel\n    +Long batteryState\n    +Long batteryHealth\n    +Long plugState\n    +List~String~ networkAddresses\n}\n\nclass AndroidDeviceProperties {\n    +String appName\n    +String appVersion\n    +String sdkVersion\n    +String mobileCarrierName\n    +String mobileIsoCountryCode\n    +String deviceManufacturer\n    +String deviceModel\n    +String deviceSystemVersion\n    +String androidId\n    +String buildTags\n    +List~String~ evidenceFilesPresent\n    +List~String~ evidencePackagesPresent\n    +List~String~ evidenceProperties\n    +List~String~ evidenceDirectoriesWritable\n    +String buildBrand\n    +String buildDevice\n    +String buildFingerprint\n    +String buildHardware\n    +String buildProduct\n}\n\nclass MobileEvent {\n    +Long time\n    +String userId\n    +String installationId\n    +AndroidDeviceProperties androidDeviceProperties\n    +AndroidAppState androidAppState\n}\n\nAndroidDeviceLocation ..> AndroidAppState\nAndroidAppState ..> MobileEvent\nAndroidDeviceProperties  ..> MobileEvent"}](/images/overall-class-diadram.png "mermaid-graph")**
+```mermaid
+classDiagram
+class AndroidDeviceLocation {
+  +Double latitude
+  +Double longitude
+ }
+
+ class AndroidAppState {
+   +String activityClassName
+   +AndroidDeviceLocation location
+   +String sdkVersion
+   +Double batteryLevel
+   +Long batteryState
+   +Long batteryHealth
+   +Long plugState
+   +List~String~ networkAddresses
+  }
+
+  class AndroidDeviceProperties {
+   +String appName
+   +String appVersion
+   +String sdkVersion
+   +String mobileCarrierName
+   +String mobileIsoCountryCode
+   +String deviceManufacturer
+   +String deviceModel
+   +String deviceSystemVersion
+   +String androidId
+   +String buildTags
+   +List~String~ evidenceFilesPresent
+   +List~String~ evidencePackagesPresent
+   +List~String~ evidenceProperties
+   +List~String~ evidenceDirectoriesWritable
+  }
+
+  class MobileEvent {
+   +Long time
+   +String userId
+   +String installationId
+   +AndroidDeviceProperties androidDeviceProperties
+   +AndroidAppState androidAppState
+  }
+
+  AndroidDeviceLocation ..> AndroidAppState
+  AndroidAppState ..> MobileEvent
+  AndroidDeviceProperties  ..> MobileEvent
+```
 
 ## 3 Data Models
 
@@ -55,17 +101,25 @@ The data models used in this SDK are auto-generated from &#39;yaml&#39; files. T
 
 The AndroidDeviceLocation consist of the following information:
 
-- **time** : {type: integer, required: false}
-  - It indicates the time at which the location data was collected.
 - **latitude** : {type: number, required: false}
   - Which indicates the latitude of the collected location.
 - **longitude** : {type: number, required: false}
   - Which indicates the longitude of the collected location.
-- **accuracy** : {type: number, required: false}
-  - Indicates the accuracy of the collected latitude and longitude.
 
 Class diagram of AndroidDeviceLocation
-**![{"theme":"neutral","source":"classDiagram\n\nclass AndroidDeviceLocation{\n    +Long time\n    +Double latitude\n    +Double longitude\n    +Double accuracy\n\n    +withTime(time)\n    +withLatitude(latitude)\n    +withLongitude(longitude)\n    +withAccuracy(accuracy)\n    +toString() string\n    +hashCode() int\n    +equals() boolean\n}"}](/images/android-device-location.png "mermaid-graph")**
+```mermaid
+  classDiagram
+  class AndroidDeviceLocation{
+    +Double latitude
+    +Double longitude
+
+    +withLatitude(latitude)
+    +withLongitude(longitude)
+    +toString() string
+    +hashCode() int
+    +equals() boolean
+  }
+```
 
 ### 3.2 AndroidAppState
 
@@ -146,19 +200,45 @@ The AndroidDeviceProperties collects the following information:
 - **evidence\_directories\_writable** : {type: array, items: {type: string}, required: false}
   - It may contain a list of path to common system directories which have write permissions that indicate rooted devices.
   - If it is an empty list then the device is not a rooted device.
-- **build\_brand** : {type: string, required: false}
-  - The build brand indicates the consumer-visible brand with which the product/hardware will be associated, if any.
-- **build\_device** : {type: string, required: false}
-  - The build device indicates the name of the industrial design.
-- **build\_fingerprint** : {type: string, required: false}
-  - The build fingerprint indicated a string that uniquely identifies this build.
-- **build\_hardware** : {type: string, required: false}
-  - The build hardware indicates the name of the hardware (from the kernel command line or /proc).
-- **build\_product** : {type: string, required: false}
-  - The build product indicates the name of the overall product.
 
 Class diagram of AndroidDeviceProperties
-**![{"theme":"neutral","source":"classDiagram\n\nclass AndroidDeviceProperties {\n    +String appName\n    +String appVersion\n    +String sdkVersion\n    +String mobileCarrierName\n    +String mobileIsoCountryCode\n    +String deviceManufacturer\n    +String deviceModel\n    +String deviceSystemVersion\n    +String androidId\n    +String buildTags\n    +List~String~ evidenceFilesPresent\n    +List~String~ evidencePackagesPresent\n    +List~String~ evidenceProperties\n    +List~String~ evidenceDirectoriesWritable\n    +String buildBrand\n    +String buildDevice\n    +String buildFingerprint\n    +String buildHardware\n    +String buildProduct\n\n    +withAppName(appName)\n    +withAppVersion(appVersion)\n    +withSdkVersion(sdkVersion)\n    +withMobileCarrierName(mobileCarrierName)\n    +withMobileIsoCountryCode(mobileIsoCountryCode)\n    +withDeviceManufacturer(deviceManufacturer)\n    +withDeviceModel(deviceModel)\n    +withDeviceSystemVersion(deviceSystemVersion)\n    +withAndroidId(androidId)\n    +withBuildTags(buildTags)\n    +withEvidenceFilesPresent(evidenceFilesPresent)\n    +withEvidencePackagesPresent(evidencePackagesPresent) \n    +withEvidenceProperties(evidenceProperties)\n    +withEvidenceDirectoriesWritable(evidenceDirectoriesWritable)\n    +withBuildBrand(buildBrand)\n    +withBuildDevice(buildDevice)\n    +withBuildFingerprint(buildFingerprint)\n    +withBuildHardware(buildHardware)\n    +withBuildProduct(buildProduct)\n    +toString() string\n    +hashCode() int\n    +equals() boolean\n}"}](/images/android-device-properties.png "mermaid-graph")**
+```mermaid
+classDiagram
+class AndroidDeviceProperties {
+  +String appName
+  +String appVersion
+  +String sdkVersion
+  +String mobileCarrierName
+  +String mobileIsoCountryCode
+  +String deviceManufacturer
+  +String deviceModel
+  +String deviceSystemVersion
+  +String androidId
+  +String buildTags
+  +List~String~ evidenceFilesPresent
+  +List~String~ evidencePackagesPresent
+  +List~String~ evidenceProperties
+  +List~String~ evidenceDirectoriesWritable
+
+  +withAppName(appName)
+  +withAppVersion(appVersion)
+  +withSdkVersion(sdkVersion)
+  +withMobileCarrierName(mobileCarrierName)
+  +withMobileIsoCountryCode(mobileIsoCountryCode)
+  +withDeviceManufacturer(deviceManufacturer)
+  +withDeviceModel(deviceModel)
+  +withDeviceSystemVersion(deviceSystemVersion)
+  +withAndroidId(androidId)
+  +withBuildTags(buildTags)
+  +withEvidenceFilesPresent(evidenceFilesPresent)
+  +withEvidencePackagesPresent(evidencePackagesPresent) 
+  +withEvidenceProperties(evidenceProperties)
+  +withEvidenceDirectoriesWritable(evidenceDirectoriesWritable)
+  +toString() string
+  +hashCode() int
+  +equals() boolean
+}
+```
 
 
 ###
@@ -445,11 +525,6 @@ It provides only one instance method:
   - Other build and device informations are collected from android.os.Build provider:
     - The device manufacturer detail is collected from _Build.MANUFACTURER_ which provides the manufacturer of the product/hardware.
     - The device model from _Build.MODEL_ which provides the end-user-visible name for the end product.
-    - The build brand from _Build.BRAND_ which provide the consumer-visible brand with which the product/hardware will be associated
-    - The build device from _Build.DEVICE_ which provides the name of the industrial design.
-    - The build fingerprint from _Build.FINGERPRINT_ which provides a string that uniquely identifies this build. Do not attempt to parse this value.
-    - The build hardware from _Build.HARDWARE_ which provides the name of the hardware (from the kernel command line or /proc).
-    - The build product from _Build.PRODUCT_ which provides the name of the overall product.
     - The build tag from _Build.TAGS_ which provides comma-separated tags describing the build, like &quot;unsigned,debug&quot;.
   - It will check and collect evidence from the device which indicates whether the device is rooted with the following different approaches:
     - existingRootFiles()
