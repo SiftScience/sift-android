@@ -1,5 +1,10 @@
 ﻿# Change Log
 
+## [1.1.1] - 2022-07-06
+
+### Removed
+- Removed deprecated time and accuracy fields of the android device location object.
+
 ## [1.1.0] - 2021-08-02
 
 ### Added
