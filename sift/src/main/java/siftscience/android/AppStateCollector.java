@@ -250,10 +250,8 @@ public class AppStateCollector {
         Location location = this.acquiredNewLocation ? this.location : this.lastLocation;
 
         return new AndroidDeviceLocationJson()
-                .withTime(location.getTime())
                 .withLatitude(location.getLatitude())
-                .withLongitude(location.getLongitude())
-                .withAccuracy(new BigDecimal(location.getAccuracy()).doubleValue());
+                .withLongitude(location.getLongitude());
     }
 
     @SuppressLint("MissingPermission")
