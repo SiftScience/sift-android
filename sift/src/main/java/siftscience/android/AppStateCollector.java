@@ -294,12 +294,13 @@ public class AppStateCollector {
                                     case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
                                         Log.i(TAG, "Location settings are inadequate, and cannot be " +
                                                 "fixed here. Fix in Settings.");
+                                        mRequestingLocationUpdates = false;
                                 }
                             } else {
                                 // A different, unknown type of error occurred.
                                 Log.d(TAG, "Encountered unknown exception in checkLocationSettings", e);
+                                mRequestingLocationUpdates = false;
                             }
-                            mRequestingLocationUpdates = false;
                         }
                     });
         } else {
