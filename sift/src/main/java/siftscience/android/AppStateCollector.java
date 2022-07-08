@@ -297,7 +297,7 @@ public class AppStateCollector {
                                 }
                             } else {
                                 // A different, unknown type of error occurred.
-                                Log.d(TAG, "ERROR! " + e.getMessage());
+                                Log.d(TAG, "Encountered unknown exception in checkLocationSettings", e);
                             }
                             mRequestingLocationUpdates = false;
                         }
