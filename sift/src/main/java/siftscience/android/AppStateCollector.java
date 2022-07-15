@@ -284,16 +284,22 @@ public class AppStateCollector {
                     .addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
-                            int statusCode = ((ApiException) e).getStatusCode();
-                            switch (statusCode) {
-                                case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                                    Log.i(TAG, "Location settings are not satisfied. " +
-                                            "Try to attempt upgrade location settings");
-                                    break;
-                                case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                                    Log.i(TAG, "Location settings are inadequate, and cannot be " +
-                                            "fixed here. Fix in Settings.");
-                                    mRequestingLocationUpdates = false;
+                            if (e instanceof ApiException) {
+                                int statusCode = ((ApiException) e).getStatusCode();
+                                switch (statusCode) {
+                                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                                        Log.i(TAG, "Location settings are not satisfied. " +
+                                                "Try to attempt upgrade location settings");
+                                        break;
+                                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                                        Log.i(TAG, "Location settings are inadequate, and cannot be " +
+                                                "fixed here. Fix in Settings.");
+                                        mRequestingLocationUpdates = false;
+                                }
+                            } else {
+                                // A different, unknown type of error occurred.
+                                Log.d(TAG, "Encountered unknown exception in checkLocationSettings", e);
+                                mRequestingLocationUpdates = false;
                             }
                         }
                     });
