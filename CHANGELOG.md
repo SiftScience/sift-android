@@ -1,5 +1,11 @@
 ﻿# Change Log
 
+## [1.1.2] - 2022-07-15
+
+### Changed
+- Fixed unsafe exception casting in AppStateCollector
+
+
 ## [1.1.1] - 2022-07-06
 
 ### Removed
