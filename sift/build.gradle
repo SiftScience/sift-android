@@ -13,10 +13,13 @@ buildscript {
 
 android {
     compileSdkVersion 31
+    buildToolsVersion '30.0.0'
 
     defaultConfig {
         minSdkVersion 16  // Jelly Bean 4.1.x (basically Java 6)
         targetSdkVersion 31
+        versionCode 22
+        versionName '1.1.0'
 
         consumerProguardFiles 'proguard-rules.pro'
     }
