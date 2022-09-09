@@ -1,5 +1,11 @@
 ﻿# Change Log
 
+## [1.1.3] - 2022-09-09
+
+### Changed
+- Upgraded gson to version 2.9.1
+
+
 ## [1.1.2] - 2022-07-15
 
 ### Changed
