@@ -16,7 +16,7 @@ android {
     buildToolsVersion '30.0.0'
 
     defaultConfig {
-        minSdkVersion 16  // Jelly Bean 4.1.x (basically Java 6)
+        minSdkVersion 24  // Java 8
         targetSdkVersion 31
         versionCode 25
         versionName '1.1.3'

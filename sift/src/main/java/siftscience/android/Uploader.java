@@ -33,7 +33,6 @@ import java.util.zip.GZIPOutputStream;
 /**
  * Stateless utility class for sending MobileEventJson batches to Sift backend
  */
-@RequiresApi(api = Build.VERSION_CODES.KITKAT)
 public class Uploader {
     private static final String TAG = Uploader.class.getName();
     private static final long BACKOFF_MULTIPLIER = TimeUnit.SECONDS.toSeconds(3);

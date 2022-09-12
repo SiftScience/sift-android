@@ -1,9 +1,10 @@
 ﻿# Change Log
 
-## [1.1.3] - 2022-09-09
+## [1.2.0] - 2022-09-09
 
 ### Changed
 - Upgraded gson to version 2.9.1
+- Upgraded to API Level 24
 
 
 ## [1.1.2] - 2022-07-15
