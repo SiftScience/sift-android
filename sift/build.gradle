@@ -16,10 +16,10 @@ android {
     buildToolsVersion '30.0.0'
 
     defaultConfig {
-        minSdkVersion 16  // Jelly Bean 4.1.x (basically Java 6)
+        minSdkVersion 19  // Java 7
         targetSdkVersion 31
         versionCode 25
-        versionName '1.1.3'
+        versionName '1.2.0'
 
         consumerProguardFiles 'proguard-rules.pro'
     }

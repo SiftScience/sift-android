@@ -165,7 +165,7 @@ public class AppStateCollector {
     }
 
     private void doCollect() {
-        String installationId = Settings.Secure.getString(this.context.getContentResolver(),
+        @SuppressLint("HardwareIds") String installationId = Settings.Secure.getString(this.context.getContentResolver(),
                 Settings.Secure.ANDROID_ID);
         this.sift.appendAppStateEvent(
                 new MobileEventJson()

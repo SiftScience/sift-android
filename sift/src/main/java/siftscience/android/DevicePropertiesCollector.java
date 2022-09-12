@@ -2,6 +2,7 @@
 
 package siftscience.android;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -92,6 +93,7 @@ public class DevicePropertiesCollector {
                         .withTime(Time.now()));
     }
 
+    @SuppressLint("HardwareIds")
     private AndroidDevicePropertiesJson get() {
         // Package properties
         PackageManager packageManager = this.context.getPackageManager();

@@ -2,10 +2,13 @@
 
 package siftscience.android;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.StringJoiner;
 
 import android.content.Context;
 import android.os.Build;
+import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -238,10 +241,8 @@ public final class Sift {
             this.disallowLocationCollection = disallowLocationCollection;
         }
 
-        @RequiresApi(api = Build.VERSION_CODES.N)
         boolean isValid() {
-
-            StringJoiner configurationErrors = new StringJoiner(", ");
+            List<String> configurationErrors = new ArrayList<>();
 
             if (accountId == null || accountId.isEmpty()) {
                 configurationErrors.add("accountId");
@@ -255,11 +256,11 @@ public final class Sift {
                 configurationErrors.add("server URL format");
             }
 
-            boolean valid = configurationErrors.length() == 0;
+            boolean valid = configurationErrors.size() == 0;
 
             if (!valid) {
                 Log.d(TAG, "The following configuration properties are missing or empty: " +
-                        configurationErrors.toString());
+                        TextUtils.join(",", configurationErrors));
             }
 
             return valid;
