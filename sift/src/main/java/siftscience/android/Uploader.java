@@ -103,7 +103,6 @@ public class Uploader {
         this.configProvider = configProvider;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
     public void upload(List<MobileEventJson> batch) {
         // Kick-off the first upload
         try {
@@ -130,7 +129,6 @@ public class Uploader {
     }
 
     /** Builds a Request for the specified event batch */
-    @RequiresApi(api = Build.VERSION_CODES.N)
     @Nullable
     private Request makeRequest(List<MobileEventJson> batch) throws IOException {
         if (batch == null || batch.isEmpty()) {
