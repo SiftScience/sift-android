@@ -4,7 +4,7 @@
 
 ### Changed
 - Upgraded gson to version 2.9.1
-- Upgraded to API Level 24
+- Upgraded to API Level 19
 
 
 ## [1.1.2] - 2022-07-15
