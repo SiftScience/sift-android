@@ -1,5 +1,10 @@
 ﻿# Change Log
 
+## [1.3.0] - 2023-01-30
+
+### Changed
+- Updated play-services-location to version 21.0.1
+
 ## [1.2.0] - 2022-09-09
 
 ### Changed
