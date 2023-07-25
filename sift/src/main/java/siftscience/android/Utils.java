@@ -39,6 +39,9 @@ public class Utils {
         if (a == null || b == null) {
             return a == b;
         }
+        if (a.size() != b.size()) {
+            return false;
+        }
         for (int i = 0; i < a.size(); i++) {
             if (!equals(a.get(i), b.get(i))) {
                 return false;

@@ -11,8 +11,16 @@ import androidx.annotation.NonNull;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -34,6 +42,7 @@ public final class Sift {
 
     static final Gson GSON = new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+            .registerTypeAdapter(Config.class, Config.getDeserializer())
             .create();
 
     private static volatile SiftImpl instance;
@@ -208,10 +217,12 @@ public final class Sift {
                 "https://api3.siftscience.com/v3/accounts/%s/mobile_events";
 
         /** Your account ID; defaults to null. */
+        @Deprecated
         @SerializedName(value="account_id", alternate={"accountId"})
         public final String accountId;
 
         /** Your beacon key; defaults to null. */
+        @Deprecated
         @SerializedName(value="beacon_key", alternate={"beaconKey"})
         public final String beaconKey;
 
@@ -226,6 +237,58 @@ public final class Sift {
         /** Whether to allow location collection; defaults to false. */
         @SerializedName(value="disallow_location_collection", alternate={"disallowLocationCollection"})
         public final boolean disallowLocationCollection;
+
+        private static final JsonDeserializer deserializer = new JsonDeserializer<Config>() {
+            @Override
+            public Config deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+                JsonObject jsonObject = json.getAsJsonObject();
+
+                String accountId = null;
+                if (jsonObject.has("account_id")) {
+                    accountId = jsonObject.get("account_id").getAsString();
+                } else if (jsonObject.has("accountId")) {
+                    accountId = jsonObject.get("accountId").getAsString();
+                }
+
+                String beaconKey = null;
+                if (jsonObject.has("beacon_key")) {
+                    beaconKey = jsonObject.get("beacon_key").getAsString();
+                } else if (jsonObject.has("beaconKey")) {
+                    beaconKey = jsonObject.get("beaconKey").getAsString();
+                }
+
+                List<AccountKey> accountKeys = new ArrayList<>();
+                if (jsonObject.has("account_keys")) {
+                    Type accountKeyType = new TypeToken<AccountKey>() {
+                    }.getType();
+                    for (JsonElement item : jsonObject.getAsJsonArray("account_keys")) {
+                        accountKeys.add((AccountKey) context.deserialize(item, accountKeyType));
+                    }
+                } else if (jsonObject.has("accountKeys")) {
+                    Type accountKeyType = new TypeToken<AccountKey>() {
+                    }.getType();
+                    for (JsonElement item : jsonObject.getAsJsonArray("accountKeys")) {
+                        accountKeys.add((AccountKey) context.deserialize(item, accountKeyType));
+                    }
+                }
+
+                String serverUrlFormat = null;
+                if (jsonObject.has("server_url_format")) {
+                    serverUrlFormat = jsonObject.get("server_url_format").getAsString();
+                } else if (jsonObject.has("serverUrlFormat")) {
+                    serverUrlFormat = jsonObject.get("serverUrlFormat").getAsString();
+                }
+
+                boolean disallowLocationCollection = false;
+                if (jsonObject.has("disallow_location_collection")) {
+                    disallowLocationCollection = jsonObject.get("disallow_location_collection").getAsBoolean();
+                } else if (jsonObject.has("disallowLocationCollection")) {
+                    disallowLocationCollection = jsonObject.get("disallowLocationCollection").getAsBoolean();
+                }
+
+                return new Config(accountId, beaconKey, accountKeys, serverUrlFormat, disallowLocationCollection);
+            }
+        };
 
         Config() {
             this(null, null, null, DEFAULT_SERVER_URL_FORMAT, false);
@@ -312,6 +375,7 @@ public final class Sift {
                 disallowLocationCollection = config.disallowLocationCollection;
             }
 
+            @Deprecated
             private String accountId;
 
             @Deprecated
@@ -320,6 +384,7 @@ public final class Sift {
                 return this;
             }
 
+            @Deprecated
             private String beaconKey;
 
             @Deprecated
@@ -354,6 +419,11 @@ public final class Sift {
                         disallowLocationCollection);
             }
         }
+
+        public static JsonDeserializer<Config> getDeserializer() {
+            return deserializer;
+        }
+
     }
 
     private Sift() {
