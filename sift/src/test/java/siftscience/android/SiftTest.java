@@ -2,6 +2,20 @@
 
 package siftscience.android;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.location.Location;
@@ -21,7 +35,7 @@ import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -31,20 +45,6 @@ import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class SiftTest {
     private ScheduledExecutorService executor;
@@ -196,6 +196,8 @@ public class SiftTest {
         // Verify default values
         assertNull(sift.getConfig().accountId);
         assertNull(sift.getConfig().beaconKey);
+        assertNotNull(sift.getConfig().accountKeys);
+        assertEquals(sift.getConfig().accountKeys.size(), 0);
         assertNotNull(sift.getConfig().serverUrlFormat);
         assertFalse(sift.getConfig().disallowLocationCollection);
 
@@ -293,6 +295,61 @@ public class SiftTest {
         assertEquals(configString,
                 "{\"account_id\":\"a\"," +
                         "\"beacon_key\":\"b\"," +
+                        "\"account_keys\":[{\"account_id\":\"a\",\"beacon_key\":\"b\"}]," +
+                        "\"server_url_format\":\"s\"," +
+                        "\"disallow_location_collection\":false}");
+
+        assertEquals(Sift.GSON.fromJson(configString, Sift.Config.class), c);
+    }
+
+    @Test
+    public void testSerializeAccountKeysWithSeparateAccountIdAndBeaconKeyConfig() throws IOException {
+        MemorySharedPreferences preferences = new MemorySharedPreferences();
+
+        List<AccountKey> accountKeys = new ArrayList<>();
+        accountKeys.add(new AccountKey("c", "d"));
+        Sift.Config c = new Sift.Config.Builder()
+                .withAccountId("a")
+                .withBeaconKey("b")
+                .withAccountKeys(accountKeys)
+                .withServerUrlFormat("s")
+                .withDisallowLocationCollection(false)
+                .build();
+
+        SiftImpl sift = new SiftImpl(
+                mockContext(preferences), c, "", false, mockTaskManager());
+
+        String configString = sift.archiveConfig();
+
+        assertEquals(configString,
+                "{\"account_id\":\"a\"," +
+                        "\"beacon_key\":\"b\"," +
+                        "\"account_keys\":[{\"account_id\":\"c\",\"beacon_key\":\"d\"},{\"account_id\":\"a\",\"beacon_key\":\"b\"}]," +
+                        "\"server_url_format\":\"s\"," +
+                        "\"disallow_location_collection\":false}");
+
+        assertEquals(Sift.GSON.fromJson(configString, Sift.Config.class), c);
+    }
+
+    @Test
+    public void testSerializeAccountKeysWithoutSeparateAccountIdAndBeaconKeyConfig() throws IOException {
+        MemorySharedPreferences preferences = new MemorySharedPreferences();
+
+        List<AccountKey> accountKeys = new ArrayList<>();
+        accountKeys.add(new AccountKey("c", "d"));
+        Sift.Config c = new Sift.Config.Builder()
+                .withAccountKeys(accountKeys)
+                .withServerUrlFormat("s")
+                .withDisallowLocationCollection(false)
+                .build();
+
+        SiftImpl sift = new SiftImpl(
+                mockContext(preferences), c, "", false, mockTaskManager());
+
+        String configString = sift.archiveConfig();
+
+        assertEquals(configString,
+                "{\"account_keys\":[{\"account_id\":\"c\",\"beacon_key\":\"d\"}]," +
                         "\"server_url_format\":\"s\"," +
                         "\"disallow_location_collection\":false}");
 
@@ -626,6 +683,104 @@ public class SiftTest {
         List<MobileEventJson> eventList = sift.getQueue(SiftImpl.DEVICE_PROPERTIES_QUEUE_IDENTIFIER).flush();
         assertEquals(0, eventList.size());
 
+    }
+
+    @Test
+    public void testConfigInvalidIfNoAccountIdAndBeaconKeyAndAccountKeys() {
+        Sift.Config config = new Sift.Config.Builder().build();
+        assertFalse(config.isValid());
+    }
+
+    @Test
+    public void testConfigInvalidIfNullOrEmptyAccountId() {
+        Sift.Config config = new Sift.Config.Builder()
+                .withAccountId(null)
+                .withBeaconKey("BEACON_KEY")
+                .build();
+        assertFalse(config.isValid());
+
+        config = new Sift.Config.Builder()
+                .withAccountId("")
+                .withBeaconKey("BEACON_KEY")
+                .build();
+        assertFalse(config.isValid());
+    }
+
+    @Test
+    public void testConfigInvalidIfNullOrEmptyBeaconKey() {
+        Sift.Config config = new Sift.Config.Builder()
+                .withAccountId("ACCOUNT_ID")
+                .withBeaconKey(null)
+                .build();
+        assertFalse(config.isValid());
+
+        config = new Sift.Config.Builder()
+                .withAccountId("ACCOUNT_ID")
+                .withBeaconKey("")
+                .build();
+        assertFalse(config.isValid());
+    }
+
+    @Test
+    public void testConfigInvalidIfEmptyAccountKeys() {
+        Sift.Config config = new Sift.Config.Builder()
+                .withAccountKeys(new ArrayList<AccountKey>())
+                .build();
+        assertFalse(config.isValid());
+    }
+
+    @Test
+    public void testConfigInvalidIfNullOrEmptyAccountIdInAccountKeys() {
+        List<AccountKey> accountKeys = new ArrayList<AccountKey>();
+        accountKeys.add(new AccountKey(null, "BEACON_KEY"));
+        Sift.Config config = new Sift.Config.Builder()
+                .withAccountKeys(accountKeys)
+                .build();
+        assertFalse(config.isValid());
+
+        accountKeys = new ArrayList<AccountKey>();
+        accountKeys.add(new AccountKey("", "BEACON_KEY"));
+        config = new Sift.Config.Builder()
+                .withAccountKeys(accountKeys)
+                .build();
+        assertFalse(config.isValid());
+    }
+
+    @Test
+    public void testConfigInvalidIfNullOrEmptyBeaconKeyInAccountKeys() {
+        List<AccountKey> accountKeys = new ArrayList<AccountKey>();
+        accountKeys.add(new AccountKey("ACCOUNT_ID", null));
+        Sift.Config config = new Sift.Config.Builder()
+                .withAccountKeys(accountKeys)
+                .build();
+        assertFalse(config.isValid());
+
+        accountKeys = new ArrayList<AccountKey>();
+        accountKeys.add(new AccountKey("ACCOUNT_ID", ""));
+        config = new Sift.Config.Builder()
+                .withAccountKeys(accountKeys)
+                .build();
+        assertFalse(config.isValid());
+    }
+
+    @Test
+    public void testConfigIsValidIfValidAccountIdAndBeaconKeyProvided() {
+        Sift.Config config = new Sift.Config.Builder()
+                .withAccountId("ACCOUNT_ID")
+                .withBeaconKey("BEACON_KEY")
+                .build();
+        assertTrue(config.isValid());
+    }
+
+    @Test
+    public void testConfigIsValidIfValidAccountKeysIsProvided() {
+        List<AccountKey> accountKeys = new ArrayList<AccountKey>();
+        accountKeys.add(new AccountKey("ACCOUNT_ID_1", "BEACON_KEY_1"));
+        accountKeys.add(new AccountKey("ACCOUNT_ID_2", "BEACON_KEY_2"));
+        Sift.Config config = new Sift.Config.Builder()
+                .withAccountKeys(accountKeys)
+                .build();
+        assertTrue(config.isValid());
     }
 
     private Context mockContext(SharedPreferences preferences) {

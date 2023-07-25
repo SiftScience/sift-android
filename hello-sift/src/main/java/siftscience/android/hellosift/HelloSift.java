@@ -6,11 +6,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.view.View;
 import android.widget.Button;
 
+import androidx.appcompat.app.AppCompatActivity;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import siftscience.android.AccountKey;
 import siftscience.android.Sift;
 
 public class HelloSift extends AppCompatActivity {
@@ -27,9 +31,13 @@ public class HelloSift extends AppCompatActivity {
         editor.clear();
         editor.apply();
 
+        List<AccountKey> accountKeys = new ArrayList<>();
+        accountKeys.add(new AccountKey("ACCOUNT_ID_2", "BEACON_KEY_2"));
+        accountKeys.add(new AccountKey("ACCOUNT_ID_3", "BEACON_KEY_3"));
         Sift.open(this, new Sift.Config.Builder()
-                .withAccountId("YOUR_ACCOUNT_ID")
-                .withBeaconKey("YOUR_BEACON_KEY")
+                .withAccountId("ACCOUNT_ID_1")
+                .withBeaconKey("BEACON_KEY_1")
+                .withAccountKeys(accountKeys)
                 .build());
 
         Sift.setUserId("USER_ID");

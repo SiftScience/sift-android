@@ -2,23 +2,19 @@
 
 package siftscience.android;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.StringJoiner;
-
 import android.content.Context;
-import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -219,6 +215,10 @@ public final class Sift {
         @SerializedName(value="beacon_key", alternate={"beaconKey"})
         public final String beaconKey;
 
+        /** This can be used to provide multiple account ID & beacon key to publish mobile events to multiple SIFT instances */
+        @SerializedName(value = "account_keys", alternate = {"accountKeys"})
+        public final List<AccountKey> accountKeys;
+
         /** The location of the API endpoint. May be overwritten for testing. */
         @SerializedName(value="server_url_format", alternate={"serverUrlFormat"})
         public final String serverUrlFormat;
@@ -228,15 +228,27 @@ public final class Sift {
         public final boolean disallowLocationCollection;
 
         Config() {
-            this(null, null, DEFAULT_SERVER_URL_FORMAT, false);
+            this(null, null, null, DEFAULT_SERVER_URL_FORMAT, false);
         }
 
         private Config(String accountId,
                        String beaconKey,
+                       List<AccountKey> accountKeys,
                        String serverUrlFormat,
                        boolean disallowLocationCollection) {
             this.accountId = accountId;
             this.beaconKey = beaconKey;
+            if (accountKeys == null || accountKeys.isEmpty()) {
+                this.accountKeys = new ArrayList<>();
+            } else {
+                this.accountKeys = accountKeys;
+            }
+            if (accountId != null && beaconKey != null) {
+                AccountKey accountKey = new AccountKey(accountId, beaconKey);
+                if (!this.accountKeys.contains(accountKey)) {
+                    this.accountKeys.add(accountKey);
+                }
+            }
             this.serverUrlFormat = serverUrlFormat;
             this.disallowLocationCollection = disallowLocationCollection;
         }
@@ -244,12 +256,19 @@ public final class Sift {
         boolean isValid() {
             List<String> configurationErrors = new ArrayList<>();
 
-            if (accountId == null || accountId.isEmpty()) {
+            if (accountKeys == null || accountKeys.isEmpty()) {
                 configurationErrors.add("accountId");
-            }
-
-            if (beaconKey == null || beaconKey.isEmpty()) {
                 configurationErrors.add("beacon key");
+            } else {
+                for (AccountKey accountKey : accountKeys) {
+                    if ((accountKey.accountId == null || accountKey.accountId.isEmpty())) {
+                        configurationErrors.add("accountId");
+                    }
+
+                    if (accountKey.beaconKey == null || accountKey.beaconKey.isEmpty()) {
+                        configurationErrors.add("beacon key");
+                    }
+                }
             }
 
             if (serverUrlFormat == null || serverUrlFormat.isEmpty()) {
@@ -271,9 +290,10 @@ public final class Sift {
             if (!(other instanceof Config)) {
                 return false;
             }
-            Config that  = (Config) other;
+            Config that = (Config) other;
             return Utils.equals(accountId, that.accountId) &&
                     Utils.equals(beaconKey, that.beaconKey) &&
+                    Utils.equals(accountKeys, (that.accountKeys)) &&
                     Utils.equals(serverUrlFormat, that.serverUrlFormat) &&
                     Utils.equals(disallowLocationCollection, that.disallowLocationCollection);
         }
@@ -287,36 +307,48 @@ public final class Sift {
             public Builder(Config config) {
                 accountId = config.accountId;
                 beaconKey = config.beaconKey;
+                accountKeys = config.accountKeys;
                 serverUrlFormat = config.serverUrlFormat;
                 disallowLocationCollection = config.disallowLocationCollection;
             }
 
             private String accountId;
+
             public Builder withAccountId(String accountId) {
                 this.accountId = accountId;
                 return this;
             }
 
             private String beaconKey;
+
             public Builder withBeaconKey(String beaconKey) {
                 this.beaconKey = beaconKey;
                 return this;
             }
 
+            private List<AccountKey> accountKeys;
+
+            public Builder withAccountKeys(List<AccountKey> accountKeys) {
+                this.accountKeys = accountKeys;
+                return this;
+            }
+
             private String serverUrlFormat;
+
             public Builder withServerUrlFormat(String serverUrlFormat) {
                 this.serverUrlFormat = serverUrlFormat;
                 return this;
             }
 
             private boolean disallowLocationCollection;
+
             public Builder withDisallowLocationCollection(boolean disallowLocationCollection) {
                 this.disallowLocationCollection = disallowLocationCollection;
                 return this;
             }
 
             public Config build() {
-                return new Config(accountId, beaconKey, serverUrlFormat,
+                return new Config(accountId, beaconKey, accountKeys, serverUrlFormat,
                         disallowLocationCollection);
             }
         }

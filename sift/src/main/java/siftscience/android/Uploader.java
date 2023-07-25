@@ -2,13 +2,11 @@
 
 package siftscience.android;
 
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-import androidx.annotation.VisibleForTesting;
-
-import android.os.Build;
 import android.util.Base64;
 import android.util.Log;
+
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.sift.api.representations.ListRequestJson;
 import com.sift.api.representations.MobileEventJson;
@@ -23,6 +21,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -71,23 +70,23 @@ public class Uploader {
             private Map<String, String> headers;
             private byte[] body;
 
-            Request.Builder withMethod(String method) {
+            Builder withMethod(String method) {
                 this.method = method;
                 return this;
             }
 
 
-            Request.Builder withUrl(URL url) {
+            Builder withUrl(URL url) {
                 this.url = url;
                 return this;
             }
 
-            Request.Builder withHeaders(Map headers) {
+            Builder withHeaders(Map headers) {
                 this.headers = headers;
                 return this;
             }
 
-            Request.Builder withBody(byte[] body) {
+            Builder withBody(byte[] body) {
                 this.body = body;
                 return this;
             }
@@ -106,8 +105,11 @@ public class Uploader {
     public void upload(List<MobileEventJson> batch) {
         // Kick-off the first upload
         try {
-            Request request = makeRequest(batch);
-            if (request != null) {
+            List<Request> requests = makeRequests(batch);
+            if (requests == null || requests.isEmpty()) {
+                return;
+            }
+            for (Request request : requests) {
                 Log.d(TAG, String.format("Uploading batch of size %d", batch.size()));
                 this.doUpload(request, MAX_RETRIES);
             }
@@ -130,7 +132,7 @@ public class Uploader {
 
     /** Builds a Request for the specified event batch */
     @Nullable
-    private Request makeRequest(List<MobileEventJson> batch) throws IOException {
+    private List<Request> makeRequests(List<MobileEventJson> batch) throws IOException {
         if (batch == null || batch.isEmpty()) {
             Log.d(TAG, "Mobile events batch is empty");
             return null;
@@ -148,34 +150,40 @@ public class Uploader {
             return null;
         }
 
-        URL url = new URL(String.format(config.serverUrlFormat, config.accountId));
+        List<Request> requests = new ArrayList<>();
+        for (AccountKey accountKey : config.accountKeys) {
+            URL url = new URL(String.format(config.serverUrlFormat, accountKey.accountId));
 
-        final String encodedBeaconKey = Base64.encodeToString(
-                config.beaconKey.getBytes(US_ASCII), Base64.NO_WRAP);
+            final String encodedBeaconKey = Base64.encodeToString(
+                    accountKey.beaconKey.getBytes(US_ASCII), Base64.NO_WRAP);
 
-        Map<String, String> headers = new HashMap<String, String>();
-        headers.put("Authorization", "Basic " + encodedBeaconKey);
-        headers.put("Accept", "application/json");
-        headers.put("Content-Encoding", "gzip");
-        headers.put("Content-Type", "application/json");
+            Map<String, String> headers = new HashMap<String, String>();
+            headers.put("Authorization", "Basic " + encodedBeaconKey);
+            headers.put("Accept", "application/json");
+            headers.put("Content-Encoding", "gzip");
+            headers.put("Content-Type", "application/json");
 
-        ListRequestJson request = new ListRequestJson()
-                .withData(Collections.<Object>unmodifiableList(batch));
+            ListRequestJson request = new ListRequestJson()
+                    .withData(Collections.<Object>unmodifiableList(batch));
 
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        OutputStream gzip = new GZIPOutputStream(os);
-        Writer writer = new OutputStreamWriter(gzip, UTF8);
-        Sift.GSON.toJson(request, writer);
-        writer.close();
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            OutputStream gzip = new GZIPOutputStream(os);
+            Writer writer = new OutputStreamWriter(gzip, UTF8);
+            Sift.GSON.toJson(request, writer);
+            writer.close();
 
-        Log.d(TAG, String.format("Built HTTP request for batch of size %d", batch.size()));
+            Log.d(TAG, String.format("Built HTTP request for batch of size %d", batch.size()));
 
-        return new Request.Builder()
-                .withMethod("PUT")
-                .withUrl(url)
-                .withHeaders(headers)
-                .withBody(os.toByteArray())
-                .build();
+            requests.add(new Request.Builder()
+                    .withMethod("PUT")
+                    .withUrl(url)
+                    .withHeaders(headers)
+                    .withBody(os.toByteArray())
+                    .build());
+        }
+
+        return requests;
+
     }
 
     private String readInputStreamAsString(InputStream in, int maxBytes) throws IOException {

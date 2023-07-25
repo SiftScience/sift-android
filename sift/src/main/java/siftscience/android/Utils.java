@@ -4,6 +4,8 @@ package siftscience.android;
 
 import com.sift.api.representations.MobileEventJson;
 
+import java.util.List;
+
 /**
  * Util methods.
  */
@@ -31,5 +33,17 @@ public class Utils {
             return a == b;
         }
         return a.equals(b);
+    }
+
+    public static boolean equals(List<AccountKey> a, List<AccountKey> b) {
+        if (a == null || b == null) {
+            return a == b;
+        }
+        for (int i = 0; i < a.size(); i++) {
+            if (!equals(a.get(i), b.get(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 }
