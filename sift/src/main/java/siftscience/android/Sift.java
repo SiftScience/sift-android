@@ -314,6 +314,7 @@ public final class Sift {
 
             private String accountId;
 
+            @Deprecated
             public Builder withAccountId(String accountId) {
                 this.accountId = accountId;
                 return this;
@@ -321,6 +322,7 @@ public final class Sift {
 
             private String beaconKey;
 
+            @Deprecated
             public Builder withBeaconKey(String beaconKey) {
                 this.beaconKey = beaconKey;
                 return this;
