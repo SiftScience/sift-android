@@ -238,6 +238,7 @@ public final class Sift {
         @SerializedName(value="disallow_location_collection", alternate={"disallowLocationCollection"})
         public final boolean disallowLocationCollection;
 
+        // This is needed to add the separate accountId & beaconKey fields into the accountKeys list when deserializing
         private static final JsonDeserializer deserializer = new JsonDeserializer<Config>() {
             @Override
             public Config deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
