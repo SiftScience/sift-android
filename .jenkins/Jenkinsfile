@@ -45,7 +45,7 @@ pipeline {
                 }
             }
         }
-        stage ('Build and Test Workflows') {
+        stage ('Workflow') {
             steps {
                 script {
                     def workflows = [:]
