@@ -2,7 +2,7 @@
 jenkinsBranch = 'sift-android'
 sharedLib = library("shared-lib@${jenkinsBranch}")
 
-def siftandroidWorkflow = sharedLib.com.sift.ci.SiftAndroidWorkflow.new()
+def siftAndroidWorkflow = sharedLib.com.sift.ci.SiftAndroidWorkflow.new()
 def ciUtil = sharedLib.com.sift.ci.CIUtil.new()
 def stackdriver = sharedLib.com.sift.ci.StackDriverMetrics.new()
 
@@ -28,6 +28,8 @@ pipeline {
         disableRestartFromStage()
         parallelsAlwaysFailFast()
         buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '30', numToKeepStr: '')
+        timeout(time: 30, unit: 'MINUTES')
+
     }
     environment {
         GIT_BRANCH = "${env.CHANGE_BRANCH != null? env.CHANGE_BRANCH : env.BRANCH_NAME}"
@@ -50,17 +52,15 @@ pipeline {
                     def stage1 = 'Build'
                     workflows[stage1] = {
                         stage(stage1) {
-                            // if (env.GIT_BRANCH.equals('master')) {
-                                ciUtil.updateGithubCommitStatus(repoName, stage1, 'Started', 'pending', commitSha)
-                                try {
-                                    siftAndroidWorkflow.runSiftAndroidBuild(podTemplateFile, podLabel)
-                                    ciUtil.updateGithubCommitStatus(repoName, stage1, 'SUCCESS', 'success', commitSha)
-                                } catch (Exception e) {
-                                    ciUtil.updateGithubCommitStatus(repoName, stage1, 'FAILURE', 'failure', commitSha)
-                                    print("${stage1} failed")
-                                    throw e
-                                }
-                            // }
+                            ciUtil.updateGithubCommitStatus(repoName, stage1, 'Started', 'pending', commitSha)
+                            try {
+                                siftAndroidWorkflow.runSiftAndroidBuild(podTemplateFile, podLabel)
+                                ciUtil.updateGithubCommitStatus(repoName, stage1, 'SUCCESS', 'success', commitSha)
+                            } catch (Exception e) {
+                                ciUtil.updateGithubCommitStatus(repoName, stage1, 'FAILURE', 'failure', commitSha)
+                                print("${stage1} failed")
+                                throw e
+                            }
                         }
                     }
                     parallel workflows
