@@ -33,6 +33,7 @@ pipeline {
     }
     environment {
         GIT_BRANCH = "${env.CHANGE_BRANCH != null? env.CHANGE_BRANCH : env.BRANCH_NAME}"
+        ANDROID_SDK_ROOT = "/opt/android/sdk"
     }
     stages {
         stage('Initialize') {
