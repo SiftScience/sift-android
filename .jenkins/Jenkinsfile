@@ -50,22 +50,15 @@ pipeline {
         stage ('Workflow') {
             steps {
                 script {
-                    def workflows = [:]
-                    def stage1 = 'Build'
-                    workflows[stage1] = {
-                        stage(stage1) {
-                            ciUtil.updateGithubCommitStatus(repoName, stage1, 'Started', 'pending', commitSha)
-                            try {
-                                siftAndroidWorkflow.runSiftAndroidBuild(podTemplateFile, podLabel)
-                                ciUtil.updateGithubCommitStatus(repoName, stage1, 'SUCCESS', 'success', commitSha)
-                            } catch (Exception e) {
-                                ciUtil.updateGithubCommitStatus(repoName, stage1, 'FAILURE', 'failure', commitSha)
-                                print("${stage1} failed")
-                                throw e
-                            }
-                        }
+                    ciUtil.updateGithubCommitStatus(repoName, 'Build', 'Started', 'pending', commitSha)
+                    try {
+                        siftAndroidWorkflow.runSiftAndroidBuild(podTemplateFile, podLabel)
+                        ciUtil.updateGithubCommitStatus(repoName, 'Build', 'SUCCESS', 'success', commitSha)
+                    } catch (Exception e) {
+                        ciUtil.updateGithubCommitStatus(repoName, 'Build', 'FAILURE', 'failure', commitSha)
+                        print("${stage1} failed")
+                        throw e
                     }
-                    parallel workflows
                 }
             }
         }
