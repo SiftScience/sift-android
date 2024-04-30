@@ -14,8 +14,6 @@ def defaultStatusContext = 'Jenkins:auto'
 def podTemplateFile = 'android-pod-template.yaml'
 def podLabel = "android-${BUILD_TAG}"
 
-
-
 // GitHub repo name
 def repoName = 'sift-android'
 
@@ -56,7 +54,6 @@ pipeline {
                         ciUtil.updateGithubCommitStatus(repoName, 'Build', 'SUCCESS', 'success', commitSha)
                     } catch (Exception e) {
                         ciUtil.updateGithubCommitStatus(repoName, 'Build', 'FAILURE', 'failure', commitSha)
-                        print("${stage1} failed")
                         throw e
                     }
                 }
