@@ -1,5 +1,5 @@
 // Load Jenkins shared library
-jenkinsBranch = 'sift-android'
+jenkinsBranch = 'v0.17.0'
 sharedLib = library("shared-lib@${jenkinsBranch}")
 
 def siftAndroidWorkflow = sharedLib.com.sift.ci.SiftAndroidWorkflow.new()
