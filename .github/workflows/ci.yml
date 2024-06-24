@@ -21,12 +21,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: set up JDK 11
-        uses: actions/setup-java@v3
-        with:
-          java-version: '11'
-          distribution: 'temurin'
-          cache: gradle
+      - my_android_job:
+          runs-on: ubuntu-22.04 # Works also with self hosted runner supporting docker
+          container:
+            image: docker://fabernovel/android:api-29-v1.1.0
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Build with Gradle
