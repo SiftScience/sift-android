@@ -3,14 +3,10 @@ name: Android-ci
 on:
   push:
     branches:
-      - "*"
+      - master
   pull_request:
     branches:
       - master
-
-env:
-  ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
-  API_KEY: ${{ secrets.API_KEY }}
 
 permissions:
   contents: read
@@ -20,7 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: docker://fabernovel/android:api-29-v1.1.0
-
     steps:
       - uses: actions/checkout@v4
       - name: set up JDK 11
