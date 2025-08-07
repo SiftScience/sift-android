@@ -32,7 +32,6 @@ jobs:
           echo "$(ls -la)"
       - name: Sonatype Publish
         run: |
-          cd sift
           ./gradlew uploadArchives
           BEARER=$(printf "${{ secrets.SUSER }}:${{ secrets.SPASSWORD }}" | base64)
           curl --request POST \
