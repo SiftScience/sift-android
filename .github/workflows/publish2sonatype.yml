@@ -1,7 +1,8 @@
 name: Publishing to Sonatype
 on:
-  release:
-    types: [published]
+  push:
+#  release:
+#    types: [published]
 
 env:
   GH_TOKEN: ${{ github.token }}
