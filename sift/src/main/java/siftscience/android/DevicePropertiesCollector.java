@@ -89,7 +89,7 @@ public class DevicePropertiesCollector {
         this.sift.appendDevicePropertiesEvent(
                 new MobileEventJson()
                         .withAndroidDeviceProperties(deviceProperties)
-                        .withInstallationId(deviceProperties.androidId)
+                        .withInstallationId(deviceProperties.getAndroidId())
                         .withTime(Time.now()));
     }
 
@@ -252,7 +252,11 @@ public class DevicePropertiesCollector {
         try {
             inputstream = Runtime.getRuntime().exec("getprop").getInputStream();
         } catch (IOException e) {
-            Log.e(TAG, "Error reading properties", e);
+            if (isCommandMissing(e)) {
+                Log.d(TAG, "getprop is unavailable in this runtime");
+            } else {
+                Log.e(TAG, "Error reading properties", e);
+            }
         }
         if (inputstream == null) {
             return new String[0];
@@ -276,7 +280,11 @@ public class DevicePropertiesCollector {
         try {
             inputstream = Runtime.getRuntime().exec("mount").getInputStream();
         } catch (IOException e) {
-            Log.e(TAG, "Error reading mount", e);
+            if (isCommandMissing(e)) {
+                Log.d(TAG, "mount is unavailable in this runtime");
+            } else {
+                Log.e(TAG, "Error reading mount", e);
+            }
         }
         if (inputstream == null) {
             return new String[0];
@@ -289,5 +297,10 @@ public class DevicePropertiesCollector {
             Log.e(TAG, "Error reading mount", e);
         }
         return allPaths.split("\n");
+    }
+
+    private boolean isCommandMissing(IOException exception) {
+        String message = exception.getMessage();
+        return message != null && message.contains("No such file or directory");
     }
 }

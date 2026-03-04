@@ -27,11 +27,11 @@ properties:
     scope: public
   fields:
     type: object
-    javaType: java.util.Map<String,String>
+    existingJavaType: java.util.Map<String,String>
     scope: public
   device_properties:
     type: object
-    javaType: java.util.Map<String, String>
+    existingJavaType: java.util.Map<String, String>
     scope: public
 
   android_device_properties:

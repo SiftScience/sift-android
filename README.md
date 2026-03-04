@@ -2,6 +2,7 @@
 
 - [Introduction](#introduction)
 - [Installation](#installation)
+- [Compatibility](#compatibility)
 - [Integration](#integration)
   - [Application Integration](#application)
   - [Custom Integration](#custom)
@@ -44,6 +45,21 @@ android {
   }
   ...
 }
+```
+
+<a name="compatibility"></a>
+## Compatibility
+
+- `minSdk` is `19` (Android 4.4+).
+- Generated classes under `com.sift.api.representations` should be accessed via getters/setters.
+- If your integration directly references generated model fields, migrate to accessors:
+
+```java
+// Before
+event.userId = "SOME_USER_ID";
+
+// After
+event.setUserId("SOME_USER_ID");
 ```
 
 <a name="integration"></a>

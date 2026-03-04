@@ -39,9 +39,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -392,13 +392,13 @@ public class SiftTest {
         // Append twice because the first one gets uploaded and flushed
         sift.getQueue(SiftImpl.APP_STATE_QUEUE_IDENTIFIER).append(new MobileEventJson());
         MobileEventJson event = sift.getQueue(SiftImpl.APP_STATE_QUEUE_IDENTIFIER).flush().get(0);
-        assertEquals("gary", event.userId);
+        assertEquals("gary", event.getUserId());
 
         sift.unsetUserId();
 
         sift.getQueue(SiftImpl.APP_STATE_QUEUE_IDENTIFIER).append(new MobileEventJson());
         event = sift.getQueue(SiftImpl.APP_STATE_QUEUE_IDENTIFIER).flush().get(0);
-        assertNull(event.userId);
+        assertNull(event.getUserId());
     }
 
     @Test
@@ -517,7 +517,7 @@ public class SiftTest {
         assertEquals(1, eventList.size());
 
         MobileEventJson event = eventList.get(0);
-        assertEquals(Sift.SDK_VERSION, event.androidAppState.sdkVersion);
+        assertEquals(Sift.SDK_VERSION, event.getAndroidAppState().getSdkVersion());
     }
 
     @Test
@@ -574,9 +574,9 @@ public class SiftTest {
         assertEquals(1, eventList.size());
 
         MobileEventJson event = eventList.get(0);
-        assertNotNull(event.androidAppState.location);
+        assertNotNull(event.getAndroidAppState().getLocation());
 
-        assertEquals(mockLocationJson, event.androidAppState.location);
+        assertEquals(mockLocationJson, event.getAndroidAppState().getLocation());
     }
 
     @Test

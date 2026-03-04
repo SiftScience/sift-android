@@ -49,6 +49,6 @@ public class EventTest {
         MobileEventJson actual = Sift.GSON.fromJson(Sift.GSON.toJson(event), MobileEventJson.class);
 
         assertTrue(Utils.eventsAreBasicallyEqual(event, actual));
-        assertEquals(event.time, actual.time);
+        assertEquals(event.getTime(), actual.getTime());
     }
 }

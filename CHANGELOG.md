@@ -1,5 +1,33 @@
 ﻿# Change Log
 
+## [1.3.1] - 2026-03-03
+
+### Breaking Changes
+- Generated event models now rely on getters/setters. Direct field access in `com.sift.api.representations` may be source-incompatible and should be migrated.
+
+### Changed
+- Migrated build system to Gradle 8.13 and Android Gradle Plugin 8.13.2.
+- Refreshed the full Gradle wrapper set (`gradle-wrapper.properties`, `gradlew`, `gradlew.bat`, `gradle-wrapper.jar`).
+- Updated Android SDK levels to compileSdk 36 / targetSdk 36 while keeping `minSdk 19`.
+- Added Java toolchain configuration to compile with JDK 17 and set project JVM args for modern Gradle runs.
+- Updated core and test dependencies (Gson, AppCompat, JUnit, Mockito, WireMock, AndroidX Test).
+- Migrated publishing flow to `maven-publish` and Sonatype publish tasks.
+- Updated CI and publishing GitHub Actions workflows to JDK 17 + Android SDK API 36 and removed debug-only workflow output.
+- Added a Compatibility section to README.
+
+### Removed
+- Removed `jcenter()` repository usage and legacy repository declarations.
+- Removed explicit `androidTest` dependency on `androidx.annotation`.
+- Removed legacy `uploadArchives` compatibility task.
+- Removed legacy AWS Device Farm Gradle integration (`keys.gradle` / `devicefarm` hook in sample app).
+
+### Fixed
+- Fixed Gradle/AGP migration issues (new DSL requirements, namespace setup, manifest package migration, and modern publishing setup).
+- Fixed `jsonschema2pojo` migration incompatibilities (`existingJavaType` schema usage and generated model integration updates).
+- Updated SDK source and tests to generated-model accessors.
+- Reduced noisy non-Android unit test logs for missing `getprop` / `mount` commands.
+- Added Mockito Java agent setup for unit tests to avoid JDK dynamic agent self-attach warnings.
+
 ## [1.3.0] - 2023-01-30
 
 ### Changed

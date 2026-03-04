@@ -12,5 +12,5 @@ properties:
     type: array
     items:
       type: object
-      javaType: java.lang.Object
+      existingJavaType: java.lang.Object
 additionalProperties: false
