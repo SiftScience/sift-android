@@ -9,15 +9,3 @@ plugins {
 tasks.register('clean', Delete) {
     delete rootProject.layout.buildDirectory
 }
-
-subprojects {
-    def toolchainServiceClass = Class.forName('org.gradle.jvm.toolchain.JavaToolchainService')
-    def languageVersionClass = Class.forName('org.gradle.jvm.toolchain.JavaLanguageVersion')
-    def languageVersionOf = languageVersionClass.getMethod('of', Integer.TYPE)
-    def toolchains = project.services.get(toolchainServiceClass)
-    tasks.withType(org.gradle.api.tasks.compile.JavaCompile).configureEach {
-        javaCompiler = toolchains.compilerFor { spec ->
-            spec.languageVersion = languageVersionOf.invoke(null, 17)
-        }
-    }
-}

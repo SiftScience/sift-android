@@ -1,4 +1,4 @@
-﻿# Change Log
+# Change Log
 
 ## [1.3.1] - 2026-03-03
 
