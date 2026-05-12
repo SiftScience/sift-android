@@ -19,10 +19,10 @@ public class Utils {
 
         // KLUDGE: jsonschema2pojo doesn't generate copy constructors, so back up one time,
         // override it, then restore it.
-        Long firstTime = first.time;
-        first.time = second.time;
+        Long firstTime = first.getTime();
+        first.setTime(second.getTime());
         boolean result = first.equals(second);
-        first.time = firstTime;
+        first.setTime(firstTime);
         return result;
     }
 

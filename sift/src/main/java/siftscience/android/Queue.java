@@ -151,13 +151,13 @@ public class Queue {
     void append(@NonNull MobileEventJson event) {
         long now = Time.now();
 
-        if (event.userId == null) {
-            event.userId = userIdProvider.getUserId();
+        if (event.getUserId() == null) {
+            event.setUserId(userIdProvider.getUserId());
         }
 
         if (this.config.acceptSameEventAfter > 0 &&
                 state.lastEvent != null &&
-                now < state.lastEvent.time + this.config.acceptSameEventAfter &&
+                now < state.lastEvent.getTime() + this.config.acceptSameEventAfter &&
                 Utils.eventsAreBasicallyEqual(state.lastEvent, event)) {
             Log.d(TAG, String.format("Drop duplicate event: %s", event.toString()));
             return;

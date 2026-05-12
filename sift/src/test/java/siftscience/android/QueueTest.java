@@ -21,7 +21,8 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 public class QueueTest {
 
@@ -80,7 +81,7 @@ public class QueueTest {
         queue.append(event1);
         queue.append(event2);
 
-        verifyZeroInteractions(uploadRequester);
+        verifyNoMoreInteractions(uploadRequester);
         String archive = queue.archive();
         assertEquals(Arrays.asList(event1, event2), queue.flush());
 
@@ -125,7 +126,7 @@ public class QueueTest {
                 )
                 .withTime(Time.currentTime)
                 .withUserId("gary");
-        assertTrue(Time.currentTime == event1.time);
+        assertTrue(Time.currentTime == event1.getTime());
         queue.append(event1);
 
         Time.currentTime++;
@@ -137,10 +138,10 @@ public class QueueTest {
                 )
                 .withTime(Time.currentTime)
                 .withUserId("gary");
-        assertTrue(Time.currentTime == event1.time);
+        assertTrue(Time.currentTime == event1.getTime());
         queue.append(event1);
 
-        verifyZeroInteractions(uploadRequester);
+        verifyNoInteractions(uploadRequester);
 
         assertEquals(Collections.singletonList(event0), queue.flush());
 
@@ -153,10 +154,10 @@ public class QueueTest {
                 )
                 .withTime(Time.currentTime)
                 .withUserId("gary");
-        assertTrue(Time.currentTime == event1.time);
+        assertTrue(Time.currentTime == event1.getTime());
         queue.append(event1);
 
-        verifyZeroInteractions(uploadRequester);
+        verifyNoInteractions(uploadRequester);
         assertEquals(Collections.singletonList(event1), queue.flush());
     }
 
@@ -178,7 +179,7 @@ public class QueueTest {
                 )
                 .withTime(1000L);
 
-        verifyZeroInteractions(uploadRequester);
+        verifyNoInteractions(uploadRequester);
 
         // Always upload the first event
         queue.append(event);
@@ -296,7 +297,7 @@ public class QueueTest {
 
         // Should not have uploaded the second event (not stale enough)
         queue.append(event);
-        verifyZeroInteractions(uploadRequester);
+        verifyNoInteractions(uploadRequester);
     }
 
     @Test
