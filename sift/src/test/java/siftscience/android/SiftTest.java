@@ -521,6 +521,88 @@ public class SiftTest {
     }
 
     @Test
+    public void testManualScreenTitleOverridesActivityName() {
+        MemorySharedPreferences preferences = new MemorySharedPreferences();
+
+        Sift.Config config = new Sift.Config.Builder().withDisallowLocationCollection(true).build();
+
+        SiftImpl sift = new SiftImpl(mockContext(preferences), config, "",
+                false, mockTaskManager());
+
+        AppStateCollector appStateCollector = new AppStateCollector(sift, mockContext(preferences));
+        appStateCollector.setActivityName("MainActivity");
+        appStateCollector.setManualScreenTitle("Checkout");
+
+        appStateCollector.collect();
+        // Collect twice because the first one gets uploaded and flushed
+        appStateCollector.collect();
+
+        List<MobileEventJson> eventList = sift.getQueue(SiftImpl.APP_STATE_QUEUE_IDENTIFIER).flush();
+        assertEquals(1, eventList.size());
+        assertEquals("Checkout",
+                eventList.get(0).getAndroidAppState().getActivityClassName());
+    }
+
+    @Test
+    public void testManualScreenTitleResetFallsBackToActivityName() {
+        MemorySharedPreferences preferences = new MemorySharedPreferences();
+
+        Sift.Config config = new Sift.Config.Builder().withDisallowLocationCollection(true).build();
+
+        SiftImpl sift = new SiftImpl(mockContext(preferences), config, "",
+                false, mockTaskManager());
+
+        AppStateCollector appStateCollector = new AppStateCollector(sift, mockContext(preferences));
+        appStateCollector.setActivityName("MainActivity");
+        appStateCollector.setManualScreenTitle("Checkout");
+
+        appStateCollector.collect();
+        // Collect twice because the first one gets uploaded and flushed
+        appStateCollector.collect();
+        assertEquals("Checkout", sift.getQueue(SiftImpl.APP_STATE_QUEUE_IDENTIFIER)
+                .flush().get(0).getAndroidAppState().getActivityClassName());
+
+        appStateCollector.setManualScreenTitle(null);
+        appStateCollector.collect();
+        assertEquals("MainActivity", sift.getQueue(SiftImpl.APP_STATE_QUEUE_IDENTIFIER)
+                .flush().get(0).getAndroidAppState().getActivityClassName());
+
+        appStateCollector.setManualScreenTitle("Checkout");
+        appStateCollector.setManualScreenTitle("");
+        appStateCollector.collect();
+        assertEquals("MainActivity", sift.getQueue(SiftImpl.APP_STATE_QUEUE_IDENTIFIER)
+                .flush().get(0).getAndroidAppState().getActivityClassName());
+    }
+
+    @Test
+    public void testUnboundSetScreenTitle() throws NoSuchFieldException, IllegalAccessException {
+        MemorySharedPreferences preferences = new MemorySharedPreferences();
+
+        resetSiftStatics();
+
+        Sift.setScreenTitle("Checkout");
+        Sift.open(mockContext(preferences),
+                new Sift.Config.Builder().withDisallowLocationCollection(true).build());
+
+        Field collectorField = Sift.class.getDeclaredField("appStateCollector");
+        collectorField.setAccessible(true);
+        AppStateCollector appStateCollector = (AppStateCollector) collectorField.get(Sift.class);
+
+        Field titleField = AppStateCollector.class.getDeclaredField("manualScreenTitle");
+        titleField.setAccessible(true);
+        assertEquals("Checkout", titleField.get(appStateCollector));
+    }
+
+    private void resetSiftStatics() throws NoSuchFieldException, IllegalAccessException {
+        for (String name : Arrays.asList("instance", "appStateCollector",
+                "devicePropertiesCollector")) {
+            Field field = Sift.class.getDeclaredField(name);
+            field.setAccessible(true);
+            field.set(Sift.class, null);
+        }
+    }
+
+    @Test
     public void testDevicePropertyCollector() throws InterruptedException {
         MemorySharedPreferences preferences = new MemorySharedPreferences();
 

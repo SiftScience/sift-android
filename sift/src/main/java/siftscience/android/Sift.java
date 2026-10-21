@@ -45,6 +45,8 @@ public final class Sift {
     private static volatile AppStateCollector appStateCollector;
     private static volatile String unboundUserId;
     private static volatile boolean hasUnboundUserId = false;
+    private static volatile String unboundScreenTitle;
+    private static volatile boolean hasUnboundScreenTitle = false;
     private static volatile ExecutorService executors;
 
     //================================================================================
@@ -81,6 +83,11 @@ public final class Sift {
                 appStateCollector = new AppStateCollector(instance, c);
                 unboundUserId = null;
                 hasUnboundUserId = false;
+                if (hasUnboundScreenTitle) {
+                    appStateCollector.setManualScreenTitle(unboundScreenTitle);
+                    unboundScreenTitle = null;
+                    hasUnboundScreenTitle = false;
+                }
             } else {
                 if (config != null) {
                     instance.setConfig(config);
@@ -198,6 +205,26 @@ public final class Sift {
 
     public static synchronized void unsetUserId() {
         setUserId(null);
+    }
+
+    /**
+     * Set the screen name attached to every later App State collection, until it
+     * is changed or reset.
+     *
+     * Overrides the Activity class name collected automatically. Pass null or an
+     * empty string to reset, after which the automatic name is used again. It
+     * does not collect by itself; call Sift.collect() to send an event now.
+     *
+     * The title is not persisted, so it does not survive a process restart.
+     */
+    public static synchronized void setScreenTitle(String title) {
+        AppStateCollector localAppStateCollector = appStateCollector;
+        if (localAppStateCollector != null) {
+            localAppStateCollector.setManualScreenTitle(title);
+        } else {
+            unboundScreenTitle = title;
+            hasUnboundScreenTitle = true;
+        }
     }
 
     //================================================================================
