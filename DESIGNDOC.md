@@ -126,7 +126,7 @@ Class diagram of AndroidDeviceLocation
 The AndroidAppState collects the following informations:
 
 - **activity\_class\_name** : {type: string, required: false}
-  - The activity class name indicates the current activity/fragment class name from where the data are collected.
+  - The activity class name indicates the current activity/fragment class name from where the data are collected; overridden by the screen name set through `setScreenTitle`.
 - **location** : {type: AndroidDeviceLocation, required: false}
   - The location consists of collective information of latitude, longitude, accuracy and the time at which data was collected as shown in the [section 3.1](#31-androidDeviceLocation). (_Have data only if the sift configuration and permissions are enabled_)
 - **sdk\_version** : {type: string, required: false}
@@ -328,6 +328,11 @@ Following are the static API to interact with SDK:
   - It will set the provided id as the userId inside the sift instance.
 - **unsetUserId**()
   - Which removes any presetted useId to null
+- **setScreenTitle**(_title_)
+  - It will set a screen name that is attached to every later App State collection, until it is changed or reset.
+  - The name overrides the Activity class name collected automatically. Passing null or an empty string resets it, after which the automatic name is used again.
+  - It does not collect by itself; call Sift.collect() to send an event right away.
+  - The title is not persisted, so it does not survive a process restart.
 
 ### 4.2 SIFT IMPL
 
@@ -499,6 +504,8 @@ It provides the following instance methods:
 
 - **setActivityName**(_activityName_)
   - Which will assign the current activity class name as the provided name.
+- **setManualScreenTitle**(_title_)
+  - Which records the screen name used instead of the automatic activity class name in all later collections. A null or empty title resets it.
 - **collect**()
   - This will request location updates if Sift.Config _disallowLocationCollection_ is false and location permission is enabled by the user which was requested by your application (_NB: Sift will not request permissions that are not granted by the user from your application_). Otherwise it will collect the rest of app state events without location information.
   - The location collection is managed by FusedLocationProviderClient. The location request is configured as PRIORITY\_HIGH\_ACCURACY with one minute interval and 10 seconds fastest interval.

@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.4.0] - 2026-10-21
+
+### Added
+- `Sift.setScreenTitle(String)` sets the screen name reported with App State events, overriding the automatically collected Activity class name. Passing `null` or an empty string resets it to the automatic name. Mirrors the iOS SDK's `setScreenTitle:`, so cross-platform wrappers can set and clear a screen name the same way on both platforms.
+
 ## [1.3.1] - 2026-03-03
 
 ### Breaking Changes

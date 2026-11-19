@@ -124,6 +124,21 @@ If the user logs out of your application, you should unset the user id:
 Sift.unsetUserId();
 ```
 
+#### Set a custom screen name
+
+Sift reports the Activity class name with App State events. If your application
+does not map screens to Activities, set the screen name yourself:
+
+```java
+Sift.setScreenTitle("Checkout");
+```
+
+Pass `null` or an empty string to clear it and go back to the automatic name:
+
+```java
+Sift.setScreenTitle(null);
+```
+
 <a name="custom"></a>
 ### Custom Integration
 #### Initialize Sift in your main Activity
@@ -208,6 +223,21 @@ If the user logs out of your application, you should unset the user id:
 ```java
 Sift.unsetUserId();
 ``` 
+
+#### Set a custom screen name
+
+Sift reports the Activity class name with App State events. If your application
+does not map screens to Activities, set the screen name yourself:
+
+```java
+Sift.setScreenTitle("Checkout");
+```
+
+Pass `null` or an empty string to clear it and go back to the automatic name:
+
+```java
+Sift.setScreenTitle(null);
+```
 
 <a name="submitting_an_issue"></a>
 ## Submitting an issue

@@ -54,6 +54,7 @@ public class AppStateCollector {
     private final Context context;
 
     private String activityClassName;
+    private volatile String manualScreenTitle;
     private boolean acquiredNewLocation;
     private LocationRequest locationRequest;
     private FusedLocationProviderClient mFusedLocationClient;
@@ -81,6 +82,22 @@ public class AppStateCollector {
 
     public void setActivityName(String activityName) {
         this.activityClassName = activityName;
+    }
+
+    /**
+     * Record the screen name used instead of the automatic Activity class name
+     * in all later collections.
+     *
+     * A null or empty title resets it; the automatic name is used again.
+     */
+    public void setManualScreenTitle(String title) {
+        this.manualScreenTitle = (title == null || title.isEmpty()) ? null : title;
+    }
+
+    /** @return the manual screen title when one is set, the automatic name otherwise. */
+    private String screenTitle() {
+        String manual = this.manualScreenTitle;
+        return manual != null ? manual : this.activityClassName;
     }
 
     public void collect() {
@@ -200,7 +217,7 @@ public class AppStateCollector {
         List<String> ipAddresses = getIpAddresses();
 
         AndroidAppStateJson androidAppStateJson = new AndroidAppStateJson()
-                .withActivityClassName(this.activityClassName)
+                .withActivityClassName(this.screenTitle())
                 .withBatteryLevel(batteryLevel)
                 .withBatteryState((long) status)
                 .withBatteryHealth((long) health)
