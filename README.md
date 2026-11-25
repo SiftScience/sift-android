@@ -21,10 +21,12 @@ Add Sift to your application’s build.gradle file:
 ```gradle
 dependencies {
   ...
-  compile 'com.siftscience:sift-android:1.0.0'
+  implementation 'com.siftscience:sift-android:VERSION'
   ...
 }
 ```
+
+Replace `VERSION` with the latest release, listed on [Maven Central](https://central.sonatype.com/artifact/com.siftscience/sift-android/versions). The SDK is published to Maven Central, so make sure `mavenCentral()` is in your `repositories`.
 
 You may also need to add the following `packagingOptions` to the main android block:
 
